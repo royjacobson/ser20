@@ -56,7 +56,7 @@ template <class Archive> struct variant_save_visitor : boost::static_visitor<> {
 
 //! @internal
 template <class Archive, class T> struct LoadAndConstructLoadWrapper {
-  using ST = typename std::aligned_storage<sizeof(T), CEREAL_ALIGNOF(T)>::type;
+  using ST = std::aligned_storage_t<sizeof(T), CEREAL_ALIGNOF(T)>;
 
   LoadAndConstructLoadWrapper() : construct(reinterpret_cast<T*>(&st)) {}
 

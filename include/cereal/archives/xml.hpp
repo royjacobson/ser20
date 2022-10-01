@@ -191,7 +191,7 @@ public:
   }
 
   //! Destructor, flushes the XML
-  ~XMLOutputArchive() CEREAL_NOEXCEPT {
+  ~XMLOutputArchive() noexcept {
     const int flags = itsIndent ? 0x0 : rapidxml::print_no_indenting;
     rapidxml::print(itsStream, itsXML, flags);
     itsXML.clear();
@@ -449,7 +449,7 @@ public:
       itsNodes.emplace(root);
   }
 
-  ~XMLInputArchive() CEREAL_NOEXCEPT = default;
+  ~XMLInputArchive() noexcept = default;
 
   //! Loads some binary data, encoded as a base64 string, optionally specified
   //! by some name
@@ -537,9 +537,8 @@ public:
   void setNextName(const char* name) { itsNodes.top().name = name; }
 
   //! Loads a bool from the current top node
-  template <class T,
-            traits::EnableIf<std::is_unsigned<T>::value,
-                             std::is_same<T, bool>::value> = traits::sfinae>
+  template <class T, traits::EnableIf<std::is_unsigned_v<T>,
+                                      std::is_same_v<T, bool>> = traits::sfinae>
   inline void loadValue(T& value) {
     std::istringstream is(itsNodes.top().node->value());
     is.setf(std::ios::boolalpha);
@@ -548,8 +547,7 @@ public:
 
   //! Loads a char (signed or unsigned) from the current top node
   template <class T,
-            traits::EnableIf<std::is_integral<T>::value,
-                             !std::is_same<T, bool>::value,
+            traits::EnableIf<std::is_integral_v<T>, !std::is_same_v<T, bool>,
                              sizeof(T) == sizeof(char)> = traits::sfinae>
   inline void loadValue(T& value) {
     value = *reinterpret_cast<T*>(itsNodes.top().node->value());
@@ -571,12 +569,11 @@ public:
 
   //! Loads a type best represented as an unsigned long from the current top
   //! node
-  template <
-      class T,
-      traits::EnableIf<
-          std::is_unsigned<T>::value, !std::is_same<T, bool>::value,
-          !std::is_same<T, char>::value, !std::is_same<T, unsigned char>::value,
-          sizeof(T) < sizeof(long long)> = traits::sfinae>
+  template <class T,
+            traits::EnableIf<std::is_unsigned_v<T>, !std::is_same_v<T, bool>,
+                             !std::is_same_v<T, char>,
+                             !std::is_same_v<T, unsigned char>,
+                             sizeof(T) < sizeof(long long)> = traits::sfinae>
   inline void loadValue(T& value) {
     value = static_cast<T>(std::stoul(itsNodes.top().node->value()));
   }
@@ -584,34 +581,32 @@ public:
   //! Loads a type best represented as an unsigned long long from the current
   //! top node
   template <class T,
-            traits::EnableIf<std::is_unsigned<T>::value,
-                             !std::is_same<T, bool>::value,
+            traits::EnableIf<std::is_unsigned_v<T>, !std::is_same_v<T, bool>,
                              sizeof(T) >= sizeof(long long)> = traits::sfinae>
   inline void loadValue(T& value) {
     value = static_cast<T>(std::stoull(itsNodes.top().node->value()));
   }
 
   //! Loads a type best represented as an int from the current top node
-  template <
-      class T,
-      traits::EnableIf<std::is_signed<T>::value, !std::is_same<T, char>::value,
-                       sizeof(T) <= sizeof(int)> = traits::sfinae>
+  template <class T,
+            traits::EnableIf<std::is_signed_v<T>, !std::is_same_v<T, char>,
+                             sizeof(T) <= sizeof(int)> = traits::sfinae>
   inline void loadValue(T& value) {
     value = static_cast<T>(std::stoi(itsNodes.top().node->value()));
   }
 
   //! Loads a type best represented as a long from the current top node
-  template <class T, traits::EnableIf<
-                         std::is_signed<T>::value, (sizeof(T) > sizeof(int)),
-                         sizeof(T) <= sizeof(long)> = traits::sfinae>
+  template <class T,
+            traits::EnableIf<std::is_signed_v<T>, (sizeof(T) > sizeof(int)),
+                             sizeof(T) <= sizeof(long)> = traits::sfinae>
   inline void loadValue(T& value) {
     value = static_cast<T>(std::stol(itsNodes.top().node->value()));
   }
 
   //! Loads a type best represented as a long long from the current top node
-  template <class T, traits::EnableIf<
-                         std::is_signed<T>::value, (sizeof(T) > sizeof(long)),
-                         sizeof(T) <= sizeof(long long)> = traits::sfinae>
+  template <class T,
+            traits::EnableIf<std::is_signed_v<T>, (sizeof(T) > sizeof(long)),
+                             sizeof(T) <= sizeof(long long)> = traits::sfinae>
   inline void loadValue(T& value) {
     value = static_cast<T>(std::stoll(itsNodes.top().node->value()));
   }
@@ -895,15 +890,13 @@ inline void CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar, SizeTag<T>& st) {
 
 // ######################################################################
 //! Saving for POD types to xml
-template <class T,
-          traits::EnableIf<std::is_arithmetic<T>::value> = traits::sfinae>
+template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
 inline void CEREAL_SAVE_FUNCTION_NAME(XMLOutputArchive& ar, T const& t) {
   ar.saveValue(t);
 }
 
 //! Loading for POD types from xml
-template <class T,
-          traits::EnableIf<std::is_arithmetic<T>::value> = traits::sfinae>
+template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
 inline void CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar, T& t) {
   ar.loadValue(t);
 }

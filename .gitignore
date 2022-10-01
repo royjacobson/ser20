@@ -29,6 +29,7 @@
 *.idb
 *\build_*
 .vs/
+.vscode/
 CMakeSettings.json
 
 # misc files mostly used for testing

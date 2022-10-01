@@ -128,7 +128,7 @@ public:
     this->operator()(options.is_little_endian());
   }
 
-  ~PortableBinaryOutputArchive() CEREAL_NOEXCEPT = default;
+  ~PortableBinaryOutputArchive() noexcept = default;
 
   //! Writes size bytes of data to the output stream
   template <std::streamsize DataSize>
@@ -237,7 +237,7 @@ public:
     itsConvertEndianness = options.is_little_endian() ^ streamLittleEndian;
   }
 
-  ~PortableBinaryInputArchive() CEREAL_NOEXCEPT = default;
+  ~PortableBinaryInputArchive() noexcept = default;
 
   //! Reads size bytes of data from the input stream
   /*! @param data The data to save
@@ -274,39 +274,39 @@ private:
 
 //! Saving for POD types to portable binary
 template <class T>
-inline typename std::enable_if<std::is_arithmetic<T>::value, void>::type
-CEREAL_SAVE_FUNCTION_NAME(PortableBinaryOutputArchive& ar, T const& t) {
+void CEREAL_SAVE_FUNCTION_NAME(PortableBinaryOutputArchive& ar,
+                               T const& t) requires(std::is_arithmetic_v<T>) {
   static_assert(
-      !std::is_floating_point<T>::value || (std::is_floating_point<T>::value &&
-                                            std::numeric_limits<T>::is_iec559),
+      !std::is_floating_point_v<T> ||
+          (std::is_floating_point_v<T> && std::numeric_limits<T>::is_iec559),
       "Portable binary only supports IEEE 754 standardized floating point");
   ar.template saveBinary<sizeof(T)>(std::addressof(t), sizeof(t));
 }
 
 //! Loading for POD types from portable binary
 template <class T>
-inline typename std::enable_if<std::is_arithmetic<T>::value, void>::type
-CEREAL_LOAD_FUNCTION_NAME(PortableBinaryInputArchive& ar, T& t) {
+void CEREAL_LOAD_FUNCTION_NAME(PortableBinaryInputArchive& ar,
+                               T& t) requires(std::is_arithmetic_v<T>) {
   static_assert(
-      !std::is_floating_point<T>::value || (std::is_floating_point<T>::value &&
-                                            std::numeric_limits<T>::is_iec559),
+      !std::is_floating_point_v<T> ||
+          (std::is_floating_point_v<T> && std::numeric_limits<T>::is_iec559),
       "Portable binary only supports IEEE 754 standardized floating point");
   ar.template loadBinary<sizeof(T)>(std::addressof(t), sizeof(t));
 }
 
 //! Serializing NVP types to portable binary
 template <class Archive, class T>
-inline CEREAL_ARCHIVE_RESTRICT(PortableBinaryInputArchive,
-                               PortableBinaryOutputArchive)
-    CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, NameValuePair<T>& t) {
+inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, NameValuePair<T>& t)
+    CEREAL_ARCHIVE_RESTRICT(PortableBinaryInputArchive,
+                            PortableBinaryOutputArchive) {
   ar(t.value);
 }
 
 //! Serializing SizeTags to portable binary
 template <class Archive, class T>
-inline CEREAL_ARCHIVE_RESTRICT(PortableBinaryInputArchive,
-                               PortableBinaryOutputArchive)
-    CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, SizeTag<T>& t) {
+inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, SizeTag<T>& t)
+    CEREAL_ARCHIVE_RESTRICT(PortableBinaryInputArchive,
+                            PortableBinaryOutputArchive) {
   ar(t.size);
 }
 
@@ -314,11 +314,10 @@ inline CEREAL_ARCHIVE_RESTRICT(PortableBinaryInputArchive,
 template <class T>
 inline void CEREAL_SAVE_FUNCTION_NAME(PortableBinaryOutputArchive& ar,
                                       BinaryData<T> const& bd) {
-  typedef typename std::remove_pointer<T>::type TT;
+  using TT = std::remove_pointer_t<T>;
   static_assert(
-      !std::is_floating_point<TT>::value ||
-          (std::is_floating_point<TT>::value &&
-           std::numeric_limits<TT>::is_iec559),
+      !std::is_floating_point_v<TT> ||
+          (std::is_floating_point_v<TT> && std::numeric_limits<TT>::is_iec559),
       "Portable binary only supports IEEE 754 standardized floating point");
 
   ar.template saveBinary<sizeof(TT)>(bd.data,
@@ -329,11 +328,10 @@ inline void CEREAL_SAVE_FUNCTION_NAME(PortableBinaryOutputArchive& ar,
 template <class T>
 inline void CEREAL_LOAD_FUNCTION_NAME(PortableBinaryInputArchive& ar,
                                       BinaryData<T>& bd) {
-  typedef typename std::remove_pointer<T>::type TT;
+  using TT = std::remove_pointer_t<T>;
   static_assert(
-      !std::is_floating_point<TT>::value ||
-          (std::is_floating_point<TT>::value &&
-           std::numeric_limits<TT>::is_iec559),
+      !std::is_floating_point_v<TT> ||
+          (std::is_floating_point_v<TT> && std::numeric_limits<TT>::is_iec559),
       "Portable binary only supports IEEE 754 standardized floating point");
 
   ar.template loadBinary<sizeof(TT)>(bd.data,

@@ -39,7 +39,7 @@ namespace base_class_detail {
 //! polymorphic.hpp when no polymorphism is used
 /*! @internal */
 template <class Base, class Derived,
-          bool IsPolymorphic = std::is_polymorphic<Base>::value>
+          bool IsPolymorphic = std::is_polymorphic_v<Base>>
 struct RegisterPolymorphicBaseClass {
   static void bind() {}
 };

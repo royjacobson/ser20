@@ -56,11 +56,7 @@ template <class Archive, class SetT> inline void load(Archive& ar, SetT& set) {
     typename SetT::key_type key;
 
     ar(key);
-#ifdef CEREAL_OLDER_GCC
-    hint = set.insert(hint, std::move(key));
-#else  // NOT CEREAL_OLDER_GCC
     hint = set.emplace_hint(hint, std::move(key));
-#endif // NOT CEREAL_OLDER_GCC
   }
 }
 } // namespace set_detail

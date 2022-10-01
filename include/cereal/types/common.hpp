@@ -62,7 +62,7 @@ struct enum_underlying_type : std::false_type {};
 /*! Specialization for when we actually have an enum
     @internal */
 template <class T> struct enum_underlying_type<T, true> {
-  using type = typename std::underlying_type<T>::type;
+  using type = std::underlying_type_t<T>;
 };
 } // namespace
 
@@ -75,11 +75,11 @@ template <class T> struct enum_underlying_type<T, true> {
     @internal */
 template <class T> class is_enum {
 private:
-  using DecayedT = typename std::decay<T>::type;
+  using DecayedT = std::decay_t<T>;
   using StrippedT = typename ::cereal::traits::strip_minimal<DecayedT>::type;
 
 public:
-  static const bool value = std::is_enum<StrippedT>::value;
+  static const bool value = std::is_enum_v<StrippedT>;
   using type = StrippedT;
   using base_type = typename enum_underlying_type<StrippedT, value>::type;
 };
@@ -115,12 +115,13 @@ inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive&, T*&) {
 
 //! Serialization for C style arrays
 template <class Archive, class T>
-inline typename std::enable_if<std::is_array<T>::value, void>::type
-CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, T& array) {
+inline void
+CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar,
+                               T& array) requires(std::is_array_v<T>) {
   common_detail::serializeArray(
       ar, array, std::integral_constant < bool,
-      traits::is_output_serializable<BinaryData<T>, Archive>::value&& std::
-              is_arithmetic<typename std::remove_all_extents<T>::type>::value >
+      traits::is_output_serializable_v<BinaryData<T>, Archive>&&
+              std::is_arithmetic_v < std::remove_all_extents_t < T >>>
           ());
 }
 } // namespace cereal

@@ -172,7 +172,7 @@ public:
   }
 
   //! Destructor, flushes the JSON
-  ~JSONOutputArchive() CEREAL_NOEXCEPT {
+  ~JSONOutputArchive() noexcept {
     if (itsNodeStack.top() == NodeType::InObject)
       itsWriter.EndObject();
     else if (itsNodeStack.top() == NodeType::InArray)
@@ -262,15 +262,14 @@ public:
   void saveValue(std::nullptr_t) { itsWriter.Null(); }
 
   template <class T>
-  inline typename std::enable_if<!std::is_same<T, int64_t>::value &&
-                                     std::is_same<T, long long>::value,
-                                 void>::type
+  inline typename std::enable_if<
+      !std::is_same_v<T, int64_t> && std::is_same_v<T, long long>, void>::type
   saveValue(T val) {
     itsWriter.Int64(val);
   }
   template <class T>
-  inline typename std::enable_if<!std::is_same<T, uint64_t>::value &&
-                                     std::is_same<T, unsigned long long>::value,
+  inline typename std::enable_if<!std::is_same_v<T, uint64_t> &&
+                                     std::is_same_v<T, unsigned long long>,
                                  void>::type
   saveValue(T val) {
     itsWriter.Uint64(val);
@@ -281,33 +280,29 @@ private:
   // flavors of longs, so we provide special overloads to handle these cases.
 
   //! 32 bit signed long saving to current node
-  template <class T,
-            traits::EnableIf<sizeof(T) == sizeof(std::int32_t),
-                             std::is_signed<T>::value> = traits::sfinae>
+  template <class T, traits::EnableIf<sizeof(T) == sizeof(std::int32_t),
+                                      std::is_signed_v<T>> = traits::sfinae>
   inline void saveLong(T l) {
     saveValue(static_cast<std::int32_t>(l));
   }
 
   //! non 32 bit signed long saving to current node
-  template <class T,
-            traits::EnableIf<sizeof(T) != sizeof(std::int32_t),
-                             std::is_signed<T>::value> = traits::sfinae>
+  template <class T, traits::EnableIf<sizeof(T) != sizeof(std::int32_t),
+                                      std::is_signed_v<T>> = traits::sfinae>
   inline void saveLong(T l) {
     saveValue(static_cast<std::int64_t>(l));
   }
 
   //! 32 bit unsigned long saving to current node
-  template <class T,
-            traits::EnableIf<sizeof(T) == sizeof(std::int32_t),
-                             std::is_unsigned<T>::value> = traits::sfinae>
+  template <class T, traits::EnableIf<sizeof(T) == sizeof(std::int32_t),
+                                      std::is_unsigned_v<T>> = traits::sfinae>
   inline void saveLong(T lu) {
     saveValue(static_cast<std::uint32_t>(lu));
   }
 
   //! non 32 bit unsigned long saving to current node
-  template <class T,
-            traits::EnableIf<sizeof(T) != sizeof(std::int32_t),
-                             std::is_unsigned<T>::value> = traits::sfinae>
+  template <class T, traits::EnableIf<sizeof(T) != sizeof(std::int32_t),
+                                      std::is_unsigned_v<T>> = traits::sfinae>
   inline void saveLong(T lu) {
     saveValue(static_cast<std::uint64_t>(lu));
   }
@@ -318,18 +313,17 @@ public:
   void saveValue(unsigned long lu) { saveLong(lu); };
 #else  // _MSC_VER
        //! Serialize a long if it would not be caught otherwise
-  template <class T, traits::EnableIf<std::is_same<T, long>::value,
-                                      !std::is_same<T, int>::value,
-                                      !std::is_same<T, std::int64_t>::value> =
-                         traits::sfinae>
+  template <class T,
+            traits::EnableIf<std::is_same_v<T, long>, !std::is_same_v<T, int>,
+                             !std::is_same_v<T, std::int64_t>> = traits::sfinae>
   inline void saveValue(T t) {
     saveLong(t);
   }
 
   //! Serialize an unsigned long if it would not be caught otherwise
-  template <class T, traits::EnableIf<std::is_same<T, unsigned long>::value,
-                                      !std::is_same<T, unsigned>::value,
-                                      !std::is_same<T, std::uint64_t>::value> =
+  template <class T, traits::EnableIf<std::is_same_v<T, unsigned long>,
+                                      !std::is_same_v<T, unsigned>,
+                                      !std::is_same_v<T, std::uint64_t>> =
                          traits::sfinae>
   inline void saveValue(T t) {
     saveLong(t);
@@ -339,16 +333,15 @@ public:
   //! Save exotic arithmetic as strings to current node
   /*! Handles long long (if distinct from other types), unsigned long (if
    * distinct), and long double */
-  template <class T,
-            traits::EnableIf<std::is_arithmetic<T>::value,
-                             !std::is_same<T, long>::value,
-                             !std::is_same<T, unsigned long>::value,
-                             !std::is_same<T, std::int64_t>::value,
-                             !std::is_same<T, std::uint64_t>::value,
-                             !std::is_same<T, long long>::value,
-                             !std::is_same<T, unsigned long long>::value,
-                             (sizeof(T) >= sizeof(long double) ||
-                              sizeof(T) >= sizeof(long long))> = traits::sfinae>
+  template <
+      class T,
+      traits::EnableIf<
+          std::is_arithmetic_v<T>, !std::is_same_v<T, long>,
+          !std::is_same_v<T, unsigned long>, !std::is_same_v<T, std::int64_t>,
+          !std::is_same_v<T, std::uint64_t>, !std::is_same_v<T, long long>,
+          !std::is_same_v<T, unsigned long long>,
+          (sizeof(T) >= sizeof(long double) ||
+           sizeof(T) >= sizeof(long long))> = traits::sfinae>
   inline void saveValue(T const& t) {
     std::stringstream ss;
     ss.precision(std::numeric_limits<long double>::max_digits10);
@@ -483,7 +476,7 @@ public:
                                     itsDocument.MemberEnd());
   }
 
-  ~JSONInputArchive() CEREAL_NOEXCEPT = default;
+  ~JSONInputArchive() noexcept = default;
 
   //! Loads some binary data, encoded as a base64 string
   /*! This will automatically start and finish a node to load the data, and can
@@ -663,8 +656,8 @@ public:
 
   //! Loads a value from the current node - small signed overload
   template <class T,
-            traits::EnableIf<std::is_signed<T>::value,
-                             sizeof(T) < sizeof(int64_t)> = traits::sfinae>
+            traits::EnableIf<std::is_signed_v<T>, sizeof(T) < sizeof(int64_t)> =
+                traits::sfinae>
   inline void loadValue(T& val) {
     search();
 
@@ -673,10 +666,9 @@ public:
   }
 
   //! Loads a value from the current node - small unsigned overload
-  template <
-      class T,
-      traits::EnableIf<std::is_unsigned<T>::value, sizeof(T) < sizeof(uint64_t),
-                       !std::is_same<bool, T>::value> = traits::sfinae>
+  template <class T, traits::EnableIf<
+                         std::is_unsigned_v<T>, sizeof(T) < sizeof(uint64_t),
+                         !std::is_same_v<bool, T>> = traits::sfinae>
   inline void loadValue(T& val) {
     search();
 
@@ -728,17 +720,16 @@ public:
   }
 
   template <class T>
-  inline typename std::enable_if<!std::is_same<T, int64_t>::value &&
-                                     std::is_same<T, long long>::value,
-                                 void>::type
+  inline typename std::enable_if<
+      !std::is_same_v<T, int64_t> && std::is_same_v<T, long long>, void>::type
   loadValue(T& val) {
     search();
     val = itsIteratorStack.back().value().GetInt64();
     ++itsIteratorStack.back();
   }
   template <class T>
-  inline typename std::enable_if<!std::is_same<T, uint64_t>::value &&
-                                     std::is_same<T, unsigned long long>::value,
+  inline typename std::enable_if<!std::is_same_v<T, uint64_t> &&
+                                     std::is_same_v<T, unsigned long long>,
                                  void>::type
   loadValue(T& val) {
     search();
@@ -753,7 +744,7 @@ private:
   //! 32 bit signed long loading from current node
   template <class T>
   inline typename std::enable_if<
-      sizeof(T) == sizeof(std::int32_t) && std::is_signed<T>::value, void>::type
+      sizeof(T) == sizeof(std::int32_t) && std::is_signed_v<T>, void>::type
   loadLong(T& l) {
     loadValue(reinterpret_cast<std::int32_t&>(l));
   }
@@ -761,25 +752,23 @@ private:
   //! non 32 bit signed long loading from current node
   template <class T>
   inline typename std::enable_if<
-      sizeof(T) == sizeof(std::int64_t) && std::is_signed<T>::value, void>::type
+      sizeof(T) == sizeof(std::int64_t) && std::is_signed_v<T>, void>::type
   loadLong(T& l) {
     loadValue(reinterpret_cast<std::int64_t&>(l));
   }
 
   //! 32 bit unsigned long loading from current node
   template <class T>
-  inline typename std::enable_if<sizeof(T) == sizeof(std::uint32_t) &&
-                                     !std::is_signed<T>::value,
-                                 void>::type
+  inline typename std::enable_if<
+      sizeof(T) == sizeof(std::uint32_t) && !std::is_signed_v<T>, void>::type
   loadLong(T& lu) {
     loadValue(reinterpret_cast<std::uint32_t&>(lu));
   }
 
   //! non 32 bit unsigned long loading from current node
   template <class T>
-  inline typename std::enable_if<sizeof(T) == sizeof(std::uint64_t) &&
-                                     !std::is_signed<T>::value,
-                                 void>::type
+  inline typename std::enable_if<
+      sizeof(T) == sizeof(std::uint64_t) && !std::is_signed_v<T>, void>::type
   loadLong(T& lu) {
     loadValue(reinterpret_cast<std::uint64_t&>(lu));
   }
@@ -787,9 +776,9 @@ private:
 public:
   //! Serialize a long if it would not be caught otherwise
   template <class T>
-  inline typename std::enable_if<std::is_same<T, long>::value &&
+  inline typename std::enable_if<std::is_same_v<T, long> &&
                                      sizeof(T) >= sizeof(std::int64_t) &&
-                                     !std::is_same<T, std::int64_t>::value,
+                                     !std::is_same_v<T, std::int64_t>,
                                  void>::type
   loadValue(T& t) {
     loadLong(t);
@@ -797,9 +786,9 @@ public:
 
   //! Serialize an unsigned long if it would not be caught otherwise
   template <class T>
-  inline typename std::enable_if<std::is_same<T, unsigned long>::value &&
+  inline typename std::enable_if<std::is_same_v<T, unsigned long> &&
                                      sizeof(T) >= sizeof(std::uint64_t) &&
-                                     !std::is_same<T, std::uint64_t>::value,
+                                     !std::is_same_v<T, std::uint64_t>,
                                  void>::type
   loadValue(T& t) {
     loadLong(t);
@@ -822,16 +811,15 @@ private:
 
 public:
   //! Loads a value from the current node - long double and long long overloads
-  template <class T,
-            traits::EnableIf<std::is_arithmetic<T>::value,
-                             !std::is_same<T, long>::value,
-                             !std::is_same<T, unsigned long>::value,
-                             !std::is_same<T, std::int64_t>::value,
-                             !std::is_same<T, std::uint64_t>::value,
-                             !std::is_same<T, long long>::value,
-                             !std::is_same<T, unsigned long long>::value,
-                             (sizeof(T) >= sizeof(long double) ||
-                              sizeof(T) >= sizeof(long long))> = traits::sfinae>
+  template <
+      class T,
+      traits::EnableIf<
+          std::is_arithmetic_v<T>, !std::is_same_v<T, long>,
+          !std::is_same_v<T, unsigned long>, !std::is_same_v<T, std::int64_t>,
+          !std::is_same_v<T, std::uint64_t>, !std::is_same_v<T, long long>,
+          !std::is_same_v<T, unsigned long long>,
+          (sizeof(T) >= sizeof(long double) ||
+           sizeof(T) >= sizeof(long long))> = traits::sfinae>
   inline void loadValue(T& val) {
     std::string encoded;
     loadValue(encoded);
@@ -929,7 +917,7 @@ template <class T> inline void epilogue(JSONInputArchive&, SizeTag<T> const&) {}
 
     Minimal types do not start or finish nodes */
 template <class T,
-          traits::EnableIf<!std::is_arithmetic<T>::value,
+          traits::EnableIf<!std::is_arithmetic_v<T>,
                            !traits::has_minimal_base_class_serialization<
                                T, traits::has_minimal_output_serialization,
                                JSONOutputArchive>::value,
@@ -941,7 +929,7 @@ inline void prologue(JSONOutputArchive& ar, T const&) {
 
 //! Prologue for all other types for JSON archives
 template <class T,
-          traits::EnableIf<!std::is_arithmetic<T>::value,
+          traits::EnableIf<!std::is_arithmetic_v<T>,
                            !traits::has_minimal_base_class_serialization<
                                T, traits::has_minimal_input_serialization,
                                JSONInputArchive>::value,
@@ -957,7 +945,7 @@ inline void prologue(JSONInputArchive& ar, T const&) {
 
     Minimal types do not start or finish nodes */
 template <class T,
-          traits::EnableIf<!std::is_arithmetic<T>::value,
+          traits::EnableIf<!std::is_arithmetic_v<T>,
                            !traits::has_minimal_base_class_serialization<
                                T, traits::has_minimal_output_serialization,
                                JSONOutputArchive>::value,
@@ -969,7 +957,7 @@ inline void epilogue(JSONOutputArchive& ar, T const&) {
 
 //! Epilogue for all other types other for JSON archives
 template <class T,
-          traits::EnableIf<!std::is_arithmetic<T>::value,
+          traits::EnableIf<!std::is_arithmetic_v<T>,
                            !traits::has_minimal_base_class_serialization<
                                T, traits::has_minimal_input_serialization,
                                JSONInputArchive>::value,
@@ -997,26 +985,22 @@ inline void epilogue(JSONInputArchive&, std::nullptr_t const&) {}
 
 // ######################################################################
 //! Prologue for arithmetic types for JSON archives
-template <class T,
-          traits::EnableIf<std::is_arithmetic<T>::value> = traits::sfinae>
+template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
 inline void prologue(JSONOutputArchive& ar, T const&) {
   ar.writeName();
 }
 
 //! Prologue for arithmetic types for JSON archives
-template <class T,
-          traits::EnableIf<std::is_arithmetic<T>::value> = traits::sfinae>
+template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
 inline void prologue(JSONInputArchive&, T const&) {}
 
 // ######################################################################
 //! Epilogue for arithmetic types for JSON archives
-template <class T,
-          traits::EnableIf<std::is_arithmetic<T>::value> = traits::sfinae>
+template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
 inline void epilogue(JSONOutputArchive&, T const&) {}
 
 //! Epilogue for arithmetic types for JSON archives
-template <class T,
-          traits::EnableIf<std::is_arithmetic<T>::value> = traits::sfinae>
+template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
 inline void epilogue(JSONInputArchive&, T const&) {}
 
 // ######################################################################
@@ -1073,15 +1057,13 @@ inline void CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar, std::nullptr_t& t) {
 }
 
 //! Saving for arithmetic to JSON
-template <class T,
-          traits::EnableIf<std::is_arithmetic<T>::value> = traits::sfinae>
+template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
 inline void CEREAL_SAVE_FUNCTION_NAME(JSONOutputArchive& ar, T const& t) {
   ar.saveValue(t);
 }
 
 //! Loading arithmetic from JSON
-template <class T,
-          traits::EnableIf<std::is_arithmetic<T>::value> = traits::sfinae>
+template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
 inline void CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar, T& t) {
   ar.loadValue(t);
 }

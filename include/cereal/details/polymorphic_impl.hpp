@@ -47,6 +47,7 @@
 #ifndef CEREAL_DETAILS_POLYMORPHIC_IMPL_HPP_
 #define CEREAL_DETAILS_POLYMORPHIC_IMPL_HPP_
 
+#include "cereal/details/util.hpp"
 #include "cereal/details/polymorphic_impl_fwd.hpp"
 #include "cereal/details/static_object.hpp"
 #include "cereal/types/memory.hpp"
@@ -72,7 +73,6 @@
     have been registered with CEREAL_REGISTER_ARCHIVE.  This must be called
     after all archives are registered (usually after the archives themselves
     have been included). */
-#ifdef CEREAL_HAS_CPP17
 #define CEREAL_BIND_TO_ARCHIVES(...)                                           \
   namespace cereal {                                                           \
   namespace detail {                                                           \
@@ -85,21 +85,6 @@
   };                                                                           \
   }                                                                            \
   } /* end namespaces */
-#else
-#define CEREAL_BIND_TO_ARCHIVES(...)                                           \
-  namespace cereal {                                                           \
-  namespace detail {                                                           \
-  template <> struct init_binding<__VA_ARGS__> {                               \
-    static bind_to_archives<__VA_ARGS__> const& b;                             \
-    CEREAL_BIND_TO_ARCHIVES_UNUSED_FUNCTION                                    \
-  };                                                                           \
-  bind_to_archives<__VA_ARGS__> const& init_binding<__VA_ARGS__>::b =          \
-      ::cereal::detail::StaticObject<                                          \
-          bind_to_archives<__VA_ARGS__>>::getInstance()                        \
-          .bind();                                                             \
-  }                                                                            \
-  } /* end namespaces */
-#endif
 
 namespace cereal {
 /* Polymorphic casting support */
@@ -121,11 +106,9 @@ struct PolymorphicCaster {
   PolymorphicCaster() = default;
   PolymorphicCaster(const PolymorphicCaster&) = default;
   PolymorphicCaster& operator=(const PolymorphicCaster&) = default;
-  PolymorphicCaster(PolymorphicCaster&&) CEREAL_NOEXCEPT {}
-  PolymorphicCaster& operator=(PolymorphicCaster&&) CEREAL_NOEXCEPT {
-    return *this;
-  }
-  virtual ~PolymorphicCaster() CEREAL_NOEXCEPT = default;
+  PolymorphicCaster(PolymorphicCaster&&) noexcept {}
+  PolymorphicCaster& operator=(PolymorphicCaster&&) noexcept { return *this; }
+  virtual ~PolymorphicCaster() noexcept = default;
 
   //! Downcasts to the proper derived type
   virtual void const* downcast(void const* const ptr) const = 0;
@@ -265,12 +248,7 @@ struct PolymorphicCasters {
 #undef UNREGISTERED_POLYMORPHIC_CAST_EXCEPTION
 };
 
-#ifdef CEREAL_OLDER_GCC
-#define CEREAL_EMPLACE_MAP(map, key, value)                                    \
-  map.insert(std::make_pair(std::move(key), std::move(value)));
-#else // NOT CEREAL_OLDER_GCC
 #define CEREAL_EMPLACE_MAP(map, key, value) map.emplace(key, value);
-#endif // NOT_CEREAL_OLDER_GCC
 
 //! Strongly typed derivation of PolymorphicCaster
 template <class Base, class Derived>
@@ -397,15 +375,10 @@ struct PolymorphicVirtualCaster : PolymorphicCaster {
                                          std::vector<PolymorphicCaster const*>>{
                     finalChild, std::move(path)};
 
-// Insert the new path if it doesn't exist, otherwise this will just lookup
-// where to do the replacement
-#ifdef CEREAL_OLDER_GCC
-                auto old = unregisteredRelations.insert(
-                    hint, std::make_pair(parent, newPath));
-#else  // NOT CEREAL_OLDER_GCC
+                // Insert the new path if it doesn't exist, otherwise this will
+                // just lookup where to do the replacement
                 auto old =
                     unregisteredRelations.emplace_hint(hint, parent, newPath);
-#endif // NOT CEREAL_OLDER_GCC
 
                 // If there was an uncommitted path, we need to perform a
                 // replacement
@@ -469,21 +442,13 @@ struct PolymorphicVirtualCaster : PolymorphicCaster {
    cereal::virtual_base_class instantiations. For cases where neither is called,
    see the CEREAL_REGISTER_POLYMORPHIC_RELATION macro */
 template <class Base, class Derived> struct RegisterPolymorphicCaster {
-  static PolymorphicCaster const*
-  bind(std::true_type /* is_polymorphic<Base> */) {
-    return &StaticObject<
-        PolymorphicVirtualCaster<Base, Derived>>::getInstance();
-  }
-
-  static PolymorphicCaster const*
-  bind(std::false_type /* is_polymorphic<Base> */) {
-    return nullptr;
-  }
-
   //! Performs registration (binding) between Base and Derived
   /*! If the type is not polymorphic, nothing will happen */
   static PolymorphicCaster const* bind() {
-    return bind(typename std::is_polymorphic<Base>::type());
+    return std::is_polymorphic_v<Base>
+               ? &StaticObject<
+                     PolymorphicVirtualCaster<Base, Derived>>::getInstance()
+               : nullptr;
   }
 };
 } // namespace detail
@@ -807,13 +772,15 @@ CEREAL_DLL_EXPORT void
 polymorphic_serialization_support<Archive, T>::instantiate() {
   create_bindings<Archive, T>::save(
       std::integral_constant < bool,
-      std::is_base_of<detail::OutputArchiveBase, Archive>::value&&
-              traits::is_output_serializable<T, Archive>::value > {});
+      std::is_base_of_v<detail::OutputArchiveBase, Archive>&&
+              traits::is_output_serializable_v < T,
+      Archive >> {});
 
   create_bindings<Archive, T>::load(
       std::integral_constant < bool,
-      std::is_base_of<detail::InputArchiveBase, Archive>::value&&
-              traits::is_input_serializable<T, Archive>::value > {});
+      std::is_base_of_v<detail::InputArchiveBase, Archive>&&
+              traits::is_input_serializable_v < T,
+      Archive >> {});
 }
 
 //! Begins the binding process of a type to all registered archives
@@ -836,7 +803,7 @@ struct bind_to_archives {
   /*! If T is abstract, we will not serialize it and thus
       do not need to make a binding */
   bind_to_archives const& bind() const {
-    static_assert(std::is_polymorphic<T>::value,
+    static_assert(std::is_polymorphic_v<T>,
                   "Attempting to register non polymorphic type");
     bind(std::is_abstract<T>());
     return *this;

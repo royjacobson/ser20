@@ -38,8 +38,8 @@ namespace cereal {
 //! serialization, if supported
 template <class Archive, class T, class A>
 inline typename std::enable_if<
-    traits::is_output_serializable<BinaryData<T>, Archive>::value &&
-        std::is_arithmetic<T>::value && !std::is_same<T, bool>::value,
+    traits::is_output_serializable_v<BinaryData<T>, Archive> &&
+        std::is_arithmetic_v<T> && !std::is_same_v<T, bool>,
     void>::type
 CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::vector<T, A> const& vector) {
   ar(make_size_tag(
@@ -51,8 +51,8 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::vector<T, A> const& vector) {
 //! serialization, if supported
 template <class Archive, class T, class A>
 inline typename std::enable_if<
-    traits::is_input_serializable<BinaryData<T>, Archive>::value &&
-        std::is_arithmetic<T>::value && !std::is_same<T, bool>::value,
+    traits::is_input_serializable_v<BinaryData<T>, Archive> &&
+        std::is_arithmetic_v<T> && !std::is_same_v<T, bool>,
     void>::type
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::vector<T, A>& vector) {
   size_type vectorSize;
@@ -66,9 +66,8 @@ CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::vector<T, A>& vector) {
 //! Serialization for non-arithmetic vector types
 template <class Archive, class T, class A>
 inline typename std::enable_if<
-    (!traits::is_output_serializable<BinaryData<T>, Archive>::value ||
-     !std::is_arithmetic<T>::value) &&
-        !std::is_same<T, bool>::value,
+    (!traits::is_output_serializable_v<BinaryData<T>, Archive> ||
+     !std::is_arithmetic_v<T>)&&!std::is_same_v<T, bool>,
     void>::type
 CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::vector<T, A> const& vector) {
   ar(make_size_tag(
@@ -80,9 +79,8 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::vector<T, A> const& vector) {
 //! Serialization for non-arithmetic vector types
 template <class Archive, class T, class A>
 inline typename std::enable_if<
-    (!traits::is_input_serializable<BinaryData<T>, Archive>::value ||
-     !std::is_arithmetic<T>::value) &&
-        !std::is_same<T, bool>::value,
+    (!traits::is_input_serializable_v<BinaryData<T>, Archive> ||
+     !std::is_arithmetic_v<T>)&&!std::is_same_v<T, bool>,
     void>::type
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::vector<T, A>& vector) {
   size_type size;

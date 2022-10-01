@@ -168,7 +168,7 @@ inline void epilogue(Archive& /* archive */, T const& /* data */) {}
       static error will occur - the error will propogate silently and your
       intended serialization functions may not be called.  You can manually
       ensure that your classes that have custom serialization are correct
-      by using the traits is_output_serializable and is_input_serializable
+      by using the traits is_output_serializable_v and is_input_serializable_v
       in cereal/details/traits.hpp.
     @ingroup Internal */
 enum Flags { AllowEmptyClassElision = 1 };
@@ -254,7 +254,6 @@ enum Flags { AllowEmptyClassElision = 1 };
 //! On C++17, define the StaticObject as inline to merge the definitions across
 //! TUs This prevents multiple definition errors when this macro appears in a
 //! header file included in multiple TUs.
-#ifdef CEREAL_HAS_CPP17
 #define CEREAL_CLASS_VERSION(TYPE, VERSION_NUMBER)                             \
   namespace cereal {                                                           \
   namespace detail {                                                           \
@@ -269,25 +268,6 @@ enum Flags { AllowEmptyClassElision = 1 };
   }; /* end Version */                                                         \
   }                                                                            \
   } // end namespaces
-#else
-#define CEREAL_CLASS_VERSION(TYPE, VERSION_NUMBER)                             \
-  namespace cereal {                                                           \
-  namespace detail {                                                           \
-  template <> struct Version<TYPE> {                                           \
-    static const std::uint32_t version;                                        \
-    static std::uint32_t registerVersion() {                                   \
-      ::cereal::detail::StaticObject<Versions>::getInstance().mapping.emplace( \
-          std::type_index(typeid(TYPE)).hash_code(), VERSION_NUMBER);          \
-      return VERSION_NUMBER;                                                   \
-    }                                                                          \
-    CEREAL_UNUSED_FUNCTION                                                     \
-  }; /* end Version */                                                         \
-  const std::uint32_t Version<TYPE>::version =                                 \
-      Version<TYPE>::registerVersion();                                        \
-  }                                                                            \
-  } // end namespaces
-
-#endif
 
 // ######################################################################
 //! The base output archive class
@@ -430,10 +410,8 @@ private:
   }
 
   //! Unwinds to process all data
-  template <class T, class... Other>
-  inline void process(T&& head, Other&&... tail) {
-    self->process(std::forward<T>(head));
-    self->process(std::forward<Other>(tail)...);
+  template <class... Args> inline void process(Args&&... args) {
+    (self->process(std::forward<Args>(args)), ...);
   }
 
   //! Serialization of a virtual_base_class wrapper
@@ -473,61 +451,60 @@ private:
         is specialized for this type of function OR
         has no specialization at all */
 #define PROCESS_IF(name)                                                       \
-  traits::EnableIf<                                                            \
-      traits::has_##name<T, ArchiveType>::value,                               \
-      !traits::has_invalid_output_versioning<T, ArchiveType>::value,           \
-      (traits::is_output_serializable<T, ArchiveType>::value &&                \
-       (traits::is_specialized_##name<T, ArchiveType>::value ||                \
-        !traits::is_specialized<T, ArchiveType>::value))> = traits::sfinae
+  requires(traits::has_##name##_v<T, ArchiveType> &&                           \
+           !traits::has_invalid_output_versioning_v<T, ArchiveType> &&         \
+           (traits::is_output_serializable_v<T, ArchiveType> &&                \
+            (traits::is_specialized_##name<T, ArchiveType>::value ||           \
+             !traits::is_specialized<T, ArchiveType>::value)))
 
   //! Member serialization
-  template <class T, PROCESS_IF(member_serialize)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t) PROCESS_IF(member_serialize) {
     access::member_serialize(*self, const_cast<T&>(t));
     return *self;
   }
 
   //! Non member serialization
-  template <class T, PROCESS_IF(non_member_serialize)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t) PROCESS_IF(non_member_serialize) {
     CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T&>(t));
     return *self;
   }
 
   //! Member split (save)
-  template <class T, PROCESS_IF(member_save)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t) PROCESS_IF(member_save) {
     access::member_save(*self, t);
     return *self;
   }
 
   //! Non member split (save)
-  template <class T, PROCESS_IF(non_member_save)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t) PROCESS_IF(non_member_save) {
     CEREAL_SAVE_FUNCTION_NAME(*self, t);
     return *self;
   }
 
   //! Member split (save_minimal)
-  template <class T, PROCESS_IF(member_save_minimal)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t) PROCESS_IF(member_save_minimal) {
     self->process(access::member_save_minimal(*self, t));
     return *self;
   }
 
   //! Non member split (save_minimal)
-  template <class T, PROCESS_IF(non_member_save_minimal)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(non_member_save_minimal) {
     self->process(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t));
     return *self;
   }
 
   //! Empty class specialization
-  template <class T, traits::EnableIf<
-                         (Flags & AllowEmptyClassElision),
-                         !traits::is_output_serializable<T, ArchiveType>::value,
-                         std::is_empty<T>::value> = traits::sfinae>
-  inline ArchiveType& processImpl(T const&) {
+  template <class T>
+  inline ArchiveType& processImpl(T const&) requires(
+      bool(Flags& AllowEmptyClassElision) &&
+      !traits::is_output_serializable_v<T, ArchiveType> && std::is_empty_v<T>) {
     return *self;
   }
 
@@ -536,16 +513,14 @@ private:
       we are not output serializable, and either
       don't allow empty class ellision or allow it but are not serializing an
      empty class */
-  template <class T,
-            traits::EnableIf<
-                traits::has_invalid_output_versioning<T, ArchiveType>::value ||
-                (!traits::is_output_serializable<T, ArchiveType>::value &&
-                 (!(Flags & AllowEmptyClassElision) ||
-                  ((Flags & AllowEmptyClassElision) &&
-                   !std::is_empty<T>::value)))> = traits::sfinae>
-  inline ArchiveType& processImpl(T const&) {
+  template <class T>
+  inline ArchiveType& processImpl(T const&) requires(
+      traits::has_invalid_output_versioning_v<T, ArchiveType> ||
+      (!traits::is_output_serializable_v<T, ArchiveType> &&
+       (!bool(Flags & AllowEmptyClassElision) ||
+        (bool(Flags & AllowEmptyClassElision) && !std::is_empty_v<T>)))) {
     static_assert(
-        traits::detail::count_output_serializers<T, ArchiveType>::value != 0,
+        traits::detail::count_output_serializers<T, ArchiveType> != 0,
         "cereal could not find any output serialization functions for the "
         "provided type and archive combination. \n\n "
         "Types must either have a serialize function, load/save pair, or "
@@ -558,7 +533,7 @@ private:
         "  } \n\n ");
 
     static_assert(
-        traits::detail::count_output_serializers<T, ArchiveType>::value < 2,
+        traits::detail::count_output_serializers<T, ArchiveType> < 2,
         "cereal found more than one compatible output serialization function "
         "for the provided type and archive combination. \n\n "
         "Types must either have a serialize function, load/save pair, or "
@@ -595,8 +570,9 @@ private:
 
   //! Member serialization
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(member_versioned_serialize)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(member_versioned_serialize) {
     access::member_serialize(*self, const_cast<T&>(t),
                              registerClassVersion<T>());
     return *self;
@@ -604,8 +580,9 @@ private:
 
   //! Non member serialization
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(non_member_versioned_serialize)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(non_member_versioned_serialize) {
     CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T&>(t),
                                    registerClassVersion<T>());
     return *self;
@@ -613,24 +590,27 @@ private:
 
   //! Member split (save)
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(member_versioned_save)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(member_versioned_save) {
     access::member_save(*self, t, registerClassVersion<T>());
     return *self;
   }
 
   //! Non member split (save)
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(non_member_versioned_save)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(non_member_versioned_save) {
     CEREAL_SAVE_FUNCTION_NAME(*self, t, registerClassVersion<T>());
     return *self;
   }
 
   //! Member split (save_minimal)
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(member_versioned_save_minimal)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(member_versioned_save_minimal) {
     self->process(
         access::member_save_minimal(*self, t, registerClassVersion<T>()));
     return *self;
@@ -638,8 +618,9 @@ private:
 
   //! Non member split (save_minimal)
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(non_member_versioned_save_minimal)>
-  inline ArchiveType& processImpl(T const& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(non_member_versioned_save_minimal) {
     self->process(
         CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t, registerClassVersion<T>()));
     return *self;
@@ -836,10 +817,8 @@ private:
   }
 
   //! Unwinds to process all data
-  template <class T, class... Other>
-  inline void process(T&& head, Other&&... tail) {
-    process(std::forward<T>(head));
-    process(std::forward<Other>(tail)...);
+  template <class... Args> inline void process(Args&&... args) {
+    (process(std::forward<Args>(args)), ...);
   }
 
   //! Serialization of a virtual_base_class wrapper
@@ -878,44 +857,43 @@ private:
         is specialized for this type of function OR
         has no specialization at all */
 #define PROCESS_IF(name)                                                       \
-  traits::EnableIf<                                                            \
-      traits::has_##name<T, ArchiveType>::value,                               \
-      !traits::has_invalid_input_versioning<T, ArchiveType>::value,            \
-      (traits::is_input_serializable<T, ArchiveType>::value &&                 \
-       (traits::is_specialized_##name<T, ArchiveType>::value ||                \
-        !traits::is_specialized<T, ArchiveType>::value))> = traits::sfinae
+  requires(traits::has_##name##_v<T, ArchiveType> &&                           \
+           !traits::has_invalid_input_versioning_v<T, ArchiveType> &&          \
+           (traits::is_input_serializable_v<T, ArchiveType> &&                 \
+            (traits::is_specialized_##name<T, ArchiveType>::value ||           \
+             !traits::is_specialized<T, ArchiveType>::value)))
 
   //! Member serialization
-  template <class T, PROCESS_IF(member_serialize)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_serialize) {
     access::member_serialize(*self, t);
     return *self;
   }
 
   //! Non member serialization
-  template <class T, PROCESS_IF(non_member_serialize)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_serialize) {
     CEREAL_SERIALIZE_FUNCTION_NAME(*self, t);
     return *self;
   }
 
   //! Member split (load)
-  template <class T, PROCESS_IF(member_load)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_load) {
     access::member_load(*self, t);
     return *self;
   }
 
   //! Non member split (load)
-  template <class T, PROCESS_IF(non_member_load)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_load) {
     CEREAL_LOAD_FUNCTION_NAME(*self, t);
     return *self;
   }
 
   //! Member split (load_minimal)
-  template <class T, PROCESS_IF(member_load_minimal)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     typename traits::has_member_save_minimal<T, OutArchiveType>::type value;
@@ -925,8 +903,8 @@ private:
   }
 
   //! Non member split (load_minimal)
-  template <class T, PROCESS_IF(non_member_load_minimal)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     typename traits::has_non_member_save_minimal<T, OutArchiveType>::type value;
@@ -936,10 +914,10 @@ private:
   }
 
   //! Empty class specialization
-  template <class T, traits::EnableIf<
-                         (Flags & AllowEmptyClassElision),
-                         !traits::is_input_serializable<T, ArchiveType>::value,
-                         std::is_empty<T>::value> = traits::sfinae>
+  template <class T,
+            traits::EnableIf<(Flags & AllowEmptyClassElision),
+                             !traits::is_input_serializable_v<T, ArchiveType>,
+                             std::is_empty_v<T>> = traits::sfinae>
   inline ArchiveType& processImpl(T const&) {
     return *self;
   }
@@ -949,13 +927,13 @@ private:
       we are not input serializable, and either
       don't allow empty class ellision or allow it but are not serializing an
      empty class */
-  template <class T,
-            traits::EnableIf<
-                traits::has_invalid_input_versioning<T, ArchiveType>::value ||
-                (!traits::is_input_serializable<T, ArchiveType>::value &&
-                 (!(Flags & AllowEmptyClassElision) ||
-                  ((Flags & AllowEmptyClassElision) &&
-                   !std::is_empty<T>::value)))> = traits::sfinae>
+  template <
+      class T,
+      traits::EnableIf<traits::has_invalid_input_versioning_v<T, ArchiveType> ||
+                       (!traits::is_input_serializable_v<T, ArchiveType> &&
+                        (!(Flags & AllowEmptyClassElision) ||
+                         ((Flags & AllowEmptyClassElision) &&
+                          !std::is_empty_v<T>)))> = traits::sfinae>
   inline ArchiveType& processImpl(T const&) {
     static_assert(
         traits::detail::count_input_serializers<T, ArchiveType>::value != 0,
@@ -1014,8 +992,8 @@ private:
 
   //! Member serialization
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(member_versioned_serialize)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_versioned_serialize) {
     const auto version = loadClassVersion<T>();
     access::member_serialize(*self, t, version);
     return *self;
@@ -1023,8 +1001,9 @@ private:
 
   //! Non member serialization
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(non_member_versioned_serialize)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t)
+      PROCESS_IF(non_member_versioned_serialize) {
     const auto version = loadClassVersion<T>();
     CEREAL_SERIALIZE_FUNCTION_NAME(*self, t, version);
     return *self;
@@ -1032,8 +1011,8 @@ private:
 
   //! Member split (load)
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(member_versioned_load)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_versioned_load) {
     const auto version = loadClassVersion<T>();
     access::member_load(*self, t, version);
     return *self;
@@ -1041,8 +1020,8 @@ private:
 
   //! Non member split (load)
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(non_member_versioned_load)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_versioned_load) {
     const auto version = loadClassVersion<T>();
     CEREAL_LOAD_FUNCTION_NAME(*self, t, version);
     return *self;
@@ -1050,8 +1029,9 @@ private:
 
   //! Member split (load_minimal)
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(member_versioned_load_minimal)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t)
+      PROCESS_IF(member_versioned_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     const auto version = loadClassVersion<T>();
@@ -1064,8 +1044,9 @@ private:
 
   //! Non member split (load_minimal)
   /*! Versioning implementation */
-  template <class T, PROCESS_IF(non_member_versioned_load_minimal)>
-  inline ArchiveType& processImpl(T& t) {
+  template <class T>
+  inline ArchiveType& processImpl(T& t)
+      PROCESS_IF(non_member_versioned_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     const auto version = loadClassVersion<T>();

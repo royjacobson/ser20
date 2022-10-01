@@ -57,7 +57,7 @@ public:
       : OutputArchive<BinaryOutputArchive, AllowEmptyClassElision>(this),
         itsStream(stream) {}
 
-  ~BinaryOutputArchive() CEREAL_NOEXCEPT = default;
+  ~BinaryOutputArchive() noexcept = default;
 
   //! Writes size bytes of data to the output stream
   void saveBinary(const void* data, std::streamsize size) {
@@ -93,7 +93,7 @@ public:
       : InputArchive<BinaryInputArchive, AllowEmptyClassElision>(this),
         itsStream(stream) {}
 
-  ~BinaryInputArchive() CEREAL_NOEXCEPT = default;
+  ~BinaryInputArchive() noexcept = default;
 
   //! Reads size bytes of data from the input stream
   void loadBinary(void* const data, std::streamsize size) {
@@ -115,29 +115,30 @@ private:
 
 //! Saving for POD types to binary
 template <class T>
-inline typename std::enable_if<std::is_arithmetic<T>::value, void>::type
-CEREAL_SAVE_FUNCTION_NAME(BinaryOutputArchive& ar, T const& t) {
+inline void
+CEREAL_SAVE_FUNCTION_NAME(BinaryOutputArchive& ar,
+                          T const& t) requires(std::is_arithmetic_v<T>) {
   ar.saveBinary(std::addressof(t), sizeof(t));
 }
 
 //! Loading for POD types from binary
 template <class T>
-inline typename std::enable_if<std::is_arithmetic<T>::value, void>::type
-CEREAL_LOAD_FUNCTION_NAME(BinaryInputArchive& ar, T& t) {
+inline void CEREAL_LOAD_FUNCTION_NAME(BinaryInputArchive& ar,
+                                      T& t) requires(std::is_arithmetic_v<T>) {
   ar.loadBinary(std::addressof(t), sizeof(t));
 }
 
 //! Serializing NVP types to binary
 template <class Archive, class T>
-inline CEREAL_ARCHIVE_RESTRICT(BinaryInputArchive, BinaryOutputArchive)
-    CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, NameValuePair<T>& t) {
+inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, NameValuePair<T>& t)
+    CEREAL_ARCHIVE_RESTRICT(BinaryInputArchive, BinaryOutputArchive) {
   ar(t.value);
 }
 
 //! Serializing SizeTags to binary
 template <class Archive, class T>
-inline CEREAL_ARCHIVE_RESTRICT(BinaryInputArchive, BinaryOutputArchive)
-    CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, SizeTag<T>& t) {
+inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, SizeTag<T>& t)
+    CEREAL_ARCHIVE_RESTRICT(BinaryInputArchive, BinaryOutputArchive) {
   ar(t.size);
 }
 

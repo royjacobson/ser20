@@ -81,7 +81,7 @@ inline void CEREAL_SAVE_FUNCTION_NAME(
 template <class Archive, typename... VariantTypes>
 inline void CEREAL_LOAD_FUNCTION_NAME(Archive& ar,
                                       std::variant<VariantTypes...>& variant) {
-  using variant_t = typename std::variant<VariantTypes...>;
+  using variant_t = std::variant<VariantTypes...>;
 
   std::int32_t index;
   ar(CEREAL_NVP_("index", index));

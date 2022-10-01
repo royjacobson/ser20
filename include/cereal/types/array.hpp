@@ -37,43 +37,39 @@ namespace cereal {
 //! Saving for std::array primitive types
 //! using binary serialization, if supported
 template <class Archive, class T, size_t N>
-inline typename std::enable_if<
-    traits::is_output_serializable<BinaryData<T>, Archive>::value &&
-        std::is_arithmetic<T>::value,
-    void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::array<T, N> const& array) {
+inline void
+CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::array<T, N> const& array) requires(
+    traits::is_output_serializable_v<BinaryData<T>, Archive>&&
+        std::is_arithmetic_v<T>) {
   ar(binary_data(array.data(), sizeof(array)));
 }
 
 //! Loading for std::array primitive types
 //! using binary serialization, if supported
 template <class Archive, class T, size_t N>
-inline typename std::enable_if<
-    traits::is_input_serializable<BinaryData<T>, Archive>::value &&
-        std::is_arithmetic<T>::value,
-    void>::type
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::array<T, N>& array) {
+inline void
+CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::array<T, N>& array) requires(
+    traits::is_input_serializable_v<BinaryData<T>, Archive>&&
+        std::is_arithmetic_v<T>) {
   ar(binary_data(array.data(), sizeof(array)));
 }
 
 //! Saving for std::array all other types
 template <class Archive, class T, size_t N>
-inline typename std::enable_if<
-    !traits::is_output_serializable<BinaryData<T>, Archive>::value ||
-        !std::is_arithmetic<T>::value,
-    void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::array<T, N> const& array) {
+inline void
+CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::array<T, N> const& array) requires(
+    !traits::is_output_serializable_v<BinaryData<T>, Archive> ||
+    !std::is_arithmetic_v<T>) {
   for (auto const& i : array)
     ar(i);
 }
 
 //! Loading for std::array all other types
 template <class Archive, class T, size_t N>
-inline typename std::enable_if<
-    !traits::is_input_serializable<BinaryData<T>, Archive>::value ||
-        !std::is_arithmetic<T>::value,
-    void>::type
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::array<T, N>& array) {
+inline void
+CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::array<T, N>& array) requires(
+    !traits::is_input_serializable_v<BinaryData<T>, Archive> ||
+    !std::is_arithmetic_v<T>) {
   for (auto& i : array)
     ar(i);
 }

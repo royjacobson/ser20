@@ -28,7 +28,6 @@
 #define CEREAL_TEST_CPP17_OPTIONAL_H_
 #include "../common.hpp"
 
-#ifdef CEREAL_HAS_CPP17
 #include <cereal/types/optional.hpp>
 
 template <class IArchive, class OArchive> inline
@@ -88,5 +87,4 @@ void test_std_optional()
   CHECK_EQ( **i_o7, **o_o7 );
 }
 
-#endif // CEREAL_HAS_CPP17
 #endif // CEREAL_TEST_CPP17_OPTIONAL_H_

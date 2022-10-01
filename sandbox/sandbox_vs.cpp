@@ -202,22 +202,22 @@ int main()
 
   // Test Load and Construct internal/external
   std::cout << "\tload_and_construct" << std::endl;
-  std::cout << cereal::traits::has_member_load_and_construct<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::has_non_member_load_and_construct<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::has_member_load_and_construct_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::has_non_member_load_and_construct_v<T, Archive> << std::endl;
 
   // serialize
   std::cout << "\tserialize" << std::endl;
-  std::cout << cereal::traits::has_member_serialize<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::has_non_member_serialize<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::has_member_serialize_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::has_non_member_serialize_v<T, Archive> << std::endl;
 
   // load
   std::cout << "\tload" << std::endl;
-  std::cout << cereal::traits::has_member_load<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::has_non_member_load<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::has_member_load_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::has_non_member_load_v<T, Archive> << std::endl;
 
   // load minimal
   std::cout << "\tload minimal" << std::endl;
-  std::cout << cereal::traits::has_member_load<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::has_member_load_v<T, Archive> << std::endl;
 
   // save
   std::cout << "\tsave" << std::endl;
@@ -226,45 +226,45 @@ int main()
 
   // save_minimal
   std::cout << "\tsave_minimal" << std::endl;
-  std::cout << cereal::traits::has_member_save_minimal<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::has_non_member_save_minimal<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::has_member_save_minimal_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::has_non_member_save_minimal_v<T, Archive> << std::endl;
 
   // save_minimal_versioned
   std::cout << "\tsave_minimal versioned" << std::endl;
-  std::cout << cereal::traits::has_member_versioned_save_minimal<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::has_non_member_versioned_save_minimal<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::has_member_versioned_save_minimal_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::has_non_member_versioned_save_minimal_v<T, Archive> << std::endl;
 
   // splittable
   std::cout << "\t splittable" << std::endl;
-  std::cout << cereal::traits::has_member_split<T, Archive, Archive>::value << std::endl;
-  std::cout << cereal::traits::has_non_member_split<T, Archive, Archive>::value << std::endl;
+  std::cout << cereal::traits::has_member_split_v<T, Archive, Archive> << std::endl;
+  std::cout << cereal::traits::has_non_member_split_v<T, Archive, Archive> << std::endl;
 
   // serialiable
   std::cout << "\toutput serializable" << std::endl;
-  std::cout << cereal::traits::is_output_serializable<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::is_output_serializable_v<T, Archive> << std::endl;
 
 #if !defined(__INTEL_COMPILER)
   //! TODO: This causes icc to crash
-  std::cout << cereal::traits::is_input_serializable<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::is_input_serializable_v<T, Archive> << std::endl;
 #endif
 
   // specialized
   std::cout << "\tspecialized" << std::endl;
-  std::cout << cereal::traits::detail::is_specialized_member_serialize<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::detail::is_specialized_member_load_save<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::detail::is_specialized_non_member_serialize<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::detail::is_specialized_non_member_load_save<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::detail::count_specializations<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::detail::is_specialized_member_serialize_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::detail::is_specialized_member_load_save_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::detail::is_specialized_non_member_serialize_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::detail::is_specialized_non_member_load_save_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::detail::count_specializations<T, Archive> << std::endl;
   std::cout << cereal::traits::is_specialized<T, Archive>::value << std::endl;
 
   // array size
   std::cout << typeid(A).name() << std::endl;
-  std::cout << typeid(cereal::traits::has_load_and_construct<int, bool>).name() << std::endl;
+  std::cout << cereal::traits::has_load_and_construct_v<int, bool> << std::endl;
 
   // extra testing
   std::cout << "\textra" << std::endl;
-  std::cout << cereal::traits::has_member_save_minimal<MemberMinimal, Archive>::value << std::endl;
-  std::cout << cereal::traits::has_member_load_minimal<MemberMinimal, Archive>::value << std::endl;
+  std::cout << cereal::traits::has_member_save_minimal_v<MemberMinimal, Archive> << std::endl;
+  std::cout << cereal::traits::has_member_load_minimal_v<MemberMinimal, Archive> << std::endl;
 
   // DLL testing
   std::cout << "------DLL TESTING------" << std::endl;

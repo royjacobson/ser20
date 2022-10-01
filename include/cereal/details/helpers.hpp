@@ -136,11 +136,9 @@ template <class T> class NameValuePair : detail::NameValuePairCore {
 private:
   // If we get passed an array, keep the type as is, otherwise store
   // a reference if we were passed an l value reference, else copy the value
-  using Type = typename std::conditional<
-      std::is_array<typename std::remove_reference<T>::type>::value,
-      typename std::remove_cv<T>::type,
-      typename std::conditional<std::is_lvalue_reference<T>::value, T,
-                                typename std::decay<T>::type>::type>::type;
+  using Type = std::conditional_t<
+      std::is_array_v<std::remove_reference_t<T>>, std::remove_cv_t<T>,
+      std::conditional_t<std::is_lvalue_reference_v<T>, T, std::decay_t<T>>>;
 
   // prevent nested nvps
   static_assert(!std::is_base_of<detail::NameValuePairCore, T>::value,
@@ -168,11 +166,9 @@ public:
 /*! @relates NameValuePair
     @internal */
 template <class Archive, class T>
-inline typename std::enable_if<
-    std::is_same<Archive, ::cereal::BinaryInputArchive>::value ||
-        std::is_same<Archive, ::cereal::BinaryOutputArchive>::value,
-    T&&>::type
-make_nvp(const char*, T&& value) {
+inline T&& make_nvp(const char*, T&& value) requires(
+    std::is_same_v<Archive, ::cereal::BinaryInputArchive> ||
+    std::is_same_v<Archive, ::cereal::BinaryOutputArchive>) {
   return std::forward<T>(value);
 }
 
@@ -181,11 +177,9 @@ make_nvp(const char*, T&& value) {
 /*! @relates NameValuePair
     @internal */
 template <class Archive, class T>
-inline typename std::enable_if<
-    !std::is_same<Archive, ::cereal::BinaryInputArchive>::value &&
-        !std::is_same<Archive, ::cereal::BinaryOutputArchive>::value,
-    NameValuePair<T>>::type
-make_nvp(const char* name, T&& value) {
+inline NameValuePair<T> make_nvp(const char* name, T&& value) requires(
+    !std::is_same_v<Archive, ::cereal::BinaryInputArchive> &&
+    !std::is_same_v<Archive, ::cereal::BinaryOutputArchive>) {
   return {name, std::forward<T>(value)};
 }
 
@@ -205,10 +199,9 @@ make_nvp(const char* name, T&& value) {
 template <class T> struct BinaryData {
   //! Internally store the pointer as a void *, keeping const if created with
   //! a const pointer
-  using PT = typename std::conditional<
-      std::is_const<typename std::remove_pointer<
-          typename std::remove_reference<T>::type>::type>::value,
-      const void*, void*>::type;
+  using PT = std::conditional_t<
+      std::is_const_v<std::remove_pointer_t<std::remove_reference_t<T>>>,
+      const void*, void*>;
 
   BinaryData(T&& d, uint64_t s) : data(std::forward<T>(d)), size(s) {}
 
@@ -226,14 +219,12 @@ template <class T> class DeferredData : detail::DeferredDataCore {
 private:
   // If we get passed an array, keep the type as is, otherwise store
   // a reference if we were passed an l value reference, else copy the value
-  using Type = typename std::conditional<
-      std::is_array<typename std::remove_reference<T>::type>::value,
-      typename std::remove_cv<T>::type,
-      typename std::conditional<std::is_lvalue_reference<T>::value, T,
-                                typename std::decay<T>::type>::type>::type;
+  using Type = std::conditional_t<
+      std::is_array_v<std::remove_reference_t<T>>, std::remove_cv_t<T>,
+      std::conditional_t<std::is_lvalue_reference_v<T>, T, std::decay_t<T>>>;
 
   // prevent nested nvps
-  static_assert(!std::is_base_of<detail::DeferredDataCore, T>::value,
+  static_assert(!std::is_base_of_v<detail::DeferredDataCore, T>,
                 "Cannot defer DeferredData");
 
   DeferredData& operator=(DeferredData const&) = delete;
@@ -260,11 +251,9 @@ namespace detail {
 class OutputArchiveBase {
 public:
   OutputArchiveBase() = default;
-  OutputArchiveBase(OutputArchiveBase&&) CEREAL_NOEXCEPT {}
-  OutputArchiveBase& operator=(OutputArchiveBase&&) CEREAL_NOEXCEPT {
-    return *this;
-  }
-  virtual ~OutputArchiveBase() CEREAL_NOEXCEPT = default;
+  OutputArchiveBase(OutputArchiveBase&&) noexcept {}
+  OutputArchiveBase& operator=(OutputArchiveBase&&) noexcept { return *this; }
+  virtual ~OutputArchiveBase() noexcept = default;
 
 private:
   virtual void rtti() {}
@@ -273,11 +262,9 @@ private:
 class InputArchiveBase {
 public:
   InputArchiveBase() = default;
-  InputArchiveBase(InputArchiveBase&&) CEREAL_NOEXCEPT {}
-  InputArchiveBase& operator=(InputArchiveBase&&) CEREAL_NOEXCEPT {
-    return *this;
-  }
-  virtual ~InputArchiveBase() CEREAL_NOEXCEPT = default;
+  InputArchiveBase(InputArchiveBase&&) noexcept {}
+  InputArchiveBase& operator=(InputArchiveBase&&) noexcept { return *this; }
+  virtual ~InputArchiveBase() noexcept = default;
 
 private:
   virtual void rtti() {}
@@ -305,8 +292,8 @@ template <class T> class SizeTag {
 private:
   // Store a reference if passed an lvalue reference, otherwise
   // make a copy of the data
-  using Type = typename std::conditional<std::is_lvalue_reference<T>::value, T,
-                                         typename std::decay<T>::type>::type;
+  using Type =
+      std::conditional_t<std::is_lvalue_reference_v<T>, T, std::decay_t<T>>;
 
   SizeTag& operator=(SizeTag const&) = delete;
 
@@ -338,13 +325,11 @@ public:
     \sa make_map_item
     @internal */
 template <class Key, class Value> struct MapItem {
-  using KeyType =
-      typename std::conditional<std::is_lvalue_reference<Key>::value, Key,
-                                typename std::decay<Key>::type>::type;
+  using KeyType = std::conditional_t<std::is_lvalue_reference_v<Key>, Key,
+                                     std::decay_t<Key>>;
 
-  using ValueType =
-      typename std::conditional<std::is_lvalue_reference<Value>::value, Value,
-                                typename std::decay<Value>::type>::type;
+  using ValueType = std::conditional_t<std::is_lvalue_reference_v<Value>, Value,
+                                       std::decay_t<Value>>;
 
   //! Construct a MapItem from a key and a value
   /*! @internal */

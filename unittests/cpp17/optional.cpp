@@ -28,8 +28,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "optional.hpp"
 
-#ifdef CEREAL_HAS_CPP17
-
 TEST_SUITE_BEGIN("std_optional");
 
 TEST_CASE("binary_std_optional")
@@ -53,5 +51,3 @@ TEST_CASE("json_std_optional")
 }
 
 TEST_SUITE_END();
-
-#endif // CEREAL_HAS_CPP17

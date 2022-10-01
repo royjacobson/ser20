@@ -29,8 +29,6 @@
 #define CEREAL_TEST_CPP17_VARIANT_H_
 #include "../common.hpp"
 
-#ifdef CEREAL_HAS_CPP17
-
 #include <cereal/types/variant.hpp>
 
 template <class IArchive, class OArchive> inline
@@ -70,5 +68,4 @@ void test_std_variant()
   CHECK_EQ( std::get<std::string>(i_bv3), std::get<std::string>(o_bv3) );
 }
 
-#endif // CEREAL_HAS_CPP17
 #endif // CEREAL_TEST_CPP17_VARIANT_H_

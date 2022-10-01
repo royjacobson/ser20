@@ -241,13 +241,12 @@ getInputBinding(Archive& ar, std::uint32_t const nameid) {
    false.  So we also need to check for that here.
     @internal */
 template <class Archive, class T>
-inline typename std::enable_if<
-    (traits::is_default_constructible<T>::value ||
-     traits::has_load_and_construct<T, Archive>::value) &&
-        !std::is_abstract<T>::value,
-    bool>::type
-serialize_wrapper(Archive& ar, std::shared_ptr<T>& ptr,
-                  std::uint32_t const nameid) {
+inline bool serialize_wrapper(
+    Archive& ar, std::shared_ptr<T>& ptr,
+    std::uint32_t const
+        nameid) requires((traits::is_default_constructible<T>::value ||
+                          traits::has_load_and_construct_v<
+                              T, Archive>)&&!std::is_abstract_v<T>) {
   if (nameid & detail::msb2_32bit) {
     ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
     return true;
@@ -261,13 +260,12 @@ serialize_wrapper(Archive& ar, std::shared_ptr<T>& ptr,
    away with using the derived class serialize function
     @internal */
 template <class Archive, class T, class D>
-inline typename std::enable_if<
-    (traits::is_default_constructible<T>::value ||
-     traits::has_load_and_construct<T, Archive>::value) &&
-        !std::is_abstract<T>::value,
-    bool>::type
-serialize_wrapper(Archive& ar, std::unique_ptr<T, D>& ptr,
-                  std::uint32_t const nameid) {
+inline bool serialize_wrapper(
+    Archive& ar, std::unique_ptr<T, D>& ptr,
+    std::uint32_t const
+        nameid) requires((traits::is_default_constructible<T>::value ||
+                          traits::has_load_and_construct_v<
+                              T, Archive>)&&!std::is_abstract_v<T>) {
   if (nameid & detail::msb2_32bit) {
     ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
     return true;
@@ -284,12 +282,13 @@ serialize_wrapper(Archive& ar, std::unique_ptr<T, D>& ptr,
     this was a polymorphic type serialized by its proper pointer type
     @internal */
 template <class Archive, class T>
-inline typename std::enable_if<
-    (!traits::is_default_constructible<T>::value &&
-     !traits::has_load_and_construct<T, Archive>::value) ||
-        std::is_abstract<T>::value,
-    bool>::type
-serialize_wrapper(Archive&, std::shared_ptr<T>&, std::uint32_t const nameid) {
+inline
+    typename std::enable_if<(!traits::is_default_constructible<T>::value &&
+                             !traits::has_load_and_construct_v<T, Archive>) ||
+                                std::is_abstract_v<T>,
+                            bool>::type
+    serialize_wrapper(Archive&, std::shared_ptr<T>&,
+                      std::uint32_t const nameid) {
   if (nameid & detail::msb2_32bit)
     throw cereal::Exception(
         "Cannot load a polymorphic type that is not default constructable and "
@@ -306,13 +305,13 @@ serialize_wrapper(Archive&, std::shared_ptr<T>&, std::uint32_t const nameid) {
     this was a polymorphic type serialized by its proper pointer type
     @internal */
 template <class Archive, class T, class D>
-inline typename std::enable_if<
-    (!traits::is_default_constructible<T>::value &&
-     !traits::has_load_and_construct<T, Archive>::value) ||
-        std::is_abstract<T>::value,
-    bool>::type
-serialize_wrapper(Archive&, std::unique_ptr<T, D>&,
-                  std::uint32_t const nameid) {
+inline
+    typename std::enable_if<(!traits::is_default_constructible<T>::value &&
+                             !traits::has_load_and_construct_v<T, Archive>) ||
+                                std::is_abstract_v<T>,
+                            bool>::type
+    serialize_wrapper(Archive&, std::unique_ptr<T, D>&,
+                      std::uint32_t const nameid) {
   if (nameid & detail::msb2_32bit)
     throw cereal::Exception(
         "Cannot load a polymorphic type that is not default constructable and "
@@ -326,9 +325,9 @@ serialize_wrapper(Archive&, std::unique_ptr<T, D>&,
 
 //! Saving std::shared_ptr for polymorphic types, abstract
 template <class Archive, class T>
-inline typename std::enable_if<
-    std::is_polymorphic<T>::value && std::is_abstract<T>::value, void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::shared_ptr<T> const& ptr) {
+inline void
+CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::shared_ptr<T> const& ptr) requires(
+    std::is_polymorphic_v<T>&& std::is_abstract_v<T>) {
   if (!ptr) {
     // same behavior as nullptr in memory implementation
     ar(CEREAL_NVP_("polymorphic_id", std::uint32_t(0)));
@@ -355,9 +354,9 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::shared_ptr<T> const& ptr) {
 
 //! Saving std::shared_ptr for polymorphic types, not abstract
 template <class Archive, class T>
-inline typename std::enable_if<
-    std::is_polymorphic<T>::value && !std::is_abstract<T>::value, void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::shared_ptr<T> const& ptr) {
+inline void
+CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::shared_ptr<T> const& ptr) requires(
+    std::is_polymorphic_v<T> && !std::is_abstract_v<T>) {
   if (!ptr) {
     // same behavior as nullptr in memory implementation
     ar(CEREAL_NVP_("polymorphic_id", std::uint32_t(0)));
@@ -391,8 +390,8 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::shared_ptr<T> const& ptr) {
 
 //! Loading std::shared_ptr for polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<std::is_polymorphic<T>::value, void>::type
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::shared_ptr<T>& ptr) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar, std::shared_ptr<T>& ptr) requires(std::is_polymorphic_v<T>) {
   std::uint32_t nameid;
   ar(CEREAL_NVP_("polymorphic_id", nameid));
 
@@ -408,16 +407,17 @@ CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::shared_ptr<T>& ptr) {
 
 //! Saving std::weak_ptr for polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<std::is_polymorphic<T>::value, void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::weak_ptr<T> const& ptr) {
+inline void CEREAL_SAVE_FUNCTION_NAME(
+    Archive& ar,
+    std::weak_ptr<T> const& ptr) requires(std::is_polymorphic_v<T>) {
   auto const sptr = ptr.lock();
   ar(CEREAL_NVP_("locked_ptr", sptr));
 }
 
 //! Loading std::weak_ptr for polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<std::is_polymorphic<T>::value, void>::type
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::weak_ptr<T>& ptr) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar, std::weak_ptr<T>& ptr) requires(std::is_polymorphic_v<T>) {
   std::shared_ptr<T> sptr;
   ar(CEREAL_NVP_("locked_ptr", sptr));
   ptr = sptr;
@@ -425,9 +425,10 @@ CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::weak_ptr<T>& ptr) {
 
 //! Saving std::unique_ptr for polymorphic types that are abstract
 template <class Archive, class T, class D>
-inline typename std::enable_if<
-    std::is_polymorphic<T>::value && std::is_abstract<T>::value, void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D> const& ptr) {
+inline void CEREAL_SAVE_FUNCTION_NAME(
+    Archive& ar,
+    std::unique_ptr<T, D> const&
+        ptr) requires(std::is_polymorphic_v<T>&& std::is_abstract_v<T>) {
   if (!ptr) {
     // same behavior as nullptr in memory implementation
     ar(CEREAL_NVP_("polymorphic_id", std::uint32_t(0)));
@@ -454,9 +455,10 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D> const& ptr) {
 
 //! Saving std::unique_ptr for polymorphic types, not abstract
 template <class Archive, class T, class D>
-inline typename std::enable_if<
-    std::is_polymorphic<T>::value && !std::is_abstract<T>::value, void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D> const& ptr) {
+inline void CEREAL_SAVE_FUNCTION_NAME(
+    Archive& ar,
+    std::unique_ptr<T, D> const& ptr) requires(std::is_polymorphic_v<T> &&
+                                               !std::is_abstract_v<T>) {
   if (!ptr) {
     // same behavior as nullptr in memory implementation
     ar(CEREAL_NVP_("polymorphic_id", std::uint32_t(0)));
@@ -491,8 +493,9 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D> const& ptr) {
 //! Loading std::unique_ptr, case when user provides load_and_construct for
 //! polymorphic types
 template <class Archive, class T, class D>
-inline typename std::enable_if<std::is_polymorphic<T>::value, void>::type
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D>& ptr) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar,
+    std::unique_ptr<T, D>& ptr) requires(std::is_polymorphic_v<T>) {
   std::uint32_t nameid;
   ar(CEREAL_NVP_("polymorphic_id", nameid));
 

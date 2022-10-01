@@ -43,8 +43,8 @@ enum class type : uint8_t { ulong, ullong, string, bits };
 
 //! Serializing (save) for std::bitset when BinaryData optimization supported
 template <class Archive, size_t N,
-          traits::EnableIf<traits::is_output_serializable<
-              BinaryData<std::uint32_t>, Archive>::value> = traits::sfinae>
+          traits::EnableIf<traits::is_output_serializable_v<
+              BinaryData<std::uint32_t>, Archive>> = traits::sfinae>
 inline void CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::bitset<N> const& bits) {
   ar(CEREAL_NVP_("type", bitset_detail::type::bits));
 
@@ -74,8 +74,8 @@ inline void CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::bitset<N> const& bits) {
 
 //! Serializing (save) for std::bitset when BinaryData is not supported
 template <class Archive, size_t N,
-          traits::DisableIf<traits::is_output_serializable<
-              BinaryData<std::uint32_t>, Archive>::value> = traits::sfinae>
+          traits::DisableIf<traits::is_output_serializable_v<
+              BinaryData<std::uint32_t>, Archive>> = traits::sfinae>
 inline void CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::bitset<N> const& bits) {
   try {
     auto const b = bits.to_ulong();

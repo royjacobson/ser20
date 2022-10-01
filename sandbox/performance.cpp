@@ -238,22 +238,22 @@ void test( std::string const & name,
 }
 
 template<class T>
-typename std::enable_if<std::is_floating_point<T>::value, T>::type
+typename std::enable_if<std::is_floating_point_v<T>, T>::type
 random_value(std::mt19937 & gen)
 { return std::uniform_real_distribution<T>(-10000.0, 10000.0)(gen); }
 
 template<class T>
-typename std::enable_if<std::is_integral<T>::value && sizeof(T) != sizeof(char), T>::type
+typename std::enable_if<std::is_integral_v<T> && sizeof(T) != sizeof(char), T>::type
 random_value(std::mt19937 & gen)
 { return std::uniform_int_distribution<T>(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max())(gen); }
 
 template<class T>
-typename std::enable_if<std::is_integral<T>::value && sizeof(T) == sizeof(char), T>::type
+typename std::enable_if<std::is_integral_v<T> && sizeof(T) == sizeof(char), T>::type
 random_value(std::mt19937 & gen)
 { return static_cast<T>( std::uniform_int_distribution<int64_t>(std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max())(gen) ); }
 
 template<class T>
-typename std::enable_if<std::is_same<T, std::string>::value, std::string>::type
+typename std::enable_if<std::is_same_v<T, std::string>, std::string>::type
 random_value(std::mt19937 & gen)
 {
   std::string s(std::uniform_int_distribution<int>(3, 30)(gen), ' ');

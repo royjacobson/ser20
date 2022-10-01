@@ -131,8 +131,7 @@ template <class T> class EnableSharedStateHelper {
       typename ::cereal::traits::get_shared_from_this_base<T>::type;
   using ParentType = std::enable_shared_from_this<BaseType>;
   using StorageType =
-      typename std::aligned_storage<sizeof(ParentType),
-                                    CEREAL_ALIGNOF(ParentType)>::type;
+      std::aligned_storage_t<sizeof(ParentType), CEREAL_ALIGNOF(ParentType)>;
 
 public:
   //! Saves the state of some type inheriting from enable_shared_from_this
@@ -197,7 +196,7 @@ loadAndConstructSharedPtr(Archive& ar, T* ptr,
 
 //! Saving std::shared_ptr for non polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<!std::is_polymorphic<T>::value, void>::type
+inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
 CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::shared_ptr<T> const& ptr) {
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
 }
@@ -205,14 +204,14 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::shared_ptr<T> const& ptr) {
 //! Loading std::shared_ptr, case when no user load and construct for non
 //! polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<!std::is_polymorphic<T>::value, void>::type
+inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::shared_ptr<T>& ptr) {
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
 }
 
 //! Saving std::weak_ptr for non polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<!std::is_polymorphic<T>::value, void>::type
+inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
 CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::weak_ptr<T> const& ptr) {
   auto const sptr = ptr.lock();
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(sptr)));
@@ -220,7 +219,7 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::weak_ptr<T> const& ptr) {
 
 //! Loading std::weak_ptr for non polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<!std::is_polymorphic<T>::value, void>::type
+inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::weak_ptr<T>& ptr) {
   std::shared_ptr<T> sptr;
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(sptr)));
@@ -229,7 +228,7 @@ CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::weak_ptr<T>& ptr) {
 
 //! Saving std::unique_ptr for non polymorphic types
 template <class Archive, class T, class D>
-inline typename std::enable_if<!std::is_polymorphic<T>::value, void>::type
+inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
 CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D> const& ptr) {
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
 }
@@ -237,7 +236,7 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D> const& ptr) {
 //! Loading std::unique_ptr, case when user provides load_and_construct for non
 //! polymorphic types
 template <class Archive, class T, class D>
-inline typename std::enable_if<!std::is_polymorphic<T>::value, void>::type
+inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D>& ptr) {
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
 }
@@ -265,11 +264,10 @@ inline void CEREAL_SAVE_FUNCTION_NAME(
 //! implementation)
 /*! @internal */
 template <class Archive, class T>
-inline
-    typename std::enable_if<traits::has_load_and_construct<T, Archive>::value,
-                            void>::type
-    CEREAL_LOAD_FUNCTION_NAME(
-        Archive& ar, memory_detail::PtrWrapper<std::shared_ptr<T>&>& wrapper) {
+inline typename std::enable_if<traits::has_load_and_construct_v<T, Archive>,
+                               void>::type
+CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar, memory_detail::PtrWrapper<std::shared_ptr<T>&>& wrapper) {
   uint32_t id;
 
   ar(CEREAL_NVP_("id", id));
@@ -278,8 +276,7 @@ inline
     // Storage type for the pointer - since we can't default construct this
     // type, we'll allocate it using std::aligned_storage and use a custom
     // deleter
-    using AlignedStorage =
-        typename std::aligned_storage<sizeof(T), CEREAL_ALIGNOF(T)>::type;
+    using AlignedStorage = std::aligned_storage_t<sizeof(T), CEREAL_ALIGNOF(T)>;
 
     // Valid flag - set to true once construction finishes
     //  This prevents us from calling the destructor on
@@ -288,7 +285,7 @@ inline
 
     // Allocate our storage, which we will treat as
     //  uninitialized until initialized with placement new
-    using NonConstT = typename std::remove_const<T>::type;
+    using NonConstT = std::remove_const_t<T>;
     std::shared_ptr<NonConstT> ptr(
         reinterpret_cast<NonConstT*>(new AlignedStorage()), [=](NonConstT* t) {
           if (*valid)
@@ -316,17 +313,16 @@ inline
 //! implementation)
 /*! @internal */
 template <class Archive, class T>
-inline
-    typename std::enable_if<!traits::has_load_and_construct<T, Archive>::value,
-                            void>::type
-    CEREAL_LOAD_FUNCTION_NAME(
-        Archive& ar, memory_detail::PtrWrapper<std::shared_ptr<T>&>& wrapper) {
+inline typename std::enable_if<!traits::has_load_and_construct_v<T, Archive>,
+                               void>::type
+CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar, memory_detail::PtrWrapper<std::shared_ptr<T>&>& wrapper) {
   uint32_t id;
 
   ar(CEREAL_NVP_("id", id));
 
   if (id & detail::msb_32bit) {
-    using NonConstT = typename std::remove_const<T>::type;
+    using NonConstT = std::remove_const_t<T>;
     std::shared_ptr<NonConstT> ptr(
         detail::Construct<NonConstT, Archive>::load_andor_construct());
     ar.registerSharedPointer(id, ptr);
@@ -359,24 +355,21 @@ inline void CEREAL_SAVE_FUNCTION_NAME(
 //! implementation)
 /*! @internal */
 template <class Archive, class T, class D>
-inline
-    typename std::enable_if<traits::has_load_and_construct<T, Archive>::value,
-                            void>::type
-    CEREAL_LOAD_FUNCTION_NAME(
-        Archive& ar,
-        memory_detail::PtrWrapper<std::unique_ptr<T, D>&>& wrapper) {
+inline typename std::enable_if<traits::has_load_and_construct_v<T, Archive>,
+                               void>::type
+CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar, memory_detail::PtrWrapper<std::unique_ptr<T, D>&>& wrapper) {
   uint8_t isValid;
   ar(CEREAL_NVP_("valid", isValid));
 
   auto& ptr = wrapper.ptr;
 
   if (isValid) {
-    using NonConstT = typename std::remove_const<T>::type;
+    using NonConstT = std::remove_const_t<T>;
     // Storage type for the pointer - since we can't default construct this
     // type, we'll allocate it using std::aligned_storage
     using AlignedStorage =
-        typename std::aligned_storage<sizeof(NonConstT),
-                                      CEREAL_ALIGNOF(NonConstT)>::type;
+        std::aligned_storage_t<sizeof(NonConstT), CEREAL_ALIGNOF(NonConstT)>;
 
     // Allocate storage - note the AlignedStorage type so that deleter is
     // correct if
@@ -400,17 +393,15 @@ inline
 //! implementation)
 /*! @internal */
 template <class Archive, class T, class D>
-inline
-    typename std::enable_if<!traits::has_load_and_construct<T, Archive>::value,
-                            void>::type
-    CEREAL_LOAD_FUNCTION_NAME(
-        Archive& ar,
-        memory_detail::PtrWrapper<std::unique_ptr<T, D>&>& wrapper) {
+inline typename std::enable_if<!traits::has_load_and_construct_v<T, Archive>,
+                               void>::type
+CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar, memory_detail::PtrWrapper<std::unique_ptr<T, D>&>& wrapper) {
   uint8_t isValid;
   ar(CEREAL_NVP_("valid", isValid));
 
   if (isValid) {
-    using NonConstT = typename std::remove_const<T>::type;
+    using NonConstT = std::remove_const_t<T>;
     std::unique_ptr<NonConstT, D> ptr(
         detail::Construct<NonConstT, Archive>::load_andor_construct());
     ar(CEREAL_NVP_("data", *ptr));

@@ -40,8 +40,8 @@ namespace cereal {
 //! supported
 template <class Archive, class T>
 inline typename std::enable_if<
-    traits::is_output_serializable<BinaryData<T>, Archive>::value &&
-        std::is_arithmetic<T>::value,
+    traits::is_output_serializable_v<BinaryData<T>, Archive> &&
+        std::is_arithmetic_v<T>,
     void>::type
 CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
   ar(make_size_tag(
@@ -55,8 +55,8 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
 //! supported
 template <class Archive, class T>
 inline typename std::enable_if<
-    traits::is_input_serializable<BinaryData<T>, Archive>::value &&
-        std::is_arithmetic<T>::value,
+    traits::is_input_serializable_v<BinaryData<T>, Archive> &&
+        std::is_arithmetic_v<T>,
     void>::type
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) {
   size_type valarraySize;
@@ -70,8 +70,8 @@ CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) {
 //! Saving for std::valarray all other types
 template <class Archive, class T>
 inline typename std::enable_if<
-    !traits::is_output_serializable<BinaryData<T>, Archive>::value ||
-        !std::is_arithmetic<T>::value,
+    !traits::is_output_serializable_v<BinaryData<T>, Archive> ||
+        !std::is_arithmetic_v<T>,
     void>::type
 CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
   ar(make_size_tag(
@@ -83,8 +83,8 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
 //! Loading for std::valarray all other types
 template <class Archive, class T>
 inline typename std::enable_if<
-    !traits::is_input_serializable<BinaryData<T>, Archive>::value ||
-        !std::is_arithmetic<T>::value,
+    !traits::is_input_serializable_v<BinaryData<T>, Archive> ||
+        !std::is_arithmetic_v<T>,
     void>::type
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) {
   size_type valarraySize;

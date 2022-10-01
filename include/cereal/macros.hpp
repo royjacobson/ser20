@@ -107,48 +107,6 @@
 #endif // CEREAL_SAVE_MINIMAL_FUNCTION_NAME
 
 // ######################################################################
-//! Defines the CEREAL_NOEXCEPT macro to use instead of noexcept
-/*! If a compiler we support does not support noexcept, this macro
-    will detect this and define CEREAL_NOEXCEPT as a no-op
-    @internal */
-#if !defined(CEREAL_HAS_NOEXCEPT)
-#if defined(__clang__)
-#if __has_feature(cxx_noexcept)
-#define CEREAL_HAS_NOEXCEPT
-#endif
-#else // NOT clang
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) &&                                     \
-        __GNUC__ * 10 + __GNUC_MINOR__ >= 46 ||                                \
-    defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023026
-#define CEREAL_HAS_NOEXCEPT
-#endif // end GCC/MSVC check
-#endif // end NOT clang block
-
-#ifndef CEREAL_NOEXCEPT
-#ifdef CEREAL_HAS_NOEXCEPT
-#define CEREAL_NOEXCEPT noexcept
-#else
-#define CEREAL_NOEXCEPT
-#endif // end CEREAL_HAS_NOEXCEPT
-#endif // end !defined(CEREAL_HAS_NOEXCEPT)
-#endif // ifndef CEREAL_NOEXCEPT
-
-// ######################################################################
-//! Checks if C++17 is available
-//! NOTE: clang v5 has a bug with inline variables, so disable C++17 on that
-//! compiler
-#if (__cplusplus >= 201703L ||                                                 \
-     (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)) &&                        \
-    (!defined(__clang__) || __clang_major__ > 5)
-#define CEREAL_HAS_CPP17
-#endif
-
-//! Checks if C++14 is available
-#if __cplusplus >= 201402L
-#define CEREAL_HAS_CPP14
-#endif
-
-// ######################################################################
 //! Defines the CEREAL_ALIGNOF macro to use instead of alignof
 #if defined(_MSC_VER) && _MSC_VER < 1900
 #define CEREAL_ALIGNOF __alignof

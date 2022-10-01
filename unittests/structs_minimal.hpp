@@ -142,29 +142,29 @@ struct Issue79Struct
   std::int32_t x;
 };
 
-template <class Archive, cereal::traits::DisableIf<std::is_same<Archive, cereal::BinaryOutputArchive>::value ||
-                                                   std::is_same<Archive, cereal::PortableBinaryOutputArchive>::value> = cereal::traits::sfinae>
+template <class Archive, cereal::traits::DisableIf<std::is_same_v<Archive, cereal::BinaryOutputArchive> ||
+                                                   std::is_same_v<Archive, cereal::PortableBinaryOutputArchive>> = cereal::traits::sfinae>
 inline std::string save_minimal( Archive const &, Issue79Struct const & val )
 {
   return std::to_string( val.x );
 }
 
-template <class Archive, cereal::traits::DisableIf<std::is_same<Archive, cereal::BinaryInputArchive>::value ||
-                                                   std::is_same<Archive, cereal::PortableBinaryInputArchive>::value> = cereal::traits::sfinae>
+template <class Archive, cereal::traits::DisableIf<std::is_same_v<Archive, cereal::BinaryInputArchive> ||
+                                                   std::is_same_v<Archive, cereal::PortableBinaryInputArchive>> = cereal::traits::sfinae>
 inline void load_minimal( Archive const &, Issue79Struct & val, std::string const & str )
 {
   val.x = std::stoi( str );
 }
 
-template <class Archive, cereal::traits::EnableIf<std::is_same<Archive, cereal::BinaryOutputArchive>::value ||
-                                                  std::is_same<Archive, cereal::PortableBinaryOutputArchive>::value> = cereal::traits::sfinae>
+template <class Archive, cereal::traits::EnableIf<std::is_same_v<Archive, cereal::BinaryOutputArchive> ||
+                                                  std::is_same_v<Archive, cereal::PortableBinaryOutputArchive>> = cereal::traits::sfinae>
 inline std::int32_t save_minimal( Archive const &, Issue79Struct const & val )
 {
   return val.x;
 }
 
-template <class Archive, cereal::traits::EnableIf<std::is_same<Archive, cereal::BinaryInputArchive>::value ||
-                                                  std::is_same<Archive, cereal::PortableBinaryInputArchive>::value> = cereal::traits::sfinae>
+template <class Archive, cereal::traits::EnableIf<std::is_same_v<Archive, cereal::BinaryInputArchive> ||
+                                                  std::is_same_v<Archive, cereal::PortableBinaryInputArchive>> = cereal::traits::sfinae>
 inline void load_minimal( Archive const &, Issue79Struct & val, std::int32_t const & xx )
 {
   val.x = xx;
@@ -176,29 +176,29 @@ struct Issue79StructInternal
   Issue79StructInternal( std::int32_t xx ) : x(xx) {}
   std::int32_t x;
 
-  template <class Archive, cereal::traits::DisableIf<std::is_same<Archive, cereal::BinaryOutputArchive>::value ||
-                                                     std::is_same<Archive, cereal::PortableBinaryOutputArchive>::value> = cereal::traits::sfinae>
+  template <class Archive, cereal::traits::DisableIf<std::is_same_v<Archive, cereal::BinaryOutputArchive> ||
+                                                     std::is_same_v<Archive, cereal::PortableBinaryOutputArchive>> = cereal::traits::sfinae>
   inline std::string save_minimal( Archive const & ) const
   {
     return std::to_string( x );
   }
 
-  template <class Archive, cereal::traits::DisableIf<std::is_same<Archive, cereal::BinaryInputArchive>::value ||
-                                                     std::is_same<Archive, cereal::PortableBinaryInputArchive>::value> = cereal::traits::sfinae>
+  template <class Archive, cereal::traits::DisableIf<std::is_same_v<Archive, cereal::BinaryInputArchive> ||
+                                                     std::is_same_v<Archive, cereal::PortableBinaryInputArchive>> = cereal::traits::sfinae>
   inline void load_minimal( Archive const &, std::string const & str )
   {
     x = std::stoi( str );
   }
 
-  template <class Archive, cereal::traits::EnableIf<std::is_same<Archive, cereal::BinaryOutputArchive>::value ||
-                                                    std::is_same<Archive, cereal::PortableBinaryOutputArchive>::value> = cereal::traits::sfinae>
+  template <class Archive, cereal::traits::EnableIf<std::is_same_v<Archive, cereal::BinaryOutputArchive> ||
+                                                    std::is_same_v<Archive, cereal::PortableBinaryOutputArchive>> = cereal::traits::sfinae>
   inline std::int32_t save_minimal( Archive const & ) const
   {
     return x;
   }
 
-  template <class Archive, cereal::traits::EnableIf<std::is_same<Archive, cereal::BinaryInputArchive>::value ||
-                                                    std::is_same<Archive, cereal::PortableBinaryInputArchive>::value> = cereal::traits::sfinae>
+  template <class Archive, cereal::traits::EnableIf<std::is_same_v<Archive, cereal::BinaryInputArchive> ||
+                                                    std::is_same_v<Archive, cereal::PortableBinaryInputArchive>> = cereal::traits::sfinae>
   inline void load_minimal( Archive const &, std::int32_t const & xx )
   {
     x = xx;
