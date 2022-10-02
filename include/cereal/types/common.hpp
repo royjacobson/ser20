@@ -108,7 +108,7 @@ CEREAL_LOAD_MINIMAL_FUNCTION_NAME(
  * raw pointers. */
 template <class Archive, class T>
 inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive&, T*&) {
-  static_assert(cereal::traits::detail::delay_static_assert<T>::value,
+  static_assert(cereal::traits::detail::delay_static_assert<T>,
                 "Cereal does not support serializing raw pointers - please use "
                 "a smart pointer");
 }

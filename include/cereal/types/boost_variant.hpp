@@ -87,29 +87,19 @@ template <> struct load_variant_wrapper<boost::detail::variant::void_> {
 
 //! @internal
 template <class T> struct load_variant_wrapper {
-  // default constructible
-  template <class Archive, class Variant>
-  static void load_variant_impl(Archive& ar, Variant& variant, std::true_type) {
-    T value;
-    ar(CEREAL_NVP_("data", value));
-    variant = std::move(value);
-  }
-
-  // not default constructible
-  template <class Variant, class Archive>
-  static void load_variant_impl(Archive& ar, Variant& variant,
-                                std::false_type) {
-    LoadAndConstructLoadWrapper<Archive, T> loadWrapper;
-
-    ar(CEREAL_NVP_("data", loadWrapper));
-    variant = std::move(*loadWrapper.construct.ptr());
-  }
-
   //! @internal
   template <class Variant, class Archive>
   static void load_variant(Archive& ar, Variant& variant) {
-    load_variant_impl(ar, variant,
-                      typename std::is_default_constructible<T>::type());
+    if constexpr (std::is_default_constructible_v<T>) {
+      T value;
+      ar(CEREAL_NVP_("data", value));
+      variant = std::move(value);
+    } else {
+      LoadAndConstructLoadWrapper<Archive, T> loadWrapper;
+
+      ar(CEREAL_NVP_("data", loadWrapper));
+      variant = std::move(*loadWrapper.construct.ptr());
+    }
   }
 };
 } // namespace boost_variant_detail

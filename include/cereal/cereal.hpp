@@ -31,7 +31,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <functional>
+// #include <functional>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -914,11 +914,10 @@ private:
   }
 
   //! Empty class specialization
-  template <class T,
-            traits::EnableIf<(Flags & AllowEmptyClassElision),
-                             !traits::is_input_serializable_v<T, ArchiveType>,
-                             std::is_empty_v<T>> = traits::sfinae>
-  inline ArchiveType& processImpl(T const&) {
+  template <class T>
+  inline ArchiveType& processImpl(T const&) requires(
+      bool(Flags& AllowEmptyClassElision) &&
+      !traits::is_input_serializable_v<T, ArchiveType> && std::is_empty_v<T>) {
     return *self;
   }
 
@@ -927,16 +926,14 @@ private:
       we are not input serializable, and either
       don't allow empty class ellision or allow it but are not serializing an
      empty class */
-  template <
-      class T,
-      traits::EnableIf<traits::has_invalid_input_versioning_v<T, ArchiveType> ||
-                       (!traits::is_input_serializable_v<T, ArchiveType> &&
-                        (!(Flags & AllowEmptyClassElision) ||
-                         ((Flags & AllowEmptyClassElision) &&
-                          !std::is_empty_v<T>)))> = traits::sfinae>
-  inline ArchiveType& processImpl(T const&) {
+  template <class T>
+  inline ArchiveType& processImpl(T const&) requires(
+      traits::has_invalid_input_versioning_v<T, ArchiveType> ||
+      (!traits::is_input_serializable_v<T, ArchiveType> &&
+       (!bool(Flags & AllowEmptyClassElision) ||
+        (bool(Flags & AllowEmptyClassElision) && !std::is_empty_v<T>)))) {
     static_assert(
-        traits::detail::count_input_serializers<T, ArchiveType>::value != 0,
+        traits::detail::count_input_serializers<T, ArchiveType> != 0,
         "cereal could not find any input serialization functions for the "
         "provided type and archive combination. \n\n "
         "Types must either have a serialize function, load/save pair, or "
@@ -949,7 +946,7 @@ private:
         "  } \n\n ");
 
     static_assert(
-        traits::detail::count_input_serializers<T, ArchiveType>::value < 2,
+        traits::detail::count_input_serializers<T, ArchiveType> < 2,
         "cereal found more than one compatible input serialization function "
         "for the provided type and archive combination. \n\n "
         "Types must either have a serialize function, load/save pair, or "

@@ -44,101 +44,20 @@ using no = std::false_type;
 namespace detail {
 // ######################################################################
 //! Used to delay a static_assert until template instantiation
-template <class T> struct delay_static_assert : std::false_type {};
-
-// ######################################################################
-// SFINAE Helpers
-
-//! Return type for SFINAE Enablers
-enum class sfinae {};
-
-// workaround needed due to bug in MSVC 2013, see
-// http://connect.microsoft.com/VisualStudio/feedback/details/800231/c-11-alias-template-issue
-template <bool... Conditions>
-struct EnableIfHelper : std::enable_if<(Conditions && ...), sfinae> {};
-
-template <bool... Conditions>
-struct DisableIfHelper : std::enable_if<!(Conditions || ...), sfinae> {};
+template <class T> constexpr inline bool delay_static_assert = false;
 } // namespace detail
-
-//! Used as the default value for EnableIf and DisableIf template parameters
-/*! @relates EnableIf
-    @relates DisableIf */
-static const detail::sfinae sfinae = {};
-
-// ######################################################################
-//! Provides a way to enable a function if conditions are met
-/*! This is intended to be used in a near identical fashion to std::enable_if
-    while being significantly easier to read at the cost of not allowing for as
-    complicated of a condition.
-
-    This will compile (allow the function) if every condition evaluates to true.
-    at compile time.  This should be used with SFINAE to ensure that at least
-    one other candidate function works when one fails due to an EnableIf.
-
-    This should be used as the las template parameter to a function as
-    an unnamed parameter with a default value of cereal::traits::sfinae:
-
-    @code{cpp}
-    // using by making the last template argument variadic
-    template <class T, EnableIf<std::is_same_v<T, bool>> = sfinae>
-    void func(T t );
-    @endcode
-
-    Note that this performs a logical AND of all conditions, so you will need
-    to construct more complicated requirements with this fact in mind.
-
-    @relates DisableIf
-    @relates sfinae
-    @tparam Conditions The conditions which will be logically ANDed to enable
-   the function. */
-template <bool... Conditions>
-using EnableIf = typename detail::EnableIfHelper<Conditions...>::type;
-
-// ######################################################################
-//! Provides a way to disable a function if conditions are met
-/*! This is intended to be used in a near identical fashion to std::enable_if
-    while being significantly easier to read at the cost of not allowing for as
-    complicated of a condition.
-
-    This will compile (allow the function) if every condition evaluates to
-   false. This should be used with SFINAE to ensure that at least one other
-   candidate function works when one fails due to a DisableIf.
-
-    This should be used as the las template parameter to a function as
-    an unnamed parameter with a default value of cereal::traits::sfinae:
-
-    @code{cpp}
-    // using by making the last template argument variadic
-    template <class T, DisableIf<std::is_same_v<T, bool>> = sfinae>
-    void func(T t );
-    @endcode
-
-    This is often used in conjunction with EnableIf to form an enable/disable
-   pair of overloads.
-
-    Note that this performs a logical AND of all conditions, so you will need
-    to construct more complicated requirements with this fact in mind.  If all
-   conditions hold, the function will be disabled.
-
-    @relates EnableIf
-    @relates sfinae
-    @tparam Conditions The conditions which will be logically ANDed to disable
-   the function. */
-template <bool... Conditions>
-using DisableIf = typename detail::DisableIfHelper<Conditions...>::type;
 
 // ######################################################################
 namespace detail {
 template <class InputArchive> struct get_output_from_input : no {
   static_assert(
-      detail::delay_static_assert<InputArchive>::value,
+      detail::delay_static_assert<InputArchive>,
       "Could not find an associated output archive for input archive.");
 };
 
 template <class OutputArchive> struct get_input_from_output : no {
   static_assert(
-      detail::delay_static_assert<OutputArchive>::value,
+      detail::delay_static_assert<OutputArchive>,
       "Could not find an associated input archive for output archive.");
 };
 } // namespace detail
@@ -385,9 +304,8 @@ struct is_string<std::basic_string<CharT, Traits, Alloc>> : std::true_type {};
 
 // Determines if the type is valid for use with a minimal serialize function
 template <class T>
-struct is_minimal_type
-    : std::integral_constant<bool, detail::is_string<T>::value ||
-                                       std::is_arithmetic_v<T>> {};
+constexpr inline bool is_minimal_type_v =
+    detail::is_string<T>::value || std::is_arithmetic_v<T>;
 
 // ######################################################################
 //! Creates implementation details for whether a member save_minimal function
@@ -468,8 +386,7 @@ struct is_minimal_type
     using type =                                                               \
         typename detail::get_member_##test_name##_type<T, A,                   \
                                                        check::value>::type;    \
-    static_assert((check::value && is_minimal_type<type>::value) ||            \
-                      !check::value,                                           \
+    static_assert((check::value && is_minimal_type_v<type>) || !check::value,  \
                   "cereal detected a member " #test_name                       \
                   " with an invalid return type. \n "                          \
                   "return type must be arithmetic or string");                 \
@@ -555,8 +472,7 @@ CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(versioned_save_minimal)
                                                                                \
     using type = typename detail::get_non_member_##test_name##_type<           \
         T, A, check::value>::type;                                             \
-    static_assert((check::value && is_minimal_type<type>::value) ||            \
-                      !check::value,                                           \
+    static_assert((check::value && is_minimal_type_v<type>) || !check::value,  \
                   "cereal detected a non-member " #test_name                   \
                   " with an invalid return type. \n "                          \
                   "return type must be arithmetic or string");                 \
@@ -876,33 +792,30 @@ namespace detail {
 // const stripped away before reaching here, prevents errors on conversion from
 // construct<const T> to construct<T>
 template <typename T, typename A>
-struct has_member_load_and_construct_impl
-    : std::integral_constant<
-          bool, std::is_same_v<decltype(access::load_and_construct<T>(
-                                   std::declval<A&>(),
-                                   std::declval<::cereal::construct<T>&>())),
-                               void>> {};
+constexpr inline bool has_member_load_and_construct_impl =
+    std::is_same_v<decltype(access::load_and_construct<T>(
+                       std::declval<A&>(),
+                       std::declval<::cereal::construct<T>&>())),
+                   void>;
 
 template <typename T, typename A>
-struct has_member_versioned_load_and_construct_impl
-    : std::integral_constant<
-          bool, std::is_same_v<decltype(access::load_and_construct<T>(
-                                   std::declval<A&>(),
-                                   std::declval<::cereal::construct<T>&>(), 0)),
-                               void>> {};
+constexpr inline bool has_member_versioned_load_and_construct_impl =
+    std::is_same_v<decltype(access::load_and_construct<T>(
+                       std::declval<A&>(),
+                       std::declval<::cereal::construct<T>&>(), 0)),
+                   void>;
 } // namespace detail
 
 //! Member load and construct check
 template <typename T, typename A>
 constexpr inline bool has_member_load_and_construct_v =
-    detail::has_member_load_and_construct_impl<std::remove_const_t<T>,
-                                               A>::value;
+    detail::has_member_load_and_construct_impl<std::remove_const_t<T>, A>;
 
 //! Member load and construct check (versioned)
 template <typename T, typename A>
 constexpr inline bool has_member_versioned_load_and_construct_v =
     detail::has_member_versioned_load_and_construct_impl<std::remove_const_t<T>,
-                                                         A>::value;
+                                                         A>;
 
 // ######################################################################
 //! Creates a test for whether a non-member load_and_construct specialization
@@ -1176,30 +1089,27 @@ namespace detail {
 /*! If specialization is being used, we'll count only those; otherwise we'll
  * count everything */
 template <class T, class InputArchive>
-struct count_input_serializers
-    : std::integral_constant<
-          int,
-          count_specializations<T, InputArchive>
-              ? count_specializations<T, InputArchive>
-              : has_member_load_v<T, InputArchive> +
-                    has_non_member_load_v<T, InputArchive> +
-                    has_member_serialize_v<T, InputArchive> +
-                    has_non_member_serialize_v<T, InputArchive> +
-                    has_member_load_minimal_v<T, InputArchive> +
-                    has_non_member_load_minimal_v<T, InputArchive> +
-                    /*-versioned---------------------------------------------------------*/
-                    has_member_versioned_load_v<T, InputArchive> +
-                    has_non_member_versioned_load_v<T, InputArchive> +
-                    has_member_versioned_serialize_v<T, InputArchive> +
-                    has_non_member_versioned_serialize_v<T, InputArchive> +
-                    has_member_versioned_load_minimal_v<T, InputArchive> +
-                    has_non_member_versioned_load_minimal_v<T, InputArchive>> {
-};
+constexpr inline int count_input_serializers =
+    count_specializations<T, InputArchive>
+        ? count_specializations<T, InputArchive>
+        : has_member_load_v<T, InputArchive> +
+              has_non_member_load_v<T, InputArchive> +
+              has_member_serialize_v<T, InputArchive> +
+              has_non_member_serialize_v<T, InputArchive> +
+              has_member_load_minimal_v<T, InputArchive> +
+              has_non_member_load_minimal_v<T, InputArchive> +
+              /*-versioned---------------------------------------------------------*/
+              has_member_versioned_load_v<T, InputArchive> +
+              has_non_member_versioned_load_v<T, InputArchive> +
+              has_member_versioned_serialize_v<T, InputArchive> +
+              has_non_member_versioned_serialize_v<T, InputArchive> +
+              has_member_versioned_load_minimal_v<T, InputArchive> +
+              has_non_member_versioned_load_minimal_v<T, InputArchive>;
 } // namespace detail
 
 template <class T, class InputArchive>
 constexpr inline bool is_input_serializable_v =
-    detail::count_input_serializers<T, InputArchive>::value == 1;
+    detail::count_input_serializers<T, InputArchive> == 1;
 
 // ######################################################################
 // Base Class Support
@@ -1330,15 +1240,13 @@ using decay_archive = std::decay_t<typename strip_minimal<A>::type>;
     Example use:
     @code{cpp}
     // example use to disable a serialization function
-    template <class Archive, EnableIf<cereal::traits::is_same_archive<Archive,
-   cereal::BinaryOutputArchive>::value> = sfinae> void save( Archive & ar,
+    template <class Archive, EnableIf<cereal::traits::is_same_archive_v<Archive,
+   cereal::BinaryOutputArchive>> = sfinae> void save( Archive & ar,
    MyType const & mt );
     @endcode */
 template <class ArchiveT, class CerealArchiveT>
-struct is_same_archive
-    : std::integral_constant<
-          bool,
-          std::is_same_v<detail::decay_archive<ArchiveT>, CerealArchiveT>> {};
+constexpr inline bool is_same_archive_v =
+    std::is_same_v<detail::decay_archive<ArchiveT>, CerealArchiveT>;
 
 // ######################################################################
 //! A macro to use to restrict which types of archives your function will work
@@ -1365,8 +1273,8 @@ struct is_same_archive
    this by hand.
  */
 #define CEREAL_ARCHIVE_RESTRICT(INTYPE, OUTTYPE)                               \
-  requires(cereal::traits::is_same_archive<Archive, INTYPE>::value ||          \
-           cereal::traits::is_same_archive<Archive, OUTTYPE>::value)
+  requires(cereal::traits::is_same_archive_v<Archive, INTYPE> ||               \
+           cereal::traits::is_same_archive_v<Archive, OUTTYPE>)
 
 //! Type traits only struct used to mark an archive as human readable (text
 //! based)
@@ -1376,9 +1284,8 @@ struct TextArchive {};
 
 //! Checks if an archive is a text archive (human readable)
 template <class A>
-struct is_text_archive
-    : std::integral_constant<
-          bool, std::is_base_of_v<TextArchive, detail::decay_archive<A>>> {};
+constexpr inline bool is_text_archive_v =
+    std::is_base_of_v<TextArchive, detail::decay_archive<A>>;
 } // namespace traits
 
 // ######################################################################
@@ -1391,7 +1298,7 @@ template <class T, class A,
           bool NonMemberVersioned =
               traits::has_non_member_versioned_load_and_construct_v<T, A>>
 struct Construct {
-  static_assert(cereal::traits::detail::delay_static_assert<T>::value,
+  static_assert(cereal::traits::detail::delay_static_assert<T>,
                 "cereal found more than one compatible load_and_construct "
                 "function for the provided type and archive combination. \n\n "
                 "Types must either have a member load_and_construct function "

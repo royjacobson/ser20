@@ -47,9 +47,9 @@
 #ifndef CEREAL_DETAILS_POLYMORPHIC_IMPL_HPP_
 #define CEREAL_DETAILS_POLYMORPHIC_IMPL_HPP_
 
-#include "cereal/details/util.hpp"
 #include "cereal/details/polymorphic_impl_fwd.hpp"
 #include "cereal/details/static_object.hpp"
+#include "cereal/details/util.hpp"
 #include "cereal/types/memory.hpp"
 #include "cereal/types/string.hpp"
 #include <functional>
@@ -136,7 +136,7 @@ struct PolymorphicCasters {
 #define UNREGISTERED_POLYMORPHIC_CAST_EXCEPTION(LoadSave)                      \
   throw cereal::Exception(                                                     \
       "Trying to " #LoadSave " a registered polymorphic type with an "         \
-                             "unregistered polymorphic cast.\n"                \
+      "unregistered polymorphic cast.\n"                                       \
       "Could not find a path to a base class (" +                              \
       util::demangle(baseInfo.name()) +                                        \
       ") for type: " + ::cereal::util::demangledName<Derived>() +              \
@@ -790,22 +790,16 @@ polymorphic_serialization_support<Archive, T>::instantiate() {
     registered archive types with the parameter type T. */
 template <class T, class Tag = polymorphic_binding_tag>
 struct bind_to_archives {
-  //! Binding for non abstract types
-  void bind(std::false_type) const {
-    instantiate_polymorphic_binding(static_cast<T*>(nullptr), 0, Tag{},
-                                    adl_tag{});
-  }
-
-  //! Binding for abstract types
-  void bind(std::true_type) const {}
-
   //! Binds the type T to all registered archives
   /*! If T is abstract, we will not serialize it and thus
       do not need to make a binding */
   bind_to_archives const& bind() const {
     static_assert(std::is_polymorphic_v<T>,
                   "Attempting to register non polymorphic type");
-    bind(std::is_abstract<T>());
+    if constexpr (std::is_abstract_v<T>) {
+      instantiate_polymorphic_binding(static_cast<T*>(nullptr), 0, Tag{},
+                                      adl_tag{});
+    }
     return *this;
   }
 };

@@ -196,31 +196,33 @@ loadAndConstructSharedPtr(Archive& ar, T* ptr,
 
 //! Saving std::shared_ptr for non polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::shared_ptr<T> const& ptr) {
+inline void CEREAL_SAVE_FUNCTION_NAME(
+    Archive& ar,
+    std::shared_ptr<T> const& ptr) requires(!std::is_polymorphic_v<T>) {
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
 }
 
 //! Loading std::shared_ptr, case when no user load and construct for non
 //! polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::shared_ptr<T>& ptr) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar, std::shared_ptr<T>& ptr) requires(!std::is_polymorphic_v<T>) {
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
 }
 
 //! Saving std::weak_ptr for non polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::weak_ptr<T> const& ptr) {
+inline void CEREAL_SAVE_FUNCTION_NAME(
+    Archive& ar,
+    std::weak_ptr<T> const& ptr) requires(!std::is_polymorphic_v<T>) {
   auto const sptr = ptr.lock();
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(sptr)));
 }
 
 //! Loading std::weak_ptr for non polymorphic types
 template <class Archive, class T>
-inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::weak_ptr<T>& ptr) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar, std::weak_ptr<T>& ptr) requires(!std::is_polymorphic_v<T>) {
   std::shared_ptr<T> sptr;
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(sptr)));
   ptr = sptr;
@@ -228,16 +230,18 @@ CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::weak_ptr<T>& ptr) {
 
 //! Saving std::unique_ptr for non polymorphic types
 template <class Archive, class T, class D>
-inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D> const& ptr) {
+inline void CEREAL_SAVE_FUNCTION_NAME(
+    Archive& ar,
+    std::unique_ptr<T, D> const& ptr) requires(!std::is_polymorphic_v<T>) {
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
 }
 
 //! Loading std::unique_ptr, case when user provides load_and_construct for non
 //! polymorphic types
 template <class Archive, class T, class D>
-inline typename std::enable_if<!std::is_polymorphic_v<T>, void>::type
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::unique_ptr<T, D>& ptr) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar,
+    std::unique_ptr<T, D>& ptr) requires(!std::is_polymorphic_v<T>) {
   ar(CEREAL_NVP_("ptr_wrapper", memory_detail::make_ptr_wrapper(ptr)));
 }
 
@@ -313,10 +317,10 @@ CEREAL_LOAD_FUNCTION_NAME(
 //! implementation)
 /*! @internal */
 template <class Archive, class T>
-inline typename std::enable_if<!traits::has_load_and_construct_v<T, Archive>,
-                               void>::type
-CEREAL_LOAD_FUNCTION_NAME(
-    Archive& ar, memory_detail::PtrWrapper<std::shared_ptr<T>&>& wrapper) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar,
+    memory_detail::PtrWrapper<std::shared_ptr<T>&>&
+        wrapper) requires(!traits::has_load_and_construct_v<T, Archive>) {
   uint32_t id;
 
   ar(CEREAL_NVP_("id", id));

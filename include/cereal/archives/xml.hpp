@@ -537,19 +537,19 @@ public:
   void setNextName(const char* name) { itsNodes.top().name = name; }
 
   //! Loads a bool from the current top node
-  template <class T, traits::EnableIf<std::is_unsigned_v<T>,
-                                      std::is_same_v<T, bool>> = traits::sfinae>
-  inline void loadValue(T& value) {
+  template <class T>
+  inline void loadValue(T& value) requires(
+      std::is_unsigned_v<T>&& std::is_same_v<T, bool>) {
     std::istringstream is(itsNodes.top().node->value());
     is.setf(std::ios::boolalpha);
     is >> value;
   }
 
   //! Loads a char (signed or unsigned) from the current top node
-  template <class T,
-            traits::EnableIf<std::is_integral_v<T>, !std::is_same_v<T, bool>,
-                             sizeof(T) == sizeof(char)> = traits::sfinae>
-  inline void loadValue(T& value) {
+  template <class T>
+  inline void loadValue(T& value) requires(std::is_integral_v<T> &&
+                                           !std::is_same_v<T, bool> &&
+                                           sizeof(T) == sizeof(char)) {
     value = *reinterpret_cast<T*>(itsNodes.top().node->value());
   }
 
@@ -569,45 +569,45 @@ public:
 
   //! Loads a type best represented as an unsigned long from the current top
   //! node
-  template <class T,
-            traits::EnableIf<std::is_unsigned_v<T>, !std::is_same_v<T, bool>,
-                             !std::is_same_v<T, char>,
-                             !std::is_same_v<T, unsigned char>,
-                             sizeof(T) < sizeof(long long)> = traits::sfinae>
-  inline void loadValue(T& value) {
+  template <class T>
+  inline void loadValue(T& value) requires(std::is_unsigned_v<T> &&
+                                           !std::is_same_v<T, bool> &&
+                                           !std::is_same_v<T, char> &&
+                                           !std::is_same_v<T, unsigned char> &&
+                                           sizeof(T) < sizeof(long long)) {
     value = static_cast<T>(std::stoul(itsNodes.top().node->value()));
   }
 
   //! Loads a type best represented as an unsigned long long from the current
   //! top node
-  template <class T,
-            traits::EnableIf<std::is_unsigned_v<T>, !std::is_same_v<T, bool>,
-                             sizeof(T) >= sizeof(long long)> = traits::sfinae>
-  inline void loadValue(T& value) {
+  template <class T>
+  inline void loadValue(T& value) requires(std::is_unsigned_v<T> &&
+                                           !std::is_same_v<T, bool> &&
+                                           sizeof(T) >= sizeof(long long)) {
     value = static_cast<T>(std::stoull(itsNodes.top().node->value()));
   }
 
   //! Loads a type best represented as an int from the current top node
-  template <class T,
-            traits::EnableIf<std::is_signed_v<T>, !std::is_same_v<T, char>,
-                             sizeof(T) <= sizeof(int)> = traits::sfinae>
-  inline void loadValue(T& value) {
+  template <class T>
+  inline void loadValue(T& value) requires(std::is_signed_v<T> &&
+                                           !std::is_same_v<T, char> &&
+                                           sizeof(T) <= sizeof(int)) {
     value = static_cast<T>(std::stoi(itsNodes.top().node->value()));
   }
 
   //! Loads a type best represented as a long from the current top node
-  template <class T,
-            traits::EnableIf<std::is_signed_v<T>, (sizeof(T) > sizeof(int)),
-                             sizeof(T) <= sizeof(long)> = traits::sfinae>
-  inline void loadValue(T& value) {
+  template <class T>
+  inline void loadValue(T& value) requires(std::is_signed_v<T> &&
+                                           (sizeof(T) > sizeof(int)) &&
+                                           sizeof(T) <= sizeof(long)) {
     value = static_cast<T>(std::stol(itsNodes.top().node->value()));
   }
 
   //! Loads a type best represented as a long long from the current top node
-  template <class T,
-            traits::EnableIf<std::is_signed_v<T>, (sizeof(T) > sizeof(long)),
-                             sizeof(T) <= sizeof(long long)> = traits::sfinae>
-  inline void loadValue(T& value) {
+  template <class T>
+  inline void loadValue(T& value) requires(std::is_signed_v<T> &&
+                                           (sizeof(T) > sizeof(long)) &&
+                                           sizeof(T) <= sizeof(long long)) {
     value = static_cast<T>(std::stoll(itsNodes.top().node->value()));
   }
 
@@ -807,25 +807,21 @@ template <class T> inline void epilogue(XMLInputArchive&, SizeTag<T> const&) {}
     that may be given data by the type about to be archived
 
     Minimal types do not start or end nodes */
-template <class T,
-          traits::DisableIf<traits::has_minimal_base_class_serialization<
-                                T, traits::has_minimal_output_serialization,
-                                XMLOutputArchive>::value ||
-                            traits::has_minimal_output_serialization<
-                                T, XMLOutputArchive>::value> = traits::sfinae>
-inline void prologue(XMLOutputArchive& ar, T const&) {
+template <class T>
+inline void prologue(XMLOutputArchive& ar, T const&) requires(!(
+    traits::has_minimal_base_class_serialization<
+        T, traits::has_minimal_output_serialization, XMLOutputArchive>::value ||
+    traits::has_minimal_output_serialization<T, XMLOutputArchive>::value)) {
   ar.startNode();
   ar.insertType<T>();
 }
 
 //! Prologue for all other types for XML input archives (except minimal types)
-template <class T,
-          traits::DisableIf<traits::has_minimal_base_class_serialization<
-                                T, traits::has_minimal_input_serialization,
-                                XMLInputArchive>::value ||
-                            traits::has_minimal_input_serialization<
-                                T, XMLInputArchive>::value> = traits::sfinae>
-inline void prologue(XMLInputArchive& ar, T const&) {
+template <class T>
+inline void prologue(XMLInputArchive& ar, T const&) requires(
+    !(traits::has_minimal_base_class_serialization<
+          T, traits::has_minimal_input_serialization, XMLInputArchive>::value ||
+      traits::has_minimal_input_serialization<T, XMLInputArchive>::value)) {
   ar.startNode();
 }
 
@@ -835,25 +831,21 @@ inline void prologue(XMLInputArchive& ar, T const&) {
 /*! Finishes the node created in the prologue
 
     Minimal types do not start or end nodes */
-template <class T,
-          traits::DisableIf<traits::has_minimal_base_class_serialization<
-                                T, traits::has_minimal_output_serialization,
-                                XMLOutputArchive>::value ||
-                            traits::has_minimal_output_serialization<
-                                T, XMLOutputArchive>::value> = traits::sfinae>
-inline void epilogue(XMLOutputArchive& ar, T const&) {
+template <class T>
+inline void epilogue(XMLOutputArchive& ar, T const&) requires(!(
+    traits::has_minimal_base_class_serialization<
+        T, traits::has_minimal_output_serialization, XMLOutputArchive>::value ||
+    traits::has_minimal_output_serialization<T, XMLOutputArchive>::value)) {
   ar.finishNode();
 }
 
 //! Epilogue for all other types other for XML output archives (except minimal
 //! types)
-template <class T,
-          traits::DisableIf<traits::has_minimal_base_class_serialization<
-                                T, traits::has_minimal_input_serialization,
-                                XMLInputArchive>::value ||
-                            traits::has_minimal_input_serialization<
-                                T, XMLInputArchive>::value> = traits::sfinae>
-inline void epilogue(XMLInputArchive& ar, T const&) {
+template <class T>
+inline void epilogue(XMLInputArchive& ar, T const&) requires(
+    !(traits::has_minimal_base_class_serialization<
+          T, traits::has_minimal_input_serialization, XMLInputArchive>::value ||
+      traits::has_minimal_input_serialization<T, XMLInputArchive>::value)) {
   ar.finishNode();
 }
 
@@ -890,14 +882,17 @@ inline void CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar, SizeTag<T>& st) {
 
 // ######################################################################
 //! Saving for POD types to xml
-template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
-inline void CEREAL_SAVE_FUNCTION_NAME(XMLOutputArchive& ar, T const& t) {
+template <class T>
+inline void
+CEREAL_SAVE_FUNCTION_NAME(XMLOutputArchive& ar,
+                          T const& t) requires(std::is_arithmetic_v<T>) {
   ar.saveValue(t);
 }
 
 //! Loading for POD types from xml
-template <class T, traits::EnableIf<std::is_arithmetic_v<T>> = traits::sfinae>
-inline void CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar, T& t) {
+template <class T>
+inline void CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar,
+                                      T& t) requires(std::is_arithmetic_v<T>) {
   ar.loadValue(t);
 }
 
