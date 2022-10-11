@@ -796,7 +796,7 @@ struct bind_to_archives {
   bind_to_archives const& bind() const {
     static_assert(std::is_polymorphic_v<T>,
                   "Attempting to register non polymorphic type");
-    if constexpr (std::is_abstract_v<T>) {
+    if constexpr (!std::is_abstract_v<T>) {
       instantiate_polymorphic_binding(static_cast<T*>(nullptr), 0, Tag{},
                                       adl_tag{});
     }

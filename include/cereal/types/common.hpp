@@ -88,15 +88,15 @@ public:
 //! Saving for enum types
 template <class Archive, class T>
 inline
-    typename std::enable_if<common_detail::is_enum<T>::value,
-                            typename common_detail::is_enum<T>::base_type>::type
+    std::enable_if_t<common_detail::is_enum<T>::value,
+                            typename common_detail::is_enum<T>::base_type>
     CEREAL_SAVE_MINIMAL_FUNCTION_NAME(Archive const&, T const& t) {
   return static_cast<typename common_detail::is_enum<T>::base_type>(t);
 }
 
 //! Loading for enum types
 template <class Archive, class T>
-inline typename std::enable_if<common_detail::is_enum<T>::value, void>::type
+inline std::enable_if_t<common_detail::is_enum<T>::value, void>
 CEREAL_LOAD_MINIMAL_FUNCTION_NAME(
     Archive const&, T&& t,
     typename common_detail::is_enum<T>::base_type const& value) {

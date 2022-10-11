@@ -268,8 +268,7 @@ inline void CEREAL_SAVE_FUNCTION_NAME(
 //! implementation)
 /*! @internal */
 template <class Archive, class T>
-inline typename std::enable_if<traits::has_load_and_construct_v<T, Archive>,
-                               void>::type
+inline std::enable_if_t<traits::has_load_and_construct_v<T, Archive>, void>
 CEREAL_LOAD_FUNCTION_NAME(
     Archive& ar, memory_detail::PtrWrapper<std::shared_ptr<T>&>& wrapper) {
   uint32_t id;
@@ -359,8 +358,7 @@ inline void CEREAL_SAVE_FUNCTION_NAME(
 //! implementation)
 /*! @internal */
 template <class Archive, class T, class D>
-inline typename std::enable_if<traits::has_load_and_construct_v<T, Archive>,
-                               void>::type
+inline std::enable_if_t<traits::has_load_and_construct_v<T, Archive>, void>
 CEREAL_LOAD_FUNCTION_NAME(
     Archive& ar, memory_detail::PtrWrapper<std::unique_ptr<T, D>&>& wrapper) {
   uint8_t isValid;
@@ -397,8 +395,7 @@ CEREAL_LOAD_FUNCTION_NAME(
 //! implementation)
 /*! @internal */
 template <class Archive, class T, class D>
-inline typename std::enable_if<!traits::has_load_and_construct_v<T, Archive>,
-                               void>::type
+inline std::enable_if_t<!traits::has_load_and_construct_v<T, Archive>, void>
 CEREAL_LOAD_FUNCTION_NAME(
     Archive& ar, memory_detail::PtrWrapper<std::unique_ptr<T, D>&>& wrapper) {
   uint8_t isValid;

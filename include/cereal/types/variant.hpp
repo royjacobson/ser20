@@ -47,17 +47,19 @@ template <class Archive> struct variant_save_visitor {
   Archive& ar;
 };
 
+
+// TODO: This seems 'slightly' inefficient...
 //! @internal
 template <int N, class Variant, class Archive>
-typename std::enable_if<N == std::variant_size_v<Variant>, void>::type
-load_variant(Archive& /*ar*/, int /*target*/, Variant& /*variant*/) {
+void load_variant(Archive& /*ar*/, int /*target*/,
+                  Variant& /*variant*/) requires(N ==
+                                                 std::variant_size_v<Variant>) {
   throw ::cereal::Exception("Error traversing variant during load");
 }
 //! @internal
 template <int N, class Variant, class Archive>
-    typename std::enable_if <
-    N<std::variant_size_v<Variant>, void>::type
-    load_variant(Archive& ar, int target, Variant& variant) {
+void load_variant(Archive& ar, int target,
+                  Variant& variant) requires(N < std::variant_size_v<Variant>) {
   if (N == target) {
     variant.template emplace<N>();
     ar(CEREAL_NVP_("data", std::get<N>(variant)));

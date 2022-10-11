@@ -39,10 +39,10 @@ namespace cereal {
 //! Saving for std::valarray arithmetic types, using binary serialization, if
 //! supported
 template <class Archive, class T>
-inline typename std::enable_if<
+inline std::enable_if_t<
     traits::is_output_serializable_v<BinaryData<T>, Archive> &&
         std::is_arithmetic_v<T>,
-    void>::type
+    void>
 CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
   ar(make_size_tag(
       static_cast<size_type>(valarray.size()))); // number of elements
@@ -54,10 +54,10 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
 //! Loading for std::valarray arithmetic types, using binary serialization, if
 //! supported
 template <class Archive, class T>
-inline typename std::enable_if<
+inline std::enable_if_t<
     traits::is_input_serializable_v<BinaryData<T>, Archive> &&
         std::is_arithmetic_v<T>,
-    void>::type
+    void>
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) {
   size_type valarraySize;
   ar(make_size_tag(valarraySize));
@@ -69,10 +69,10 @@ CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) {
 
 //! Saving for std::valarray all other types
 template <class Archive, class T>
-inline typename std::enable_if<
+inline std::enable_if_t<
     !traits::is_output_serializable_v<BinaryData<T>, Archive> ||
         !std::is_arithmetic_v<T>,
-    void>::type
+    void>
 CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
   ar(make_size_tag(
       static_cast<size_type>(valarray.size()))); // number of elements
@@ -82,10 +82,10 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
 
 //! Loading for std::valarray all other types
 template <class Archive, class T>
-inline typename std::enable_if<
+inline std::enable_if_t<
     !traits::is_input_serializable_v<BinaryData<T>, Archive> ||
         !std::is_arithmetic_v<T>,
-    void>::type
+    void>
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) {
   size_type valarraySize;
   ar(make_size_tag(valarraySize));

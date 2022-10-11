@@ -309,7 +309,7 @@ public:
    * serialized */
   void serializeDeferments() {
     for (auto& deferment : itsDeferments)
-      deferment();
+      deferment(*self);
   }
 
   /*! @name Boost Transition Layer
@@ -377,7 +377,7 @@ public:
     auto id = itsSharedPointerMap.find(addr);
     if (id == itsSharedPointerMap.end()) {
       auto ptrId = itsCurrentPointerId++;
-      itsSharedPointerMap.insert({addr, ptrId});
+      itsSharedPointerMap.emplace(addr, ptrId);
       return ptrId | detail::msb_32bit; // mask MSB to be 1
     } else
       return id->second;
@@ -395,7 +395,7 @@ public:
     auto id = itsPolymorphicTypeMap.find(name);
     if (id == itsPolymorphicTypeMap.end()) {
       auto polyId = itsCurrentPolymorphicTypeId++;
-      itsPolymorphicTypeMap.insert({name, polyId});
+      itsPolymorphicTypeMap.emplace(name, polyId);
       return polyId | detail::msb_32bit; // mask MSB to be 1
     } else
       return id->second;
@@ -433,11 +433,11 @@ private:
     return *self;
   }
 
-  std::vector<std::function<void(void)>> itsDeferments;
+  std::vector<std::function<void(ArchiveType&)>> itsDeferments;
 
   template <class T> inline ArchiveType& processImpl(DeferredData<T> const& d) {
-    std::function<void(void)> deferment(
-        [this, d]() { self->process(d.value); });
+    std::function<void(ArchiveType&)> deferment(
+        [d](ArchiveType& ar) { ar.process(d.value); });
     itsDeferments.emplace_back(std::move(deferment));
 
     return *self;
@@ -699,7 +699,7 @@ public:
    * serialized */
   void serializeDeferments() {
     for (auto& deferment : itsDeferments)
-      deferment();
+      deferment(*self);
   }
 
   /*! @name Boost Transition Layer
@@ -839,11 +839,11 @@ private:
     return *self;
   }
 
-  std::vector<std::function<void(void)>> itsDeferments;
+  std::vector<std::function<void(ArchiveType&)>> itsDeferments;
 
   template <class T> inline ArchiveType& processImpl(DeferredData<T> const& d) {
-    std::function<void(void)> deferment(
-        [this, d]() { self->process(d.value); });
+    std::function<void(ArchiveType&)> deferment(
+        [d](ArchiveType& ar) { ar.process(d.value); });
     itsDeferments.emplace_back(std::move(deferment));
 
     return *self;
