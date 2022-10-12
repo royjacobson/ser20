@@ -244,7 +244,7 @@ template <class Archive, class T>
 inline bool serialize_wrapper(
     Archive& ar, std::shared_ptr<T>& ptr,
     std::uint32_t const
-        nameid) requires((traits::is_default_constructible<T>::value ||
+        nameid) requires((traits::is_default_constructible<T> ||
                           traits::has_load_and_construct_v<
                               T, Archive>)&&!std::is_abstract_v<T>) {
   if (nameid & detail::msb2_32bit) {
@@ -263,7 +263,7 @@ template <class Archive, class T, class D>
 inline bool serialize_wrapper(
     Archive& ar, std::unique_ptr<T, D>& ptr,
     std::uint32_t const
-        nameid) requires((traits::is_default_constructible<T>::value ||
+        nameid) requires((traits::is_default_constructible<T> ||
                           traits::has_load_and_construct_v<
                               T, Archive>)&&!std::is_abstract_v<T>) {
   if (nameid & detail::msb2_32bit) {
@@ -282,11 +282,12 @@ inline bool serialize_wrapper(
     this was a polymorphic type serialized by its proper pointer type
     @internal */
 template <class Archive, class T>
-inline std::enable_if_t<(!traits::is_default_constructible<T>::value &&
-                         !traits::has_load_and_construct_v<T, Archive>) ||
-                            std::is_abstract_v<T>,
-                        bool>
-serialize_wrapper(Archive&, std::shared_ptr<T>&, std::uint32_t const nameid) {
+inline bool serialize_wrapper(
+    Archive&, std::shared_ptr<T>&,
+    std::uint32_t const
+        nameid) requires((!traits::is_default_constructible<T> &&
+                          !traits::has_load_and_construct_v<T, Archive>) ||
+                         std::is_abstract_v<T>) {
   if (nameid & detail::msb2_32bit)
     throw cereal::Exception(
         "Cannot load a polymorphic type that is not default constructable and "
@@ -303,12 +304,12 @@ serialize_wrapper(Archive&, std::shared_ptr<T>&, std::uint32_t const nameid) {
     this was a polymorphic type serialized by its proper pointer type
     @internal */
 template <class Archive, class T, class D>
-inline std::enable_if_t<(!traits::is_default_constructible<T>::value &&
-                         !traits::has_load_and_construct_v<T, Archive>) ||
-                            std::is_abstract_v<T>,
-                        bool>
-serialize_wrapper(Archive&, std::unique_ptr<T, D>&,
-                  std::uint32_t const nameid) {
+inline bool serialize_wrapper(
+    Archive&, std::unique_ptr<T, D>&,
+    std::uint32_t const
+        nameid) requires((!traits::is_default_constructible<T> &&
+                          !traits::has_load_and_construct_v<T, Archive>) ||
+                         std::is_abstract_v<T>) {
   if (nameid & detail::msb2_32bit)
     throw cereal::Exception(
         "Cannot load a polymorphic type that is not default constructable and "

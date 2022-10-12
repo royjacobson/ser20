@@ -39,11 +39,12 @@ namespace cereal {
 //! Saving for std::valarray arithmetic types, using binary serialization, if
 //! supported
 template <class Archive, class T>
-inline std::enable_if_t<
-    traits::is_output_serializable_v<BinaryData<T>, Archive> &&
-        std::is_arithmetic_v<T>,
-    void>
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
+inline void CEREAL_SAVE_FUNCTION_NAME(
+    Archive& ar,
+    std::valarray<T> const&
+        valarray) requires(std::is_arithmetic_v<T>&&
+                               traits::is_output_serializable_v<BinaryData<T>,
+                                                                Archive>) {
   ar(make_size_tag(
       static_cast<size_type>(valarray.size()))); // number of elements
   ar(binary_data(&valarray[0],
@@ -54,11 +55,10 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
 //! Loading for std::valarray arithmetic types, using binary serialization, if
 //! supported
 template <class Archive, class T>
-inline std::enable_if_t<
-    traits::is_input_serializable_v<BinaryData<T>, Archive> &&
-        std::is_arithmetic_v<T>,
-    void>
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) {
+inline void
+CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) requires(
+    std::is_arithmetic_v<T>&&
+        traits::is_input_serializable_v<BinaryData<T>, Archive>) {
   size_type valarraySize;
   ar(make_size_tag(valarraySize));
 
@@ -69,11 +69,12 @@ CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) {
 
 //! Saving for std::valarray all other types
 template <class Archive, class T>
-inline std::enable_if_t<
-    !traits::is_output_serializable_v<BinaryData<T>, Archive> ||
-        !std::is_arithmetic_v<T>,
-    void>
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
+inline void CEREAL_SAVE_FUNCTION_NAME(
+    Archive& ar,
+    std::valarray<T> const&
+        valarray) requires(!std::is_arithmetic_v<T> ||
+                           !traits::is_output_serializable_v<BinaryData<T>,
+                                                             Archive>) {
   ar(make_size_tag(
       static_cast<size_type>(valarray.size()))); // number of elements
   for (auto&& v : valarray)
@@ -82,11 +83,10 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar, std::valarray<T> const& valarray) {
 
 //! Loading for std::valarray all other types
 template <class Archive, class T>
-inline std::enable_if_t<
-    !traits::is_input_serializable_v<BinaryData<T>, Archive> ||
-        !std::is_arithmetic_v<T>,
-    void>
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) {
+inline void
+CEREAL_LOAD_FUNCTION_NAME(Archive& ar, std::valarray<T>& valarray) requires(
+    !std::is_arithmetic_v<T> ||
+    !traits::is_input_serializable_v<BinaryData<T>, Archive>) {
   size_type valarraySize;
   ar(make_size_tag(valarraySize));
 

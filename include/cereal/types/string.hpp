@@ -36,10 +36,11 @@
 namespace cereal {
 //! Serialization for basic_string types, if binary data is supported
 template <class Archive, class CharT, class Traits, class Alloc>
-inline std::enable_if_t<
-    traits::is_output_serializable_v<BinaryData<CharT>, Archive>, void>
-CEREAL_SAVE_FUNCTION_NAME(Archive& ar,
-                          std::basic_string<CharT, Traits, Alloc> const& str) {
+inline void CEREAL_SAVE_FUNCTION_NAME(
+    Archive& ar,
+    std::basic_string<CharT, Traits, Alloc> const&
+        str) requires(traits::is_output_serializable_v<BinaryData<CharT>,
+                                                       Archive>) {
   // Save number of chars + the data
   ar(make_size_tag(static_cast<size_type>(str.size())));
   ar(binary_data(str.data(), str.size() * sizeof(CharT)));
@@ -47,10 +48,11 @@ CEREAL_SAVE_FUNCTION_NAME(Archive& ar,
 
 //! Serialization for basic_string types, if binary data is supported
 template <class Archive, class CharT, class Traits, class Alloc>
-inline std::enable_if_t<
-    traits::is_input_serializable_v<BinaryData<CharT>, Archive>, void>
-CEREAL_LOAD_FUNCTION_NAME(Archive& ar,
-                          std::basic_string<CharT, Traits, Alloc>& str) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar,
+    std::basic_string<CharT, Traits, Alloc>&
+        str) requires(traits::is_input_serializable_v<BinaryData<CharT>,
+                                                      Archive>) {
   size_type size;
   ar(make_size_tag(size));
   str.resize(static_cast<std::size_t>(size));

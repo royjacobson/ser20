@@ -268,9 +268,10 @@ inline void CEREAL_SAVE_FUNCTION_NAME(
 //! implementation)
 /*! @internal */
 template <class Archive, class T>
-inline std::enable_if_t<traits::has_load_and_construct_v<T, Archive>, void>
-CEREAL_LOAD_FUNCTION_NAME(
-    Archive& ar, memory_detail::PtrWrapper<std::shared_ptr<T>&>& wrapper) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar,
+    memory_detail::PtrWrapper<std::shared_ptr<T>&>&
+        wrapper) requires(traits::has_load_and_construct_v<T, Archive>) {
   uint32_t id;
 
   ar(CEREAL_NVP_("id", id));
@@ -358,9 +359,10 @@ inline void CEREAL_SAVE_FUNCTION_NAME(
 //! implementation)
 /*! @internal */
 template <class Archive, class T, class D>
-inline std::enable_if_t<traits::has_load_and_construct_v<T, Archive>, void>
-CEREAL_LOAD_FUNCTION_NAME(
-    Archive& ar, memory_detail::PtrWrapper<std::unique_ptr<T, D>&>& wrapper) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar,
+    memory_detail::PtrWrapper<std::unique_ptr<T, D>&>&
+        wrapper) requires(traits::has_load_and_construct_v<T, Archive>) {
   uint8_t isValid;
   ar(CEREAL_NVP_("valid", isValid));
 
@@ -395,9 +397,10 @@ CEREAL_LOAD_FUNCTION_NAME(
 //! implementation)
 /*! @internal */
 template <class Archive, class T, class D>
-inline std::enable_if_t<!traits::has_load_and_construct_v<T, Archive>, void>
-CEREAL_LOAD_FUNCTION_NAME(
-    Archive& ar, memory_detail::PtrWrapper<std::unique_ptr<T, D>&>& wrapper) {
+inline void CEREAL_LOAD_FUNCTION_NAME(
+    Archive& ar,
+    memory_detail::PtrWrapper<std::unique_ptr<T, D>&>&
+        wrapper) requires(!traits::has_load_and_construct_v<T, Archive>) {
   uint8_t isValid;
   ar(CEREAL_NVP_("valid", isValid));
 
