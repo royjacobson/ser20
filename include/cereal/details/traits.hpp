@@ -792,11 +792,22 @@ constexpr inline bool has_member_versioned_load_and_construct_v =
    if the type has the proper non-member function for the given archive. */
 #define CEREAL_MAKE_HAS_NON_MEMBER_LOAD_AND_CONSTRUCT_TEST(test_name,          \
                                                            versioned)          \
+  namespace detail {                                                           \
+  template <class T, class A> struct has_non_member_##test_name##_impl {       \
+    template <class TT, class AA>                                              \
+    static auto test(int)                                                      \
+        -> decltype(LoadAndConstruct<TT>::load_and_construct(                  \
+                        std::declval<AA&>(),                                   \
+                        std::declval<::cereal::construct<TT>&>() versioned),   \
+                    yes());                                                    \
+    template <class, class> static no test(...);                               \
+    static const bool value = std::is_same_v<decltype(test<T, A>(0)), yes>;    \
+  };                                                                           \
+  } /* end namespace detail */                                                 \
   template <class T, class A>                                                  \
-  concept has_non_member_##test_name##_v =                                      \
-      requires(A & a, ::cereal::construct<T> & t) {                            \
-    {LoadAndConstruct<T>::load_and_construct(a, t versioned)};                \
-  };
+  constexpr inline bool has_non_member_##test_name##_v =                       \
+      detail::has_non_member_##test_name##_impl<std::remove_const_t<T>,        \
+                                                A>::value;
 
 // ######################################################################
 //! Non member load and construct check
