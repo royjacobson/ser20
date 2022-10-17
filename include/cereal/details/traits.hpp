@@ -346,7 +346,7 @@ struct HasNonMemberSaveMinimalResult {
   concept HasNonMemberMinimalNonConst##test_name##Save = requires(T & t,       \
                                                                   A& a) {      \
     {                                                                          \
-      cereal::access::member_save_minimal_non_const(a, t versioned)            \
+      CEREAL_SAVE_MINIMAL_FUNCTION_NAME(a, t versioned)                        \
       } -> ValidMinimalReturnType;                                             \
   };                                                                           \
                                                                                \
@@ -588,67 +588,47 @@ CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal, versioned_load)
     @param save_name The corresponding name the save test would have (e.g.
    save_minimal or versioned_save_minimal)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
+
+namespace detail {
+template <bool Detected, bool TypeValid> struct HasMemberLoadMinimalResult {
+  static_assert(TypeValid,
+                "cereal detected different types in corresponding non-member "
+                "load_minimal and save_minimal functions. \n "
+                "the paramater to load_minimal must be a constant reference to "
+                "the type that save_minimal returns");
+  static constexpr inline bool value = Detected;
+};
+} // namespace detail
+
 #define CEREAL_MAKE_HAS_NON_MEMBER_LOAD_MINIMAL_TEST(test_name, save_name,     \
                                                      versioned)                \
   namespace detail {                                                           \
-  template <class T, class A, class U = void>                                  \
-  struct has_non_member_##test_name##_impl {                                   \
-    template <class TT, class AA>                                              \
-    static auto test(int)                                                      \
-        -> decltype(CEREAL_LOAD_MINIMAL_FUNCTION_NAME(                         \
-                        std::declval<AA const&>(), std::declval<TT&>(),        \
-                        AnyConvert() versioned),                               \
-                    yes());                                                    \
-    template <class, class> static no test(...);                               \
-    static const bool exists = std::is_same_v<decltype(test<T, A>(0)), yes>;   \
-                                                                               \
-    template <class TT, class AA, class UU>                                    \
-    static auto test2(int)                                                     \
-        -> decltype(CEREAL_LOAD_MINIMAL_FUNCTION_NAME(                         \
-                        std::declval<AA const&>(), std::declval<TT&>(),        \
-                        NoConvertConstRef<UU>() versioned),                    \
-                    yes());                                                    \
-    template <class, class, class> static no test2(...);                       \
-    static const bool valid =                                                  \
-        std::is_same_v<decltype(test2<T, A, U>(0)), yes>;                      \
-                                                                               \
-    template <class TT, class AA>                                              \
-    static auto test3(int)                                                     \
-        -> decltype(CEREAL_LOAD_MINIMAL_FUNCTION_NAME(                         \
-                        std::declval<AA const&>(), NoConvertRef<TT>(),         \
-                        AnyConvert() versioned),                               \
-                    yes());                                                    \
-    template <class, class> static no test3(...);                              \
-    static const bool const_valid =                                            \
-        std::is_same_v<decltype(test3<T, A>(0)), yes>;                         \
-  };                                                                           \
-                                                                               \
-  template <class T, class A, bool Valid>                                      \
-  struct has_non_member_##test_name##_wrapper : std::false_type {};            \
-                                                                               \
   template <class T, class A>                                                  \
-  struct has_non_member_##test_name##_wrapper<T, A, true> {                    \
-    using AOut = typename detail::get_output_from_input<A>::type;              \
-                                                                               \
-    using SaveType = get_non_member_##save_name##_t<T, AOut>; \
-    using check = has_non_member_##test_name##_impl<T, A, SaveType>;           \
-    static const bool value = check::exists;                                   \
-                                                                               \
-    static_assert(check::valid || !check::exists,                              \
-                  "cereal detected different types in corresponding "          \
-                  "non-member " #test_name " and " #save_name                  \
-                  " functions. \n "                                            \
-                  "the paramater to " #test_name                               \
-                  " must be a constant reference to the type that " #save_name \
-                  " returns.");                                                \
+  concept has_##test_name = requires(T & t, const A& a) {                      \
+    {CEREAL_LOAD_MINIMAL_FUNCTION_NAME(a, t, AnyConvert() versioned)};         \
+  };                                                                           \
+  template <class T, class A>                                                  \
+  concept has_##test_name##_consistent_type =                                  \
+      std::is_base_of_v<cereal::detail::InputArchiveBase, A>&& requires(T & t,         \
+                                                                const A& a) {  \
+    {CEREAL_LOAD_MINIMAL_FUNCTION_NAME(                                        \
+        a, t,                                                                  \
+        NoConvertConstRef<get_non_member_##save_name##_t<                      \
+            T, typename get_output_from_input<A>::type>>() versioned)};        \
+  };                                                                           \
+  template <class T, class A>                                                  \
+  concept has_##test_name##_const_correct = requires(const A& a) {             \
+    {CEREAL_LOAD_MINIMAL_FUNCTION_NAME(a, NoConvertRef<T>(),                   \
+                                       AnyConvert() versioned)};               \
   };                                                                           \
   } /* namespace detail */                                                     \
                                                                                \
   template <class T, class A>                                                  \
   constexpr inline bool has_non_member_##test_name##_v =                       \
-      detail::has_non_member_##test_name##_wrapper<                            \
-          T, A,                                                                \
-          detail::has_non_member_##test_name##_impl<T, A>::exists>::value;
+      detail::HasMemberLoadMinimalResult<                                      \
+          detail::has_##test_name<T, A>,                                       \
+          detail::has_##test_name##_consistent_type<T, A> ||                   \
+              !detail::has_##test_name<T, A>>::value;
 
 // ######################################################################
 // Non-Member Load Minimal
