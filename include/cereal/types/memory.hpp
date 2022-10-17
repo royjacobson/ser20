@@ -304,7 +304,7 @@ inline void CEREAL_LOAD_FUNCTION_NAME(
     // Perform the actual loading and allocation
     memory_detail::loadAndConstructSharedPtr(
         ar, ptr.get(),
-        typename ::cereal::traits::has_shared_from_this<NonConstT>::type());
+        std::integral_constant<bool, ::cereal::traits::has_shared_from_this<NonConstT>>());
 
     // Mark pointer as valid (initialized)
     *valid = true;

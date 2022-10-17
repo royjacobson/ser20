@@ -36,35 +36,21 @@
 
 namespace cereal {
 namespace variant_detail {
-//! @internal
-template <class Archive> struct variant_save_visitor {
-  variant_save_visitor(Archive& ar_) : ar(ar_) {}
 
-  template <class T> void operator()(T const& value) const {
-    ar(CEREAL_NVP_("data", value));
-  }
-
-  Archive& ar;
-};
-
-
-// TODO: This seems 'slightly' inefficient...
 //! @internal
 template <int N, class Variant, class Archive>
-void load_variant(Archive& /*ar*/, int /*target*/,
-                  Variant& /*variant*/) requires(N ==
-                                                 std::variant_size_v<Variant>) {
-  throw ::cereal::Exception("Error traversing variant during load");
-}
-//! @internal
-template <int N, class Variant, class Archive>
-void load_variant(Archive& ar, int target,
-                  Variant& variant) requires(N < std::variant_size_v<Variant>) {
-  if (N == target) {
+inline void load_variant_at_index(Archive& ar, size_t target,
+                                  Variant& variant) {
+  if (target == N) {
     variant.template emplace<N>();
     ar(CEREAL_NVP_("data", std::get<N>(variant)));
-  } else
-    load_variant<N + 1>(ar, target, variant);
+  }
+}
+
+template <class Variant, class Archive, std::size_t... Is>
+inline void load_variant(Archive& ar, size_t target, Variant& variant,
+                         std::index_sequence<Is...>) {
+  (load_variant_at_index<Is, Variant, Archive>(ar, target, variant), ...);
 }
 
 } // namespace variant_detail
@@ -75,8 +61,8 @@ inline void CEREAL_SAVE_FUNCTION_NAME(
     Archive& ar, std::variant<VariantType1, VariantTypes...> const& variant) {
   std::int32_t index = static_cast<std::int32_t>(variant.index());
   ar(CEREAL_NVP_("index", index));
-  variant_detail::variant_save_visitor<Archive> visitor(ar);
-  std::visit(visitor, variant);
+  std::visit([&ar](const auto& value) -> void { ar(CEREAL_NVP_("data", value)); },
+             variant);
 }
 
 //! Loading for std::variant
@@ -90,7 +76,9 @@ inline void CEREAL_LOAD_FUNCTION_NAME(Archive& ar,
   if (index >= static_cast<std::int32_t>(std::variant_size_v<variant_t>))
     throw Exception("Invalid 'index' selector when deserializing std::variant");
 
-  variant_detail::load_variant<0>(ar, index, variant);
+  variant_detail::load_variant(
+      ar, index, variant,
+      std::make_index_sequence<std::variant_size_v<variant_t>>());
 }
 
 //! Serializing a std::monostate

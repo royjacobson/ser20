@@ -81,29 +81,20 @@ template <size_t T> struct tuple_element_name {
 
 // unwinds a tuple to save it
 //! @internal
-template <size_t Height> struct serialize {
-  template <class Archive, class... Types>
-  inline static void apply(Archive& ar, std::tuple<Types...>& tuple) {
-    serialize<Height - 1>::template apply(ar, tuple);
-    ar(CEREAL_NVP_(tuple_element_name<Height - 1>::c_str(),
-                   std::get<Height - 1>(tuple)));
-  }
-};
+template <class Archive, class... Types, std::size_t... Is>
+inline void serialize_tuple(Archive& ar, std::tuple<Types...>& tuple,
+                            std::index_sequence<Is...>) {
+  (ar(CEREAL_NVP_(tuple_element_name<Is>::c_str(), std::get<Is>(tuple))), ...);
+}
 
-// Zero height specialization - nothing to do here
-//! @internal
-template <> struct serialize<0> {
-  template <class Archive, class... Types>
-  inline static void apply(Archive&, std::tuple<Types...>&) {}
-};
 } // namespace tuple_detail
 
 //! Serializing for std::tuple
 template <class Archive, class... Types>
 inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar,
                                            std::tuple<Types...>& tuple) {
-  tuple_detail::serialize<
-      std::tuple_size<std::tuple<Types...>>::value>::template apply(ar, tuple);
+  tuple_detail::serialize_tuple(ar, tuple,
+                                std::make_index_sequence<sizeof...(Types)>());
 }
 } // namespace cereal
 

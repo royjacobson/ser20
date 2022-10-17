@@ -346,10 +346,6 @@ public:
   }
 
   // ####### Other Functionality ##########################################
-  // for detecting inheritance from enable_shared_from_this
-  template <class T>
-  inline static auto shared_from_this(T& t) -> decltype(t.shared_from_this());
-
   // for placement new
   template <class T, class... Args>
   inline static void construct(T*& ptr, Args&&... args) {

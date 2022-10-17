@@ -45,10 +45,7 @@ namespace detail {
 // ######################################################################
 //! Used to delay a static_assert until template instantiation
 template <class T> constexpr inline bool delay_static_assert = false;
-} // namespace detail
 
-// ######################################################################
-namespace detail {
 template <class InputArchive> struct get_output_from_input : no {
   static_assert(
       detail::delay_static_assert<InputArchive>,
@@ -154,65 +151,36 @@ CEREAL_MAKE_HAS_NON_MEMBER_TEST(versioned_load, CEREAL_LOAD_FUNCTION_NAME,
 
     @param test_name The name to give the test (e.g. save or versioned_save)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
+namespace detail {
+template <bool Detected, bool Valid> struct HasMemberSaveResult {
+  static_assert(Valid, "cereal detected a non-const save. \n "
+                       "save member functions must always be const");
+  static constexpr inline bool value = Detected;
+};
+} // namespace detail
+
 #define CEREAL_MAKE_HAS_MEMBER_SAVE_IMPL(test_name, versioned)                 \
   namespace detail {                                                           \
-  template <class T, class A> struct has_member_##test_name##_impl {           \
-    template <class TT, class AA>                                              \
-    static auto test(int)                                                      \
-        -> decltype(cereal::access::member_save(std::declval<AA&>(),           \
-                                                std::declval<TT const&>()      \
-                                                    versioned),                \
-                    yes());                                                    \
-    template <class, class> static no test(...);                               \
-    static const bool value = std::is_same_v<decltype(test<T, A>(0)), yes>;    \
-                                                                               \
-    template <class TT, class AA>                                              \
-    static auto test2(int)                                                     \
-        -> decltype(cereal::access::member_save_non_const(                     \
-                        std::declval<AA&>(),                                   \
-                        std::declval<std::remove_const_t<TT>&>() versioned),   \
-                    yes());                                                    \
-    template <class, class> static no test2(...);                              \
-    static const bool not_const_type =                                         \
-        std::is_same_v<decltype(test2<T, A>(0)), yes>;                         \
+  template <class T, class A>                                                  \
+  concept HasMemberNonConst##test_name##Save = requires(T & t, A& a) {         \
+    {cereal::access::member_save_non_const(a, t versioned)};                   \
   };                                                                           \
-  } /* end namespace detail */
+                                                                               \
+  template <class T, class A>                                                  \
+  concept HasMemberConst##test_name##Save = requires(const T& t, A& a) {       \
+    {cereal::access::member_save(a, t versioned)};                             \
+  };                                                                           \
+  }                                                                            \
+  template <class T, class A>                                                  \
+  constexpr inline bool has_member_##test_name##_v =                           \
+      detail::HasMemberSaveResult<                                             \
+          detail::HasMemberConst##test_name##Save<T, A>,                       \
+          detail::HasMemberConst##test_name##Save<T, A> ||                     \
+              !detail::HasMemberNonConst##test_name##Save<T, A>>::value;
 
-// ######################################################################
-// Member Save
 CEREAL_MAKE_HAS_MEMBER_SAVE_IMPL(save, )
-
-template <class T, class A>
-struct has_member_save
-    : std::integral_constant<bool, detail::has_member_save_impl<T, A>::value> {
-  typedef typename detail::has_member_save_impl<T, A> check;
-  static_assert(check::value || !check::not_const_type,
-                "cereal detected a non-const save. \n "
-                "save member functions must always be const");
-};
-
-template <class T, class A>
-constexpr inline bool has_member_save_v = has_member_save<T, A>::value;
-
-// ######################################################################
-// Member Save (versioned)
 CEREAL_MAKE_HAS_MEMBER_SAVE_IMPL(versioned_save, CEREAL_MAKE_VERSIONED_TEST)
 
-template <class T, class A>
-struct has_member_versioned_save
-    : std::integral_constant<
-          bool, detail::has_member_versioned_save_impl<T, A>::value> {
-  typedef typename detail::has_member_versioned_save_impl<T, A> check;
-  static_assert(check::value || !check::not_const_type,
-                "cereal detected a versioned non-const save. \n "
-                "save member functions must always be const");
-};
-
-template <class T, class A>
-constexpr inline bool has_member_versioned_save_v =
-    has_member_versioned_save<T, A>::value;
-
-// ######################################################################
 #undef CEREAL_MAKE_HAS_MEMBER_SAVE_IMPL
 
 // ######################################################################
@@ -222,44 +190,35 @@ constexpr inline bool has_member_versioned_save_v =
 
     @param test_name The name to give the test (e.g. save or versioned_save)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
+
+namespace detail {
+template <bool Detected, bool Valid> struct HasNonMemberSaveResult {
+  static_assert(
+      Valid, "cereal detected a non-const type parameter in non-member save. \n"
+             "save non-member functions must always pass their types as const");
+  static constexpr inline bool value = Detected;
+};
+} // namespace detail
+
 #define CEREAL_MAKE_HAS_NON_MEMBER_SAVE_TEST(test_name, versioned)             \
   namespace detail {                                                           \
-  template <class T, class A> struct has_non_member_##test_name##_impl {       \
-    template <class TT, class AA>                                              \
-    static auto test(int)                                                      \
-        -> decltype(CEREAL_SAVE_FUNCTION_NAME(std::declval<AA&>(),             \
-                                              std::declval<TT const&>()        \
-                                                  versioned),                  \
-                    yes());                                                    \
-    template <class, class> static no test(...);                               \
-    static const bool value = std::is_same_v<decltype(test<T, A>(0)), yes>;    \
-                                                                               \
-    template <class TT, class AA>                                              \
-    static auto test2(int)                                                     \
-        -> decltype(CEREAL_SAVE_FUNCTION_NAME(                                 \
-                        std::declval<AA&>(),                                   \
-                        std::declval<std::remove_const_t<TT>&>() versioned),   \
-                    yes());                                                    \
-    template <class, class> static no test2(...);                              \
-    static const bool not_const_type =                                         \
-        std::is_same_v<decltype(test2<T, A>(0)), yes>;                         \
+  template <class T, class A>                                                  \
+  concept HasNonMemberNonConst##test_name##Save = requires(T & t, A& a) {      \
+    {CEREAL_SAVE_FUNCTION_NAME(a, t versioned)};                               \
   };                                                                           \
-  } /* end namespace detail */                                                 \
                                                                                \
   template <class T, class A>                                                  \
-  struct has_non_member_##test_name                                            \
-      : std::integral_constant<                                                \
-            bool, detail::has_non_member_##test_name##_impl<T, A>::value> {    \
-    using check = typename detail::has_non_member_##test_name##_impl<T, A>;    \
-    static_assert(                                                             \
-        check::value || !check::not_const_type,                                \
-        "cereal detected a non-const type parameter in non-member " #test_name \
-        ". \n " #test_name                                                     \
-        " non-member functions must always pass their types as const");        \
+  concept HasNonMemberConst##test_name##Save = requires(const T& t, A& a) {    \
+    {CEREAL_SAVE_FUNCTION_NAME(a, t versioned)};                               \
   };                                                                           \
+  }                                                                            \
   template <class T, class A>                                                  \
   constexpr inline bool has_non_member_##test_name##_v =                       \
-      has_non_member_##test_name<T, A>::value;
+      detail::HasNonMemberSaveResult<                                          \
+          detail::HasNonMemberConst##test_name##Save<T, A>,                    \
+          detail::HasNonMemberConst##test_name##Save<T, A> ||                  \
+              !detail::HasNonMemberNonConst##test_name##Save<                  \
+                  std::remove_const_t<T>, A>>::value;
 
 // ######################################################################
 // Non Member Save
@@ -284,7 +243,7 @@ struct is_string<std::basic_string<CharT, Traits, Alloc>> : std::true_type {};
 
 // Determines if the type is valid for use with a minimal serialize function
 template <class T>
-constexpr inline bool is_minimal_type_v =
+concept ValidMinimalReturnType =
     detail::is_string<T>::value || std::is_arithmetic_v<T>;
 
 // ######################################################################
@@ -296,102 +255,65 @@ constexpr inline bool is_minimal_type_v =
     @param test_name The name to give the test (e.g. save_minimal or
    versioned_save_minimal)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
-#define CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_IMPL(test_name, versioned)         \
+namespace detail {
+template <bool Detected, bool ConstValid, bool ReturnValid>
+struct HasMemberSaveMinimalResult {
+  static_assert(ConstValid,
+                "cereal detected a non-const save_minimal. \n "
+                "save_minimal member functions must always be const");
+  static_assert(ReturnValid,
+                "cereal detected a save_minimal with bad return type. \n "
+                "save_minimal return type must be arithmetic or string");
+
+  static constexpr inline bool value = Detected;
+};
+} // namespace detail
+
+#define CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(test_name, versioned)         \
   namespace detail {                                                           \
-  template <class T, class A> struct has_member_##test_name##_impl {           \
-    template <class TT, class AA>                                              \
-    static auto test(int)                                                      \
-        -> decltype(cereal::access::member_save_minimal(                       \
-                        std::declval<AA const&>(),                             \
-                        std::declval<TT const&>() versioned),                  \
-                    yes());                                                    \
-    template <class, class> static no test(...);                               \
-    static const bool value = std::is_same_v<decltype(test<T, A>(0)), yes>;    \
-                                                                               \
-    template <class TT, class AA>                                              \
-    static auto test2(int)                                                     \
-        -> decltype(cereal::access::member_save_minimal_non_const(             \
-                        std::declval<AA const&>(),                             \
-                        std::declval<std::remove_const_t<TT>&>() versioned),   \
-                    yes());                                                    \
-    template <class, class> static no test2(...);                              \
-    static const bool not_const_type =                                         \
-        std::is_same_v<decltype(test2<T, A>(0)), yes>;                         \
-                                                                               \
-    static const bool valid = value || !not_const_type;                        \
-  };                                                                           \
-  } /* end namespace detail */
-
-// ######################################################################
-//! Creates helpers for minimal save functions
-/*! The get_member_*_type structs allow access to the return type of a
-   save_minimal, assuming that the function actually exists.  If the function
-   does not exist, the type will be void.
-
-    @param test_name The name to give the test (e.g. save_minimal or
-   versioned_save_minimal)
-    @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
-#define CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_HELPERS_IMPL(test_name, versioned) \
-  namespace detail {                                                           \
-  template <class T, class A, bool Valid>                                      \
-  struct get_member_##test_name##_type {                                       \
-    using type = void;                                                         \
+  template <class T, class A>                                                  \
+  concept HasMemberMinimalNonConst##test_name##Save = requires(T & t, A& a) {  \
+    {                                                                          \
+      cereal::access::member_save_minimal_non_const(a, t versioned)            \
+      } -> ValidMinimalReturnType;                                             \
   };                                                                           \
                                                                                \
   template <class T, class A>                                                  \
-  struct get_member_##test_name##_type<T, A, true> {                           \
-    using type = decltype(cereal::access::member_save_minimal(                 \
-        std::declval<A const&>(), std::declval<T const&>() versioned));        \
+  concept HasMemberMinimalConstValidType##test_name##Save =                    \
+      requires(const T& t, A& a) {                                             \
+    {                                                                          \
+      cereal::access::member_save_minimal(a, t versioned)                      \
+      } -> ValidMinimalReturnType;                                             \
   };                                                                           \
-  } /* end namespace detail */
-
-// ######################################################################
-//! Creates a test for whether a member save_minimal function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper member function for the given archive.
-
-    @param test_name The name to give the test (e.g. save_minimal or
-   versioned_save_minimal) */
-#define CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(test_name)                    \
   template <class T, class A>                                                  \
-  struct has_member_##test_name                                                \
-      : std::integral_constant<                                                \
-            bool, detail::has_member_##test_name##_impl<T, A>::value> {        \
-    using check = typename detail::has_member_##test_name##_impl<T, A>;        \
-    static_assert(check::valid,                                                \
-                  "cereal detected a non-const member " #test_name             \
-                  ". \n " #test_name                                           \
-                  " member functions must always be const");                   \
+  concept HasMemberMinimalConst##test_name##Save = requires(const T& t,        \
+                                                            A& a) {            \
+    {cereal::access::member_save_minimal(a, t versioned)};                     \
+  };                                                                           \
+  }                                                                            \
+  template <class T, class A>                                                  \
+  constexpr inline bool has_member_##test_name##_v =                           \
+      detail::HasMemberSaveMinimalResult<                                      \
+          detail::HasMemberMinimalConstValidType##test_name##Save<T, A>,       \
+          detail::HasMemberMinimalConstValidType##test_name##Save<T, A> ||     \
+              !detail::HasMemberMinimalNonConst##test_name##Save<T, A>,        \
+          detail::HasMemberMinimalConstValidType##test_name##Save<T, A> ||     \
+              !detail::HasMemberMinimalConst##test_name##Save<T, A>>::value;   \
                                                                                \
-    using type =                                                               \
-        typename detail::get_member_##test_name##_type<T, A,                   \
-                                                       check::value>::type;    \
-    static_assert((check::value && is_minimal_type_v<type>) || !check::value,  \
-                  "cereal detected a member " #test_name                       \
-                  " with an invalid return type. \n "                          \
-                  "return type must be arithmetic or string");                 \
-  };                                                                           \
   template <class T, class A>                                                  \
-  constexpr bool inline has_member_##test_name##_v =                           \
-      has_member_##test_name<T, A>::value;
+  using get_member_##test_name##_t =                                           \
+      decltype(cereal::access::member_save_minimal(                            \
+          std::declval<A const&>(), std::declval<T const&>() versioned));
 
 // ######################################################################
 // Member Save Minimal
-CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_IMPL(save_minimal, )
-CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_HELPERS_IMPL(save_minimal, )
-CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(save_minimal)
+CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(save_minimal, )
 
 // ######################################################################
 // Member Save Minimal (versioned)
-CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_IMPL(versioned_save_minimal,
+CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(versioned_save_minimal,
                                          CEREAL_MAKE_VERSIONED_TEST)
-CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_HELPERS_IMPL(versioned_save_minimal,
-                                                 CEREAL_MAKE_VERSIONED_TEST)
-CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(versioned_save_minimal)
 
-// ######################################################################
-#undef CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_IMPL
-#undef CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_HELPERS_IMPL
 #undef CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST
 
 // ######################################################################
@@ -402,64 +324,60 @@ CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(versioned_save_minimal)
     @param test_name The name to give the test (e.g. save_minimal or
    versioned_save_minimal)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
+
+namespace detail {
+template <bool Detected, bool ConstValid, bool ReturnValid>
+struct HasNonMemberSaveMinimalResult {
+  static_assert(ConstValid,
+                "cereal detected a non-const non-member save_minimal. \n "
+                "save_minimal member functions must always be const");
+  static_assert(
+      ReturnValid,
+      "cereal detected a non-member save_minimal with bad return type. \n "
+      "save_minimal return type must be arithmetic or string");
+
+  static constexpr inline bool value = Detected;
+};
+} // namespace detail
+
 #define CEREAL_MAKE_HAS_NON_MEMBER_SAVE_MINIMAL_TEST(test_name, versioned)     \
   namespace detail {                                                           \
-  template <class T, class A> struct has_non_member_##test_name##_impl {       \
-    template <class TT, class AA>                                              \
-    static auto test(int)                                                      \
-        -> decltype(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(                         \
-                        std::declval<AA const&>(),                             \
-                        std::declval<TT const&>() versioned),                  \
-                    yes());                                                    \
-    template <class, class> static no test(...);                               \
-    static const bool value = std::is_same_v<decltype(test<T, A>(0)), yes>;    \
-                                                                               \
-    template <class TT, class AA>                                              \
-    static auto test2(int)                                                     \
-        -> decltype(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(                         \
-                        std::declval<AA const&>(),                             \
-                        std::declval<std::remove_const_t<TT>&>() versioned),   \
-                    yes());                                                    \
-    template <class, class> static no test2(...);                              \
-    static const bool not_const_type =                                         \
-        std::is_same_v<decltype(test2<T, A>(0)), yes>;                         \
-                                                                               \
-    static const bool valid = value || !not_const_type;                        \
-  };                                                                           \
-                                                                               \
-  template <class T, class A, bool Valid>                                      \
-  struct get_non_member_##test_name##_type {                                   \
-    using type = void;                                                         \
+  template <class T, class A>                                                  \
+  concept HasNonMemberMinimalNonConst##test_name##Save = requires(T & t,       \
+                                                                  A& a) {      \
+    {                                                                          \
+      cereal::access::member_save_minimal_non_const(a, t versioned)            \
+      } -> ValidMinimalReturnType;                                             \
   };                                                                           \
                                                                                \
   template <class T, class A>                                                  \
-  struct get_non_member_##test_name##_type<T, A, true> {                       \
-    using type = decltype(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(                   \
-        std::declval<A const&>(), std::declval<T const&>() versioned));        \
+  concept HasNonMemberMinimalConstValidType##test_name##Save =                 \
+      requires(const T& t, A& a) {                                             \
+    {                                                                          \
+      CEREAL_SAVE_MINIMAL_FUNCTION_NAME(a, t versioned)                        \
+      } -> ValidMinimalReturnType;                                             \
   };                                                                           \
-  } /* end namespace detail */                                                 \
-                                                                               \
   template <class T, class A>                                                  \
-  struct has_non_member_##test_name                                            \
-      : std::integral_constant<                                                \
-            bool, detail::has_non_member_##test_name##_impl<T, A>::value> {    \
-    using check = typename detail::has_non_member_##test_name##_impl<T, A>;    \
-    static_assert(                                                             \
-        check::valid,                                                          \
-        "cereal detected a non-const type parameter in non-member " #test_name \
-        ". \n " #test_name                                                     \
-        " non-member functions must always pass their types as const");        \
-                                                                               \
-    using type = typename detail::get_non_member_##test_name##_type<           \
-        T, A, check::value>::type;                                             \
-    static_assert((check::value && is_minimal_type_v<type>) || !check::value,  \
-                  "cereal detected a non-member " #test_name                   \
-                  " with an invalid return type. \n "                          \
-                  "return type must be arithmetic or string");                 \
+  concept HasNonMemberMinimalConst##test_name##Save = requires(const T& t,     \
+                                                               A& a) {         \
+    {CEREAL_SAVE_MINIMAL_FUNCTION_NAME(a, t versioned)};                       \
   };                                                                           \
+  }                                                                            \
   template <class T, class A>                                                  \
   constexpr inline bool has_non_member_##test_name##_v =                       \
-      has_non_member_##test_name<T, A>::value;
+      detail::HasNonMemberSaveMinimalResult<                                   \
+          detail::HasNonMemberMinimalConstValidType##test_name##Save<T, A>,    \
+          detail::HasNonMemberMinimalConstValidType##test_name##Save<T, A> ||  \
+              !detail::HasNonMemberMinimalNonConst##test_name##Save<           \
+                  std::remove_const_t<T>, A>,                                  \
+          detail::HasNonMemberMinimalConstValidType##test_name##Save<T, A> ||  \
+              !detail::HasNonMemberMinimalConst##test_name##Save<T,            \
+                                                                 A>>::value;   \
+                                                                               \
+  template <class T, class A>                                                  \
+  using get_non_member_##test_name##_t =                                       \
+      decltype(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(                              \
+          std::declval<A const&>(), std::declval<T const&>() versioned));
 
 // ######################################################################
 // Non-Member Save Minimal
@@ -582,15 +500,13 @@ struct AnyConvert {
   struct has_member_##load_test_name##_wrapper<T, A, true> {                   \
     using AOut = typename detail::get_output_from_input<A>::type;              \
                                                                                \
-    static_assert(has_member_##save_test_prefix##_minimal<T, AOut>::value,     \
+    static_assert(has_member_##save_test_prefix##_minimal##_v<T, AOut>,        \
                   "cereal detected member " #load_test_name                    \
                   " but no valid member " #save_test_name ". \n "              \
                   "cannot evaluate correctness of " #load_test_name            \
                   " without valid " #save_test_name ".");                      \
                                                                                \
-    using SaveType =                                                           \
-        typename detail::get_member_##save_test_prefix##_minimal_type<         \
-            T, AOut, true>::type;                                              \
+    using SaveType = get_member_##save_test_prefix##_minimal_t<T, AOut>;       \
     const static bool value = has_member_##load_test_name##_impl<T, A>;        \
     const static bool valid =                                                  \
         has_member_##load_test_name##_type_impl<T, A, SaveType>;               \
@@ -714,15 +630,7 @@ CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal, versioned_load)
   struct has_non_member_##test_name##_wrapper<T, A, true> {                    \
     using AOut = typename detail::get_output_from_input<A>::type;              \
                                                                                \
-    static_assert(detail::has_non_member_##save_name##_impl<T, AOut>::valid,   \
-                  "cereal detected non-member " #test_name                     \
-                  " but no valid non-member " #save_name ". \n "               \
-                  "cannot evaluate correctness of " #test_name                 \
-                  " without valid " #save_name ".");                           \
-                                                                               \
-    using SaveType =                                                           \
-        typename detail::get_non_member_##save_name##_type<T, AOut,            \
-                                                           true>::type;        \
+    using SaveType = get_non_member_##save_name##_t<T, AOut>; \
     using check = has_non_member_##test_name##_impl<T, A, SaveType>;           \
     static const bool value = check::exists;                                   \
                                                                                \
@@ -757,8 +665,8 @@ CEREAL_MAKE_HAS_NON_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal,
 
 // ######################################################################
 namespace detail {
-// const stripped away before reaching here, prevents errors on conversion from
-// construct<const T> to construct<T>
+// const stripped away before reaching here, prevents errors on conversion
+// from construct<const T> to construct<T>
 template <typename T, typename A>
 constexpr inline bool has_member_load_and_construct_impl =
     std::is_same_v<decltype(access::load_and_construct<T>(
@@ -838,25 +746,25 @@ constexpr inline bool has_load_and_construct_v =
 template <class T, class InputArchive, class OutputArchive>
 constexpr inline bool
     has_member_split_v = (has_member_load_v<T, InputArchive> &&
-                          has_member_save<T, OutputArchive>::value) ||
+                          has_member_save_v<T, OutputArchive>) ||
                          (has_member_versioned_load_v<T, InputArchive> &&
-                          has_member_versioned_save<T, OutputArchive>::value);
+                          has_member_versioned_save_v<T, OutputArchive>);
 
 // ######################################################################
 template <class T, class InputArchive, class OutputArchive>
 constexpr inline bool has_non_member_split_v =
     (has_non_member_load_v<T, InputArchive> &&
-     has_non_member_save<T, OutputArchive>::value) ||
+     has_non_member_save_v<T, OutputArchive>) ||
     (has_non_member_versioned_load_v<T, InputArchive> &&
-     has_non_member_versioned_save<T, OutputArchive>::value);
+     has_non_member_versioned_save_v<T, OutputArchive>);
 
 // ######################################################################
 template <class T, class OutputArchive>
 constexpr inline bool has_invalid_output_versioning_v =
-    (has_member_versioned_save<T, OutputArchive>::value &&
-     has_member_save<T, OutputArchive>::value) ||
-    (has_non_member_versioned_save<T, OutputArchive>::value &&
-     has_non_member_save<T, OutputArchive>::value) ||
+    (has_member_versioned_save_v<T, OutputArchive> &&
+     has_member_save_v<T, OutputArchive>) ||
+    (has_non_member_versioned_save_v<T, OutputArchive> &&
+     has_non_member_save_v<T, OutputArchive>) ||
     (has_member_versioned_serialize_v<T, OutputArchive> &&
      has_member_serialize_v<T, OutputArchive>) ||
     (has_non_member_versioned_serialize_v<T, OutputArchive> &&
@@ -912,52 +820,60 @@ constexpr inline int count_specializations =
 } // namespace detail
 
 //! Check if any specialization exists for a type
-template <class T, class A>
-struct is_specialized
-    : std::integral_constant<
-          bool,
-          detail::is_specialized_member_serialize_v<T, A> ||
-              detail::is_specialized_member_load_save_v<T, A> ||
-              detail::is_specialized_member_load_save_minimal_v<T, A> ||
-              detail::is_specialized_non_member_serialize_v<T, A> ||
-              detail::is_specialized_non_member_load_save_v<T, A> ||
-              detail::is_specialized_non_member_load_save_minimal_v<T, A>> {
-  static_assert(detail::count_specializations<T, A> <= 1,
+namespace detail {
+template <bool IsSpecialized, bool IsValid> struct IsSpecializedResult {
+  static_assert(IsValid,
                 "More than one explicit specialization detected for type.");
+  static constexpr inline bool value = IsSpecialized;
 };
+} // namespace detail
+
+template <class T, class A>
+constexpr inline bool is_specialized_v = detail::IsSpecializedResult<
+    detail::is_specialized_member_serialize_v<T, A> ||
+        detail::is_specialized_member_load_save_v<T, A> ||
+        detail::is_specialized_member_load_save_minimal_v<T, A> ||
+        detail::is_specialized_non_member_serialize_v<T, A> ||
+        detail::is_specialized_non_member_load_save_v<T, A> ||
+        detail::is_specialized_non_member_load_save_minimal_v<T, A>,
+    detail::count_specializations<T, A> <= 1>::value;
 
 //! Create the static assertion for some specialization
 /*! This assertion will fail if the type is indeed specialized and does not have
    the appropriate type of serialization functions */
-#define CEREAL_MAKE_IS_SPECIALIZED_ASSERT(name, versioned_name, print_name,    \
-                                          spec_name)                           \
-  static_assert((is_specialized<T, A>::value &&                                \
-                 detail::is_specialized_##spec_name##_v<T, A> &&               \
-                 (has_##name##_v<T, A> || has_##versioned_name##_v<T, A>)) ||  \
-                    !(is_specialized<T, A>::value &&                           \
-                      detail::is_specialized_##spec_name##_v<T, A>),           \
-                "cereal detected " #print_name                                 \
-                " specialization but no " #print_name " serialize function")
+namespace detail {
+template <bool IsSpecialized, bool IsValid> struct IsSpecializedNameResult {
+  static_assert(
+      IsValid,
+      "cereal detected specialization but no but no serialize function.");
+  static constexpr inline bool value = IsSpecialized;
+};
+} // namespace detail
 
 //! Generates a test for specialization for versioned and unversioned functions
 /*! This creates checks that can be queried to see if a given type of
    serialization function has been specialized for this type */
 #define CEREAL_MAKE_IS_SPECIALIZED(name, versioned_name, spec_name)            \
   template <class T, class A>                                                  \
-  struct is_specialized_##name                                                 \
-      : std::integral_constant<                                                \
-            bool, is_specialized<T, A>::value &&                               \
-                      detail::is_specialized_##spec_name##_v<T, A>> {          \
-    CEREAL_MAKE_IS_SPECIALIZED_ASSERT(name, versioned_name, name, spec_name);  \
-  };                                                                           \
+  constexpr inline bool is_specialized_##name##_v =                            \
+      detail::IsSpecializedNameResult<                                         \
+          is_specialized_v<T, A> &&                                            \
+              detail::is_specialized_##spec_name##_v<T, A>,                    \
+          (is_specialized_v<T, A> &&                                           \
+           detail::is_specialized_##spec_name##_v<T, A> &&                     \
+           (has_##name##_v<T, A> || has_##versioned_name##_v<T, A>)) ||        \
+              !(is_specialized_v<T, A> &&                                      \
+                detail::is_specialized_##spec_name##_v<T, A>)>::value;         \
   template <class T, class A>                                                  \
-  struct is_specialized_##versioned_name                                       \
-      : std::integral_constant<                                                \
-            bool, is_specialized<T, A>::value &&                               \
-                      detail::is_specialized_##spec_name##_v<T, A>> {          \
-    CEREAL_MAKE_IS_SPECIALIZED_ASSERT(name, versioned_name, versioned_name,    \
-                                      spec_name);                              \
-  }
+  constexpr inline bool is_specialized_##versioned_name##_v =                  \
+      detail::IsSpecializedNameResult<                                         \
+          is_specialized_v<T, A> &&                                            \
+              detail::is_specialized_##spec_name##_v<T, A>,                    \
+          (is_specialized_v<T, A> &&                                           \
+           detail::is_specialized_##spec_name##_v<T, A> &&                     \
+           (has_##name##_v<T, A> || has_##versioned_name##_v<T, A>)) ||        \
+              !(is_specialized_v<T, A> &&                                      \
+                detail::is_specialized_##spec_name##_v<T, A>)>::value;
 
 CEREAL_MAKE_IS_SPECIALIZED(member_serialize, member_versioned_serialize,
                            member_serialize);
@@ -993,17 +909,16 @@ template <class T, class OutputArchive>
 struct has_minimal_output_serialization
     : std::integral_constant<
           bool,
-          is_specialized_member_save_minimal<T, OutputArchive>::value ||
+          is_specialized_member_save_minimal_v<T, OutputArchive> ||
               ((has_member_save_minimal_v<T, OutputArchive> ||
                 has_non_member_save_minimal_v<T, OutputArchive> ||
                 has_member_versioned_save_minimal_v<T, OutputArchive> ||
                 has_non_member_versioned_save_minimal_v<
                     T,
-                    OutputArchive>)&&!(is_specialized_member_serialize<T,
-                                                                       OutputArchive>::
-                                           value ||
-                                       is_specialized_member_save<
-                                           T, OutputArchive>::value))> {};
+                    OutputArchive>)&&!(is_specialized_member_serialize_v<T,
+                                                                         OutputArchive> ||
+                                       is_specialized_member_save_v<
+                                           T, OutputArchive>))> {};
 
 // ######################################################################
 // detects if a type has any active minimal input serialization
@@ -1011,17 +926,16 @@ template <class T, class InputArchive>
 struct has_minimal_input_serialization
     : std::integral_constant<
           bool,
-          is_specialized_member_load_minimal<T, InputArchive>::value ||
+          is_specialized_member_load_minimal_v<T, InputArchive> ||
               ((has_member_load_minimal_v<T, InputArchive> ||
                 has_non_member_load_minimal_v<T, InputArchive> ||
                 has_member_versioned_load_minimal_v<T, InputArchive> ||
                 has_non_member_versioned_load_minimal_v<
                     T,
-                    InputArchive>)&&!(is_specialized_member_serialize<T,
-                                                                      InputArchive>::
-                                          value ||
-                                      is_specialized_member_load<
-                                          T, InputArchive>::value))> {};
+                    InputArchive>)&&!(is_specialized_member_serialize_v<T,
+                                                                        InputArchive> ||
+                                      is_specialized_member_load_v<
+                                          T, InputArchive>))> {};
 
 // ######################################################################
 namespace detail {
@@ -1032,15 +946,15 @@ template <class T, class OutputArchive>
 constexpr inline int count_output_serializers =
     count_specializations<T, OutputArchive>
         ? count_specializations<T, OutputArchive>
-        : has_member_save<T, OutputArchive>::value +
-              has_non_member_save<T, OutputArchive>::value +
+        : has_member_save_v<T, OutputArchive> +
+              has_non_member_save_v<T, OutputArchive> +
               has_member_serialize_v<T, OutputArchive> +
               has_non_member_serialize_v<T, OutputArchive> +
               has_member_save_minimal_v<T, OutputArchive> +
               has_non_member_save_minimal_v<T, OutputArchive> +
               /*-versioned---------------------------------------------------------*/
-              has_member_versioned_save<T, OutputArchive>::value +
-              has_non_member_versioned_save<T, OutputArchive>::value +
+              has_member_versioned_save_v<T, OutputArchive> +
+              has_non_member_versioned_save_v<T, OutputArchive> +
               has_member_versioned_serialize_v<T, OutputArchive> +
               has_non_member_versioned_serialize_v<T, OutputArchive> +
               has_member_versioned_save_minimal_v<T, OutputArchive> +
@@ -1114,7 +1028,7 @@ struct get_base_class<Cast<Base>> {
 
 //! Base class cast, behave as the test
 template <class Cast, template <class, class> class Test, class Archive,
-          bool IsBaseCast = std::is_base_of<BaseCastBase, Cast>::value>
+          bool IsBaseCast = std::is_base_of_v<BaseCastBase, Cast>>
 struct has_minimal_base_class_serialization_impl
     : Test<typename get_base_class<Cast>::type, Archive> {};
 
@@ -1133,31 +1047,18 @@ struct has_minimal_base_class_serialization
     : detail::has_minimal_base_class_serialization_impl<Cast, Test, Archive> {};
 
 // ######################################################################
-namespace detail {
-struct shared_from_this_wrapper {
-  template <class U>
-  static auto(check)(U const& t)
-      -> decltype(::cereal::access::shared_from_this(t), std::true_type());
-
-  static auto(check)(...) -> decltype(std::false_type());
-
-  template <class U>
-  static auto get(U const& t) -> decltype(t.shared_from_this());
-};
-} // namespace detail
-
 //! Determine if T or any base class of T has inherited from
 //! std::enable_shared_from_this
 template <class T>
-struct has_shared_from_this
-    : decltype((detail::shared_from_this_wrapper::check)(std::declval<T>())) {};
+concept has_shared_from_this = requires(T t) {
+  {t.shared_from_this()};
+};
 
 //! Get the type of the base class of T which inherited from
 //! std::enable_shared_from_this
 template <class T> struct get_shared_from_this_base {
 private:
-  using PtrType =
-      decltype(detail::shared_from_this_wrapper::get(std::declval<T>()));
+  using PtrType = decltype(std::declval<T>().shared_from_this());
 
 public:
   //! The type of the base of T that inherited from std::enable_shared_from_this

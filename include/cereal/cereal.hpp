@@ -454,8 +454,8 @@ private:
   requires(traits::has_##name##_v<T, ArchiveType> &&                           \
            !traits::has_invalid_output_versioning_v<T, ArchiveType> &&         \
            (traits::is_output_serializable_v<T, ArchiveType> &&                \
-            (traits::is_specialized_##name<T, ArchiveType>::value ||           \
-             !traits::is_specialized<T, ArchiveType>::value)))
+            (traits::is_specialized_##name##_v<T, ArchiveType> ||              \
+             !traits::is_specialized_v<T, ArchiveType>)))
 
   //! Member serialization
   template <class T>
@@ -860,8 +860,8 @@ private:
   requires(traits::has_##name##_v<T, ArchiveType> &&                           \
            !traits::has_invalid_input_versioning_v<T, ArchiveType> &&          \
            (traits::is_input_serializable_v<T, ArchiveType> &&                 \
-            (traits::is_specialized_##name<T, ArchiveType>::value ||           \
-             !traits::is_specialized<T, ArchiveType>::value)))
+            (traits::is_specialized_##name##_v<T, ArchiveType> ||              \
+             !traits::is_specialized_v<T, ArchiveType>)))
 
   //! Member serialization
   template <class T>
@@ -896,7 +896,7 @@ private:
   inline ArchiveType& processImpl(T& t) PROCESS_IF(member_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
-    typename traits::has_member_save_minimal<T, OutArchiveType>::type value;
+    traits::get_member_save_minimal_t<T, OutArchiveType> value;
     self->process(value);
     access::member_load_minimal(*self, t, value);
     return *self;
@@ -907,7 +907,7 @@ private:
   inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
-    typename traits::has_non_member_save_minimal<T, OutArchiveType>::type value;
+    traits::get_non_member_save_minimal_t<T, OutArchiveType> value;
     self->process(value);
     CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*self, t, value);
     return *self;
@@ -1032,8 +1032,7 @@ private:
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     const auto version = loadClassVersion<T>();
-    typename traits::has_member_versioned_save_minimal<T, OutArchiveType>::type
-        value;
+    traits::get_member_versioned_save_minimal_t<T, OutArchiveType> value;
     self->process(value);
     access::member_load_minimal(*self, t, value, version);
     return *self;
@@ -1047,8 +1046,7 @@ private:
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     const auto version = loadClassVersion<T>();
-    typename traits::has_non_member_versioned_save_minimal<
-        T, OutArchiveType>::type value;
+    traits::get_non_member_versioned_save_minimal_t<T, OutArchiveType> value;
     self->process(value);
     CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*self, t, value, version);
     return *self;

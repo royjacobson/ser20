@@ -141,7 +141,7 @@ private:
       std::conditional_t<std::is_lvalue_reference_v<T>, T, std::decay_t<T>>>;
 
   // prevent nested nvps
-  static_assert(!std::is_base_of<detail::NameValuePairCore, T>::value,
+  static_assert(!std::is_base_of_v<detail::NameValuePairCore, T>,
                 "Cannot pair a name to a NameValuePair");
 
   NameValuePair& operator=(NameValuePair const&) = delete;

@@ -100,7 +100,7 @@ template <class Base> struct base_class : private traits::detail::BaseCastBase {
   template <class Derived>
   base_class(Derived const* derived)
       : base_ptr(const_cast<Base*>(static_cast<Base const*>(derived))) {
-    static_assert(std::is_base_of<Base, Derived>::value,
+    static_assert(std::is_base_of_v<Base, Derived>,
                   "Can only use base_class on a valid base class");
     base_class_detail::RegisterPolymorphicBaseClass<Base, Derived>::bind();
   }
@@ -194,7 +194,7 @@ struct virtual_base_class : private traits::detail::BaseCastBase {
   template <class Derived>
   virtual_base_class(Derived const* derived)
       : base_ptr(const_cast<Base*>(static_cast<Base const*>(derived))) {
-    static_assert(std::is_base_of<Base, Derived>::value,
+    static_assert(std::is_base_of_v<Base, Derived>,
                   "Can only use virtual_base_class on a valid base class");
     base_class_detail::RegisterPolymorphicBaseClass<Base, Derived>::bind();
   }

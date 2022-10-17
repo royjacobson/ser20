@@ -151,6 +151,7 @@ struct PolymorphicCasters {
   /*! Uses the type index from the base and derived class to find the matching
       registered caster. If no matching caster exists, the bool in the pair will
      be false and the vector reference should not be used. */
+  // TODO: Put it in a source file.
   static std::pair<bool, std::vector<PolymorphicCaster const*> const&>
   lookup_if_exists(std::type_index const& baseIndex,
                    std::type_index const& derivedIndex) {
@@ -677,15 +678,10 @@ template <class Archive, class T> struct OutputBindingCreator {
 
       auto ptr = PolymorphicCasters::template downcast<T>(dptr, baseInfo);
 
-#if defined(_MSC_VER) && _MSC_VER < 1916 && !defined(__clang__)
       savePolymorphicSharedPtr(
           ar, ptr,
-          ::cereal::traits::has_shared_from_this<
-              T>::type()); // MSVC doesn't like typename here
-#else                      // not _MSC_VER
-      savePolymorphicSharedPtr(
-          ar, ptr, typename ::cereal::traits::has_shared_from_this<T>::type());
-#endif                     // _MSC_VER
+          std::integral_constant<bool,
+                                 ::cereal::traits::has_shared_from_this<T>>());
     };
 
     serializers.unique_ptr = [&](void* arptr, void const* dptr,

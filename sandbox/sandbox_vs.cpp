@@ -221,8 +221,8 @@ int main()
 
   // save
   std::cout << "\tsave" << std::endl;
-  std::cout << cereal::traits::has_member_save<T, Archive>::value << std::endl;
-  std::cout << cereal::traits::has_non_member_save<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::has_member_save_v<T, Archive> << std::endl;
+  std::cout << cereal::traits::has_non_member_save_v<T, Archive> << std::endl;
 
   // save_minimal
   std::cout << "\tsave_minimal" << std::endl;
@@ -255,7 +255,7 @@ int main()
   std::cout << cereal::traits::detail::is_specialized_non_member_serialize_v<T, Archive> << std::endl;
   std::cout << cereal::traits::detail::is_specialized_non_member_load_save_v<T, Archive> << std::endl;
   std::cout << cereal::traits::detail::count_specializations<T, Archive> << std::endl;
-  std::cout << cereal::traits::is_specialized<T, Archive>::value << std::endl;
+  std::cout << cereal::traits::is_specialized_v<T, Archive> << std::endl;
 
   // array size
   std::cout << typeid(A).name() << std::endl;
