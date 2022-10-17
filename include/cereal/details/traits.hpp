@@ -38,21 +38,18 @@
 
 namespace cereal {
 namespace traits {
-using yes = std::true_type;
-using no = std::false_type;
-
 namespace detail {
 // ######################################################################
 //! Used to delay a static_assert until template instantiation
 template <class T> constexpr inline bool delay_static_assert = false;
 
-template <class InputArchive> struct get_output_from_input : no {
+template <class InputArchive> struct get_output_from_input : std::false_type {
   static_assert(
       detail::delay_static_assert<InputArchive>,
       "Could not find an associated output archive for input archive.");
 };
 
-template <class OutputArchive> struct get_input_from_output : no {
+template <class OutputArchive> struct get_input_from_output : std::false_type {
   static_assert(
       detail::delay_static_assert<OutputArchive>,
       "Could not find an associated input archive for output archive.");
@@ -455,6 +452,15 @@ struct AnyConvert {
 /*! This creates a class derived from std::integral_constant that will be true
    if the type has the proper member function for the given archive.
 
+    @param load_test_name The name to give the test (e.g. load_minimal or
+   versioned_load_minimal)
+    @param load_test_prefix The above parameter minus the trailing "_minimal" */
+
+// ######################################################################
+//! Creates a test for whether a member load_minimal function exists
+/*! This creates a class derived from std::integral_constant that will be true
+   if the type has the proper member function for the given archive.
+
     Our strategy here is to first check if a function matching the signature
    more or less exists (allow anything like load_minimal(xxx) using AnyConvert,
    and then secondly enforce that it has the correct signature using
@@ -463,99 +469,24 @@ struct AnyConvert {
     @param test_name The name to give the test (e.g. load_minimal or
    versioned_load_minimal)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
-#define CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_IMPL(test_name, versioned)         \
-  namespace detail {                                                           \
+
+#define CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(load_test_name, versioned)    \
   template <class T, class A>                                                  \
-  concept has_member_##test_name##_impl = requires(T & t, const A& a) {        \
-    {cereal::access::member_load_minimal(a, t, AnyConvert() versioned)};       \
-  };                                                                           \
-  template <class T, class A, class U>                                         \
-  concept has_member_##test_name##_type_impl = requires(T & t, const A& a) {   \
+  concept has_member_##load_test_name##_v = requires(T & t, const A& a) {      \
     {cereal::access::member_load_minimal(a, t,                                 \
-                                         NoConvertConstRef<U>() versioned)};   \
-  };                                                                           \
-  } /* end namespace detail */
-
-// ######################################################################
-//! Creates helpers for minimal load functions
-/*! The has_member_*_wrapper structs ensure that the load and save types for the
-    requested function type match appropriately.
-
-    @param load_test_name The name to give the test (e.g. load_minimal or
-   versioned_load_minimal)
-    @param save_test_name The name to give the test (e.g. save_minimal or
-   versioned_save_minimal, should match the load name.
-    @param save_test_prefix The name to give the test (e.g. save_minimal or
-   versioned_save_minimal, should match the load name, without the trailing
-   "_minimal" (e.g. save or versioned_save).  Needed because the preprocessor is
-   an abomination.
-    @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
-#define CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_HELPERS_IMPL(                      \
-    load_test_name, save_test_name, save_test_prefix, versioned)               \
-  namespace detail {                                                           \
-  template <class T, class A, bool Valid>                                      \
-  struct has_member_##load_test_name##_wrapper : std::false_type {};           \
-                                                                               \
-  template <class T, class A>                                                  \
-  struct has_member_##load_test_name##_wrapper<T, A, true> {                   \
-    using AOut = typename detail::get_output_from_input<A>::type;              \
-                                                                               \
-    static_assert(has_member_##save_test_prefix##_minimal##_v<T, AOut>,        \
-                  "cereal detected member " #load_test_name                    \
-                  " but no valid member " #save_test_name ". \n "              \
-                  "cannot evaluate correctness of " #load_test_name            \
-                  " without valid " #save_test_name ".");                      \
-                                                                               \
-    using SaveType = get_member_##save_test_prefix##_minimal_t<T, AOut>;       \
-    const static bool value = has_member_##load_test_name##_impl<T, A>;        \
-    const static bool valid =                                                  \
-        has_member_##load_test_name##_type_impl<T, A, SaveType>;               \
-                                                                               \
-    static_assert(                                                             \
-        valid || !value,                                                       \
-        "cereal detected different or invalid types in corresponding "         \
-        "member " #load_test_name " and " #save_test_name " functions. \n "    \
-        "the paramater to " #load_test_name                                    \
-        " must be a constant reference to the type that " #save_test_name      \
-        " returns.");                                                          \
-  };                                                                           \
-  } /* end namespace detail */
-
-// ######################################################################
-//! Creates a test for whether a member load_minimal function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper member function for the given archive.
-
-    @param load_test_name The name to give the test (e.g. load_minimal or
-   versioned_load_minimal)
-    @param load_test_prefix The above parameter minus the trailing "_minimal" */
-#define CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(load_test_name,               \
-                                                 load_test_prefix)             \
-  template <class T, class A>                                                  \
-  constexpr inline bool has_member_##load_test_prefix##_minimal##_v =          \
-      detail::has_member_##load_test_name##_wrapper<                           \
-          T, A, detail::has_member_##load_test_name##_impl<T, A>>::value;
+                                         detail::AnyConvert() versioned)};     \
+  };
 
 // ######################################################################
 // Member Load Minimal
-CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_IMPL(load_minimal, )
-CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_HELPERS_IMPL(load_minimal, save_minimal,
-                                                 save, )
-CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(load_minimal, load)
+CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(load_minimal, )
 
 // ######################################################################
 // Member Load Minimal (versioned)
-CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_IMPL(versioned_load_minimal,
+CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal,
                                          CEREAL_MAKE_VERSIONED_TEST)
-CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_HELPERS_IMPL(versioned_load_minimal,
-                                                 versioned_save_minimal,
-                                                 versioned_save,
-                                                 CEREAL_MAKE_VERSIONED_TEST)
-CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal, versioned_load)
 
 // ######################################################################
-#undef CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_IMPL
-#undef CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_HELPERS_IMPL
 #undef CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST
 
 // ######################################################################
@@ -563,25 +494,25 @@ CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal, versioned_load)
 
 // ######################################################################
 //! Creates a test for whether a non-member load_minimal function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper member function for the given archive.
+/*! This creates a class derived from std::integral_constant that will be
+   true if the type has the proper member function for the given archive.
 
     See notes from member load_minimal implementation.
 
-    Note that there should be an additional const check on load_minimal after
-   the valid check, but this currently interferes with many valid uses of
-   minimal serialization.  It has been removed (see #565 on github) and
+    Note that there should be an additional const check on load_minimal
+   after the valid check, but this currently interferes with many valid uses
+   of minimal serialization.  It has been removed (see #565 on github) and
    previously was:
 
     @code
     static_assert( check::const_valid || !check::exists,
-        "cereal detected an invalid serialization type parameter in non-member "
-   #test_name ".  " #test_name " non-member functions must accept their
-   serialization type by non-const reference" );
+        "cereal detected an invalid serialization type parameter in
+   non-member " #test_name ".  " #test_name " non-member functions must
+   accept their serialization type by non-const reference" );
     @endcode
 
-    See #132, #436, #263, and #565 on https://github.com/USCiLab/cereal for more
-   details.
+    See #132, #436, #263, and #565 on https://github.com/USCiLab/cereal for
+   more details.
 
     @param test_name The name to give the test (e.g. load_minimal or
    versioned_load_minimal)
@@ -590,7 +521,7 @@ CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal, versioned_load)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
 
 namespace detail {
-template <bool Detected, bool TypeValid> struct HasMemberLoadMinimalResult {
+template <bool Detected, bool TypeValid> struct HasNonMemberLoadMinimalResult {
   static_assert(TypeValid,
                 "cereal detected different types in corresponding non-member "
                 "load_minimal and save_minimal functions. \n "
@@ -609,8 +540,8 @@ template <bool Detected, bool TypeValid> struct HasMemberLoadMinimalResult {
   };                                                                           \
   template <class T, class A>                                                  \
   concept has_##test_name##_consistent_type =                                  \
-      std::is_base_of_v<cereal::detail::InputArchiveBase, A>&& requires(T & t,         \
-                                                                const A& a) {  \
+      std::is_base_of_v<cereal::detail::InputArchiveBase, A>&& requires(       \
+          T & t, const A& a) {                                                 \
     {CEREAL_LOAD_MINIMAL_FUNCTION_NAME(                                        \
         a, t,                                                                  \
         NoConvertConstRef<get_non_member_##save_name##_t<                      \
@@ -625,7 +556,7 @@ template <bool Detected, bool TypeValid> struct HasMemberLoadMinimalResult {
                                                                                \
   template <class T, class A>                                                  \
   constexpr inline bool has_non_member_##test_name##_v =                       \
-      detail::HasMemberLoadMinimalResult<                                      \
+      detail::HasNonMemberLoadMinimalResult<                                   \
           detail::has_##test_name<T, A>,                                       \
           detail::has_##test_name##_consistent_type<T, A> ||                   \
               !detail::has_##test_name<T, A>>::value;
@@ -681,21 +612,16 @@ constexpr inline bool has_member_versioned_load_and_construct_v =
 #define CEREAL_MAKE_HAS_NON_MEMBER_LOAD_AND_CONSTRUCT_TEST(test_name,          \
                                                            versioned)          \
   namespace detail {                                                           \
-  template <class T, class A> struct has_non_member_##test_name##_impl {       \
-    template <class TT, class AA>                                              \
-    static auto test(int)                                                      \
-        -> decltype(LoadAndConstruct<TT>::load_and_construct(                  \
-                        std::declval<AA&>(),                                   \
-                        std::declval<::cereal::construct<TT>&>() versioned),   \
-                    yes());                                                    \
-    template <class, class> static no test(...);                               \
-    static const bool value = std::is_same_v<decltype(test<T, A>(0)), yes>;    \
+  template <class Construct, class T, class A>                                 \
+  concept has_non_member_##test_name##_impl = requires(Construct & c, A& a) {  \
+    {LoadAndConstruct<T>::load_and_construct(a, c versioned)};                 \
   };                                                                           \
   } /* end namespace detail */                                                 \
   template <class T, class A>                                                  \
   constexpr inline bool has_non_member_##test_name##_v =                       \
-      detail::has_non_member_##test_name##_impl<std::remove_const_t<T>,        \
-                                                A>::value;
+      detail::has_non_member_##test_name##_impl<                               \
+          ::cereal::construct<std::remove_const_t<T>>, std::remove_const_t<T>, \
+          A>;
 
 // ######################################################################
 //! Non member load and construct check
