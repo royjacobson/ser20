@@ -127,8 +127,8 @@ template <class Archive, class T> struct LoadAndConstructLoadWrapper {
     @internal */
 template <class T> class EnableSharedStateHelper {
   // typedefs for parent type and storage type
-  using BaseType =
-      typename ::cereal::traits::get_shared_from_this_base<T>::type;
+  using BaseType = std::decay_t<
+      typename decltype(std::declval<T>().shared_from_this())::element_type>;
   using ParentType = std::enable_shared_from_this<BaseType>;
   using StorageType =
       std::aligned_storage_t<sizeof(ParentType), CEREAL_ALIGNOF(ParentType)>;
@@ -304,7 +304,8 @@ inline void CEREAL_LOAD_FUNCTION_NAME(
     // Perform the actual loading and allocation
     memory_detail::loadAndConstructSharedPtr(
         ar, ptr.get(),
-        std::integral_constant<bool, ::cereal::traits::has_shared_from_this<NonConstT>>());
+        std::integral_constant<
+            bool, ::cereal::traits::has_shared_from_this<NonConstT>>());
 
     // Mark pointer as valid (initialized)
     *valid = true;

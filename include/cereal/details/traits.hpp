@@ -960,17 +960,6 @@ concept has_shared_from_this = requires(T t) {
   {t.shared_from_this()};
 };
 
-//! Get the type of the base class of T which inherited from
-//! std::enable_shared_from_this
-template <class T> struct get_shared_from_this_base {
-private:
-  using PtrType = decltype(std::declval<T>().shared_from_this());
-
-public:
-  //! The type of the base of T that inherited from std::enable_shared_from_this
-  using type = std::decay_t<typename PtrType::element_type>;
-};
-
 // ######################################################################
 //! Extracts the true type from something possibly wrapped in a cereal NoConvert
 /*! Internally cereal uses some wrapper classes to test the validity of
