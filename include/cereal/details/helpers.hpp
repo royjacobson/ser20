@@ -152,10 +152,10 @@ public:
   //! Constructs a new NameValuePair
   /*! @param n The name of the pair
       @param v The value to pair.  Ideally this should be an l-value reference
-     so that the value can be both loaded and saved to.  If you pass an r-value
-     reference, the NameValuePair will store a copy of it instead of a
-     reference.  Thus you should only pass r-values in cases where this makes
-     sense, such as the result of some size() call.
+      so that the value can be both loaded and saved to.  If you pass an r-value
+      reference, the NameValuePair will store a copy of it instead of a
+      reference.  Thus you should only pass r-values in cases where this makes
+      sense, such as the result of some size() call.
       @internal */
   NameValuePair(char const* n, T&& v) : name(n), value(std::forward<T>(v)) {}
 
@@ -168,9 +168,10 @@ public:
 /*! @relates NameValuePair
     @internal */
 template <class Archive, class T>
-CEREAL_HIDE_FUNCTION inline T&& make_nvp(const char*, T&& value) requires(
-    std::is_same_v<Archive, ::cereal::BinaryInputArchive> ||
-    std::is_same_v<Archive, ::cereal::BinaryOutputArchive>) {
+CEREAL_HIDE_FUNCTION inline T&& make_nvp(const char*, T&& value)
+  requires(std::is_same_v<Archive, ::cereal::BinaryInputArchive> ||
+           std::is_same_v<Archive, ::cereal::BinaryOutputArchive>)
+{
   return std::forward<T>(value);
 }
 
@@ -179,10 +180,11 @@ CEREAL_HIDE_FUNCTION inline T&& make_nvp(const char*, T&& value) requires(
 /*! @relates NameValuePair
     @internal */
 template <class Archive, class T>
-CEREAL_HIDE_FUNCTION inline NameValuePair<T>
-make_nvp(const char* name, T&& value) requires(
-    !std::is_same_v<Archive, ::cereal::BinaryInputArchive> &&
-    !std::is_same_v<Archive, ::cereal::BinaryOutputArchive>) {
+CEREAL_HIDE_FUNCTION inline NameValuePair<T> make_nvp(const char* name,
+                                                      T&& value)
+  requires(!std::is_same_v<Archive, ::cereal::BinaryInputArchive> &&
+           !std::is_same_v<Archive, ::cereal::BinaryOutputArchive>)
+{
   return {name, std::forward<T>(value)};
 }
 
@@ -215,7 +217,7 @@ template <class T> struct BinaryData {
 // ######################################################################
 //! A wrapper around data that should be serialized after all non-deferred data
 /*! This class is used to demarcate data that can only be safely serialized
-   after any data not wrapped in this class.
+    after any data not wrapped in this class.
 
     @internal */
 template <class T> class DeferredData : detail::DeferredDataCore {
@@ -235,10 +237,10 @@ private:
 public:
   //! Constructs a new NameValuePair
   /*! @param v The value to defer.  Ideally this should be an l-value reference
-     so that the value can be both loaded and saved to.  If you pass an r-value
-     reference, the DeferredData will store a copy of it instead of a reference.
-     Thus you should only pass r-values in cases where this makes sense, such as
-     the result of some size() call.
+      so that the value can be both loaded and saved to.  If you pass an r-value
+      reference, the DeferredData will store a copy of it instead of a
+      reference. Thus you should only pass r-values in cases where this makes
+      sense, such as the result of some size() call.
       @internal */
   DeferredData(T&& v) : value(std::forward<T>(v)) {}
 
@@ -368,13 +370,14 @@ namespace detail {
 /*! This allows CEREAL_CLASS_VERSION to be safely called in a header file */
 namespace detail {
 struct version_binding_tag {};
-} // namespace
+} // namespace detail
 
 // ######################################################################
 //! Version information class
 /*! This is the base case for classes that have not been explicitly
     registered */
-template <class T, class BindingTag = detail::version_binding_tag> struct Version {
+template <class T, class BindingTag = detail::version_binding_tag>
+struct Version {
   static const std::uint32_t version = 0;
   // we don't need to explicitly register these types since they
   // always get a version number of 0

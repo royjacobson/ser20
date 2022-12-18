@@ -78,13 +78,11 @@ template <class OutputArchive> struct get_input_from_output : std::false_type {
 
 // ######################################################################
 //! Creates a test for whether a non const member function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper member function for the given archive.
-
+/*!
     @param name The name of the function to test for (e.g. serialize, load,
-   save)
+                save)
     @param test_name The name to give the test for the function being tested for
-   (e.g. serialize, versioned_serialize)
+                     (e.g. serialize, versioned_serialize)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
 #define CEREAL_MAKE_HAS_MEMBER_TEST(name, test_name, versioned)                \
   template <class T, class A>                                                  \
@@ -95,47 +93,22 @@ template <class OutputArchive> struct get_input_from_output : std::false_type {
 
 // ######################################################################
 //! Creates a test for whether a non const non-member function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper non-member function for the given archive. */
 #define CEREAL_MAKE_HAS_NON_MEMBER_TEST(test_name, func, versioned)            \
   template <class T, class A>                                                  \
   concept has_non_member_##test_name##_v = requires(T & t, A & a) {            \
                                              { func(a, t versioned) };         \
                                            };
 
-// ######################################################################
-// Member Serialize
 CEREAL_MAKE_HAS_MEMBER_TEST(serialize, serialize, );
-
-// ######################################################################
-// Member Serialize (versioned)
 CEREAL_MAKE_HAS_MEMBER_TEST(serialize, versioned_serialize,
                             CEREAL_MAKE_VERSIONED_TEST);
-
-// ######################################################################
-// Non Member Serialize
 CEREAL_MAKE_HAS_NON_MEMBER_TEST(serialize, CEREAL_SERIALIZE_FUNCTION_NAME, );
-
-// ######################################################################
-// Non Member Serialize (versioned)
 CEREAL_MAKE_HAS_NON_MEMBER_TEST(versioned_serialize,
                                 CEREAL_SERIALIZE_FUNCTION_NAME,
                                 CEREAL_MAKE_VERSIONED_TEST);
-
-// ######################################################################
-// Member Load
 CEREAL_MAKE_HAS_MEMBER_TEST(load, load, );
-
-// ######################################################################
-// Member Load (versioned)
 CEREAL_MAKE_HAS_MEMBER_TEST(load, versioned_load, CEREAL_MAKE_VERSIONED_TEST);
-
-// ######################################################################
-// Non Member Load
 CEREAL_MAKE_HAS_NON_MEMBER_TEST(load, CEREAL_LOAD_FUNCTION_NAME, );
-
-// ######################################################################
-// Non Member Load (versioned)
 CEREAL_MAKE_HAS_NON_MEMBER_TEST(versioned_load, CEREAL_LOAD_FUNCTION_NAME,
                                 CEREAL_MAKE_VERSIONED_TEST);
 
@@ -145,9 +118,7 @@ CEREAL_MAKE_HAS_NON_MEMBER_TEST(versioned_load, CEREAL_LOAD_FUNCTION_NAME,
 
 // ######################################################################
 //! Creates a test for whether a member save function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper member function for the given archive.
-
+/*!
     @param test_name The name to give the test (e.g. save or versioned_save)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
 namespace detail {
@@ -186,9 +157,7 @@ CEREAL_MAKE_HAS_MEMBER_SAVE_IMPL(versioned_save, CEREAL_MAKE_VERSIONED_TEST)
 
 // ######################################################################
 //! Creates a test for whether a non-member save function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper non-member function for the given archive.
-
+/*!
     @param test_name The name to give the test (e.g. save or versioned_save)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
 
@@ -223,19 +192,12 @@ template <bool Detected, bool Valid> struct HasNonMemberSaveResult {
               !detail::HasNonMemberNonConst##test_name##Save<                  \
                   std::remove_const_t<T>, A>>::value;
 
-// ######################################################################
-// Non Member Save
 CEREAL_MAKE_HAS_NON_MEMBER_SAVE_TEST(save, )
-
-// ######################################################################
-// Non Member Save (versioned)
 CEREAL_MAKE_HAS_NON_MEMBER_SAVE_TEST(versioned_save, CEREAL_MAKE_VERSIONED_TEST)
 
 // ######################################################################
 #undef CEREAL_MAKE_HAS_NON_MEMBER_SAVE_TEST
 
-// ######################################################################
-// Minimal Utilities
 namespace detail {
 // Determines if the provided type is an std::string
 template <class> struct is_string : std::false_type {};
@@ -252,11 +214,9 @@ concept ValidMinimalReturnType =
 // ######################################################################
 //! Creates implementation details for whether a member save_minimal function
 //! exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper member function for the given archive.
-
+/*!
     @param test_name The name to give the test (e.g. save_minimal or
-   versioned_save_minimal)
+                     versioned_save_minimal)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
 namespace detail {
 template <bool Detected, bool ConstValid, bool ReturnValid>
@@ -309,25 +269,13 @@ struct HasMemberSaveMinimalResult {
       decltype(cereal::access::member_save_minimal(                            \
           std::declval<A const&>(), std::declval<T const&>() versioned));
 
-// ######################################################################
-// Member Save Minimal
 CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(save_minimal, )
-
-// ######################################################################
-// Member Save Minimal (versioned)
 CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(versioned_save_minimal,
                                          CEREAL_MAKE_VERSIONED_TEST)
 
 #undef CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST
 
 // ######################################################################
-//! Creates a test for whether a non-member save_minimal function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper member function for the given archive.
-
-    @param test_name The name to give the test (e.g. save_minimal or
-   versioned_save_minimal)
-    @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
 
 namespace detail {
 template <bool Detected, bool ConstValid, bool ReturnValid>
@@ -344,6 +292,11 @@ struct HasNonMemberSaveMinimalResult {
 };
 } // namespace detail
 
+//! Creates a test for whether a non-member save_minimal function exists
+/*!
+    @param test_name The name to give the test (e.g. save_minimal or
+                     versioned_save_minimal)
+    @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
 #define CEREAL_MAKE_HAS_NON_MEMBER_SAVE_MINIMAL_TEST(test_name, versioned)     \
   namespace detail {                                                           \
   template <class T, class A>                                                  \
@@ -383,12 +336,7 @@ struct HasNonMemberSaveMinimalResult {
       decltype(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(                              \
           std::declval<A const&>(), std::declval<T const&>() versioned));
 
-// ######################################################################
-// Non-Member Save Minimal
 CEREAL_MAKE_HAS_NON_MEMBER_SAVE_MINIMAL_TEST(save_minimal, )
-
-// ######################################################################
-// Non-Member Save Minimal (versioned)
 CEREAL_MAKE_HAS_NON_MEMBER_SAVE_MINIMAL_TEST(versioned_save_minimal,
                                              CEREAL_MAKE_VERSIONED_TEST)
 
@@ -461,25 +409,9 @@ struct AnyConvert {
 
 // ######################################################################
 //! Creates a test for whether a member load_minimal function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper member function for the given archive.
-
+/*!
     @param load_test_name The name to give the test (e.g. load_minimal or
-   versioned_load_minimal)
-    @param load_test_prefix The above parameter minus the trailing "_minimal" */
-
-// ######################################################################
-//! Creates a test for whether a member load_minimal function exists
-/*! This creates a class derived from std::integral_constant that will be true
-   if the type has the proper member function for the given archive.
-
-    Our strategy here is to first check if a function matching the signature
-   more or less exists (allow anything like load_minimal(xxx) using AnyConvert,
-   and then secondly enforce that it has the correct signature using
-   NoConvertConstRef
-
-    @param test_name The name to give the test (e.g. load_minimal or
-   versioned_load_minimal)
+                          versioned_load_minimal)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
 
 #define CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(load_test_name, versioned)    \
@@ -492,12 +424,7 @@ struct AnyConvert {
         };                                                                     \
       };
 
-// ######################################################################
-// Member Load Minimal
 CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(load_minimal, )
-
-// ######################################################################
-// Member Load Minimal (versioned)
 CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal,
                                          CEREAL_MAKE_VERSIONED_TEST)
 
@@ -507,6 +434,17 @@ CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal,
 // ######################################################################
 // Non-Member Load Minimal
 
+namespace detail {
+template <bool Detected, bool TypeValid> struct HasNonMemberLoadMinimalResult {
+  static_assert(TypeValid,
+                "cereal detected different types in corresponding non-member "
+                "load_minimal and save_minimal functions. \n "
+                "the paramater to load_minimal must be a constant reference to "
+                "the type that save_minimal returns");
+  static constexpr inline bool value = Detected;
+};
+} // namespace detail
+
 // ######################################################################
 //! Creates a test for whether a non-member load_minimal function exists
 /*! This creates a class derived from std::integral_constant that will be
@@ -515,9 +453,9 @@ CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal,
     See notes from member load_minimal implementation.
 
     Note that there should be an additional const check on load_minimal
-   after the valid check, but this currently interferes with many valid uses
-   of minimal serialization.  It has been removed (see #565 on github) and
-   previously was:
+    after the valid check, but this currently interferes with many valid uses
+    of minimal serialization.  It has been removed (see #565 on github) and
+    previously was:
 
     @code
     static_assert( check::const_valid || !check::exists,
@@ -534,18 +472,6 @@ CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(versioned_load_minimal,
     @param save_name The corresponding name the save test would have (e.g.
    save_minimal or versioned_save_minimal)
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
-
-namespace detail {
-template <bool Detected, bool TypeValid> struct HasNonMemberLoadMinimalResult {
-  static_assert(TypeValid,
-                "cereal detected different types in corresponding non-member "
-                "load_minimal and save_minimal functions. \n "
-                "the paramater to load_minimal must be a constant reference to "
-                "the type that save_minimal returns");
-  static constexpr inline bool value = Detected;
-};
-} // namespace detail
-
 #define CEREAL_MAKE_HAS_NON_MEMBER_LOAD_MINIMAL_TEST(test_name, save_name,     \
                                                      versioned)                \
   namespace detail {                                                           \
@@ -781,7 +707,7 @@ template <bool IsSpecialized, bool IsValid> struct IsSpecializedNameResult {
 
 //! Generates a test for specialization for versioned and unversioned functions
 /*! This creates checks that can be queried to see if a given type of
-   serialization function has been specialized for this type */
+    serialization function has been specialized for this type */
 #define CEREAL_MAKE_IS_SPECIALIZED(name, versioned_name, spec_name)            \
   template <class T, class A>                                                  \
   constexpr inline bool is_specialized_##name##_v =                            \
@@ -870,7 +796,7 @@ struct has_minimal_input_serialization
 namespace detail {
 //! The number of output serialization functions available
 /*! If specialization is being used, we'll count only those; otherwise we'll
- * count everything */
+    count everything */
 template <class T, class OutputArchive>
 constexpr inline int count_output_serializers =
     count_specializations<T, OutputArchive>
@@ -898,7 +824,7 @@ constexpr inline bool is_output_serializable_v =
 namespace detail {
 //! The number of input serialization functions available
 /*! If specialization is being used, we'll count only those; otherwise we'll
- * count everything */
+    count everything */
 template <class T, class InputArchive>
 constexpr inline int count_input_serializers =
     count_specializations<T, InputArchive>
@@ -986,10 +912,10 @@ concept has_shared_from_this = requires(T t) {
 // ######################################################################
 //! Extracts the true type from something possibly wrapped in a cereal NoConvert
 /*! Internally cereal uses some wrapper classes to test the validity of
-   non-member minimal load and save functions.  This can interfere with user
-   type traits on templated load and save minimal functions.  To get to the
-   correct underlying type, users should use strip_minimal when performing any
-   enable_if type type trait checks.
+    non-member minimal load and save functions.  This can interfere with user
+    type traits on templated load and save minimal functions.  To get to the
+    correct underlying type, users should use strip_minimal when performing any
+    enable_if type type trait checks.
 
     See the enum serialization in types/common.hpp for an example of using this
  */
@@ -1020,14 +946,15 @@ using decay_archive = std::decay_t<typename strip_minimal<A>::type>;
 
 //! Checks if the provided archive type is equal to some cereal archive type
 /*! This automatically does things such as std::decay and removing any other
-   wrappers that may be on the Archive template parameter.
+    wrappers that may be on the Archive template parameter.
 
     Example use:
     @code{cpp}
     // example use to disable a serialization function
-    template <class Archive, EnableIf<cereal::traits::is_same_archive_v<Archive,
-   cereal::BinaryOutputArchive>> = sfinae> void save( Archive & ar,
-   MyType const & mt );
+    template <class Archive>
+    requires(cereal::traits::is_same_archive_v<Archive,
+                                               cereal::BinaryOutputArchive>)
+    void save(Archive& ar, const MyType& mt);
     @endcode */
 template <class ArchiveT, class CerealArchiveT>
 constexpr inline bool is_same_archive_v =
@@ -1037,13 +964,13 @@ constexpr inline bool is_same_archive_v =
 //! A macro to use to restrict which types of archives your function will work
 //! for.
 /*! This requires you to have a template class parameter named Archive and
-   replaces the void return type for your function.
+    replaces the void return type for your function.
 
     INTYPE refers to the input archive type you wish to restrict on.
     OUTTYPE refers to the output archive type you wish to restrict on.
 
     For example, if we want to limit a serialize to only work with binary
-   serialization:
+    serialization:
 
     @code{.cpp}
     template <class Archive>
@@ -1054,8 +981,7 @@ constexpr inline bool is_same_archive_v =
     }
     @endcode
 
-    If you need to do more restrictions in your enable_if, you will need to do
-   this by hand.
+    If you need to do more restrictions, you will need to do this by hand.
  */
 #define CEREAL_ARCHIVE_RESTRICT(INTYPE, OUTTYPE)                               \
   requires(cereal::traits::is_same_archive_v<Archive, INTYPE> ||               \
@@ -1064,7 +990,7 @@ constexpr inline bool is_same_archive_v =
 //! Type traits only struct used to mark an archive as human readable (text
 //! based)
 /*! Archives that wish to identify as text based/human readable should inherit
-   from this struct */
+    from this struct */
 struct TextArchive {};
 
 //! Checks if an archive is a text archive (human readable)

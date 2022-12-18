@@ -99,39 +99,33 @@ CEREAL_HIDE_FUNCTION inline SizeTag<T> make_size_tag(T&& sz) {
 // ######################################################################
 //! Marks data for deferred serialization
 /*! cereal performs a recursive depth-first traversal of data it serializes.
-   When serializing smart pointers to large, nested, or cyclical data
-   structures, it is possible to encounter a stack overflow from excessive
-   recursion when following a chain of pointers.
+    When serializing smart pointers to large, nested, or cyclical data
+    structures, it is possible to encounter a stack overflow from excessive
+    recursion when following a chain of pointers.
 
     Deferment can help in these situations if the data can be serialized
-   separately from the pointers used to traverse the structure. For example, a
-   graph structure can have its nodes serialized before its edges:
+    separately from the pointers used to traverse the structure. For example, a
+    graph structure can have its nodes serialized before its edges:
 
     @code{.cpp}
-    struct MyEdge
-    {
+    struct MyEdge {
       std::shared_ptr<MyNode> connection;
       int some_value;
 
-      template<class Archive>
-      void serialize(Archive & archive)
-      {
+      template <class Archive> void serialize(Archive& archive) {
         // when we serialize an edge, we'll defer serializing the associated
-   node archive( cereal::defer( connection ), some_value );
+        node archive(cereal::defer(connection), some_value);
       }
     };
 
-    struct MyGraphStructure
-    {
+    struct MyGraphStructure {
       std::vector<MyEdge> edges;
       std::vector<MyNodes> nodes;
 
-      template<class Archive>
-      void serialize(Archive & archive)
-      {
+      template <class Archive> void serialize(Archive& archive) {
         // because of the deferment, we ensure all nodes are fully serialized
         // before any connection pointers to those nodes are serialized
-        archive( edges, nodes );
+        archive(edges, nodes);
 
         // we have to explicitly inform the archive when it is safe to serialize
         // the deferred data
@@ -170,8 +164,8 @@ CEREAL_HIDE_FUNCTION inline void epilogue(Archive& /* archive */,
 /*! AllowEmptyClassElision
       This allows for empty classes to be serialized even if they do not provide
       a serialization function.  Classes with no data members are considered to
-   be empty.  Be warned that if this is enabled and you attempt to serialize an
-      empty class with improperly formed serialize or load/save functions, no
+      be empty.  Be warned that if this is enabled and you attempt to serialize
+      an empty class with improperly formed serialize or load/save functions, no
       static error will occur - the error will propogate silently and your
       intended serialization functions may not be called.  You can manually
       ensure that your classes that have custom serialization are correct
@@ -215,9 +209,9 @@ public:
 
       @internal
       @param sharedPointer The shared pointer itself (the adress is taked via
-     get()). The archive takes a copy to prevent the memory location to be freed
-                           as long as the address is used as id. This is needed
-     to prevent CVE-2020-11105.
+                           get()). The archive takes a copy to prevent the
+                           memory location to be freed as long as the address is
+                           used as id. This is needed to prevent CVE-2020-11105.
       @return A key that uniquely identifies the pointer */
   std::uint32_t
   registerSharedPointer(const std::shared_ptr<const void>& sharedPointer);
@@ -314,9 +308,6 @@ private:
     macro should be placed at global scope.
     @ingroup Utility */
 
-//! On C++17, define the StaticObject as inline to merge the definitions across
-//! TUs This prevents multiple definition errors when this macro appears in a
-//! header file included in multiple TUs.
 #define CEREAL_CLASS_VERSION(TYPE, VERSION_NUMBER)                             \
   namespace cereal {                                                           \
   namespace detail {                                                           \
@@ -354,7 +345,7 @@ class OutputArchive : public detail::OutputArchiveBase {
 public:
   //! Construct the output archive
   /*! @param derived A pointer to the derived ArchiveType (pass this from the
-   * derived archive) */
+                     derived archive) */
   OutputArchive(ArchiveType* const derived)
       : itsSharedPointerStorage(), itsCurrentPolymorphicTypeId(1) {}
 
@@ -370,7 +361,7 @@ public:
 
   //! Serializes any data marked for deferment using defer
   /*! This will cause any data wrapped in DeferredData to be immediately
-   * serialized */
+      serialized */
   void serializeDeferments() {
     for (auto& deferment : itsDeferments)
       deferment(*SELF);
@@ -378,24 +369,24 @@ public:
 
   /*! @name Boost Transition Layer
       Functionality that mirrors the syntax for Boost.  This is useful if you
-     are transitioning a large project from Boost to cereal.  The preferred
-     interface for cereal is using operator(). */
+      are transitioning a large project from Boost to cereal.  The preferred
+      interface for cereal is using operator(). */
   //! @{
 
   //! Indicates this archive is not intended for loading
   /*! This ensures compatibility with boost archive types.  If you are
-     transitioning from boost, you can check this value within a member or
-     external serialize function (i.e., Archive::is_loading::value) to disable
-     behavior specific to loading, until you can transition to split save/load
-     or save_minimal/load_minimal functions */
+      transitioning from boost, you can check this value within a member or
+      external serialize function (i.e., Archive::is_loading::value) to disable
+      behavior specific to loading, until you can transition to split save/load
+      or save_minimal/load_minimal functions */
   using is_loading = std::false_type;
 
   //! Indicates this archive is intended for saving
   /*! This ensures compatibility with boost archive types.  If you are
-     transitioning from boost, you can check this value within a member or
-     external serialize function (i.e., Archive::is_saving::value) to enable
-     behavior specific to loading, until you can transition to split save/load
-     or save_minimal/load_minimal functions */
+      transitioning from boost, you can check this value within a member or
+      external serialize function (i.e., Archive::is_saving::value) to enable
+      behavior specific to loading, until you can transition to split save/load
+      or save_minimal/load_minimal functions */
   using is_saving = std::true_type;
 
   //! Serializes passed in data
@@ -562,7 +553,7 @@ private:
   /*! Invalid if we have invalid output versioning or
       we are not output serializable, and either
       don't allow empty class ellision or allow it but are not serializing an
-     empty class */
+      empty class */
   template <class T>
   inline ArchiveType& processImpl(T const&)
     requires(traits::has_invalid_output_versioning_v<T, ArchiveType> ||
@@ -601,7 +592,7 @@ private:
 
   //! Registers a class version with the archive and serializes it if necessary
   /*! If this is the first time this class has been serialized, we will record
-     its version number and serialize that.
+      its version number and serialize that.
 
       @tparam T The type of the class being serialized */
   template <class T> inline std::uint32_t registerClassVersion() {
@@ -720,7 +711,7 @@ class InputArchive : public detail::InputArchiveBase {
 public:
   //! Construct the output archive
   /*! @param derived A pointer to the derived ArchiveType (pass this from the
-   * derived archive) */
+                     derived archive) */
   InputArchive(ArchiveType* const derived)
       : itsBaseClassSet(), itsSharedPointerStorage(), itsPolymorphicTypeMap(),
         itsVersionedTypes() {}
@@ -737,7 +728,7 @@ public:
 
   //! Serializes any data marked for deferment using defer
   /*! This will cause any data wrapped in DeferredData to be immediately
-   * serialized */
+      serialized */
   void serializeDeferments() {
     for (auto& deferment : itsDeferments)
       deferment(*SELF);
@@ -745,24 +736,24 @@ public:
 
   /*! @name Boost Transition Layer
       Functionality that mirrors the syntax for Boost.  This is useful if you
-     are transitioning a large project from Boost to cereal.  The preferred
-     interface for cereal is using operator(). */
+      are transitioning a large project from Boost to cereal.  The preferred
+      interface for cereal is using operator(). */
   //! @{
 
   //! Indicates this archive is intended for loading
   /*! This ensures compatibility with boost archive types.  If you are
-     transitioning from boost, you can check this value within a member or
-     external serialize function (i.e., Archive::is_loading::value) to enable
-     behavior specific to loading, until you can transition to split save/load
-     or save_minimal/load_minimal functions */
+      transitioning from boost, you can check this value within a member or
+      external serialize function (i.e., Archive::is_loading::value) to enable
+      behavior specific to loading, until you can transition to split save/load
+      or save_minimal/load_minimal functions */
   using is_loading = std::true_type;
 
   //! Indicates this archive is not intended for saving
   /*! This ensures compatibility with boost archive types.  If you are
-     transitioning from boost, you can check this value within a member or
-     external serialize function (i.e., Archive::is_saving::value) to disable
-     behavior specific to loading, until you can transition to split save/load
-     or save_minimal/load_minimal functions */
+      transitioning from boost, you can check this value within a member or
+      external serialize function (i.e., Archive::is_saving::value) to disable
+      behavior specific to loading, until you can transition to split save/load
+      or save_minimal/load_minimal functions */
   using is_saving = std::false_type;
 
   //! Serializes passed in data
@@ -950,7 +941,7 @@ private:
   /*! Invalid if we have invalid input versioning or
       we are not input serializable, and either
       don't allow empty class ellision or allow it but are not serializing an
-     empty class */
+      empty class */
   template <class T>
   inline ArchiveType& processImpl(T const&)
     requires(traits::has_invalid_input_versioning_v<T, ArchiveType> ||
@@ -993,7 +984,7 @@ private:
 
   //! Registers a class version with the archive and serializes it if necessary
   /*! If this is the first time this class has been serialized, we will record
-     its version number and serialize that.
+      its version number and serialize that.
 
       @tparam T The type of the class being serialized */
   template <class T> inline std::uint32_t loadClassVersion() {

@@ -31,9 +31,9 @@
 #define CEREAL_ARCHIVES_BINARY_HPP_
 
 #include "cereal/cereal.hpp"
+#include <cassert>
 #include <cstring>
 #include <sstream>
-#include <cassert>
 
 namespace cereal {
 // ######################################################################
@@ -55,14 +55,16 @@ class BinaryOutputArchive
 public:
   //! Construct, outputting to the provided stream
   /*! @param stream The stream to output to.  Can be a stringstream, a file
-     stream, or even cout! */
-  BinaryOutputArchive(std::ostream& stream, size_t bufferCapacity = 0x1000)
+                    stream, or even cout!
+      @param bufferSize Size of the inner buffer of the archive.
+      */
+  BinaryOutputArchive(std::ostream& stream, size_t bufferSize = 0x1000)
       : OutputArchive<BinaryOutputArchive, AllowEmptyClassElision>(this),
-        itsStream(stream), bufferCapacity(bufferCapacity), bufferSize(0),
-        itsBuffer(bufferCapacity) {}
+        itsStream(stream), bufferSize(bufferSize), bufferEnd(0),
+        itsBuffer(bufferSize) {}
 
   ~BinaryOutputArchive() {
-    if (bufferSize) {
+    if (bufferEnd) {
       flush();
     }
   }
@@ -70,22 +72,22 @@ public:
   //! Writes size bytes of data to the output stream
   void saveBinary(const void* data, std::streamsize size) {
     auto as_char = reinterpret_cast<const char*>(data);
-    if (4 * size > bufferCapacity) {
+    if (4 * size > bufferSize) {
       flush();
       write(as_char, size);
     } else {
-      if (bufferSize + size > bufferCapacity) {
+      if (bufferEnd + size > bufferSize) {
         flush();
       }
-      std::memcpy(itsBuffer.data() + bufferSize, as_char, size);
-      bufferSize += size;
+      std::memcpy(itsBuffer.data() + bufferEnd, as_char, size);
+      bufferEnd += size;
     }
   }
 
 private:
   void flush() {
-    write(itsBuffer.data(), bufferSize);
-    bufferSize = 0;
+    write(itsBuffer.data(), bufferEnd);
+    bufferEnd = 0;
   }
 
   void write(const char* data, std::streamsize size) {
@@ -98,8 +100,8 @@ private:
 
   std::ostream& itsStream;
 
-  size_t bufferCapacity;
   size_t bufferSize;
+  size_t bufferEnd;
   std::vector<char> itsBuffer;
 };
 
@@ -118,10 +120,14 @@ class BinaryInputArchive
     : public InputArchive<BinaryInputArchive, AllowEmptyClassElision> {
 public:
   //! Construct, loading from the provided stream
-  BinaryInputArchive(std::istream& stream, size_t bufferCapacity = 0x1000)
+  /*! @param stream The stream to output to.  Can be a stringstream, a file
+             stream, or even cout!
+    @param bufferSize Size of the inner buffer of the archive.
+    */
+  BinaryInputArchive(std::istream& stream, size_t bufferSize = 0x1000)
       : InputArchive<BinaryInputArchive, AllowEmptyClassElision>(this),
-        itsStream(stream), bufferCapacity(bufferCapacity), bufferStart(0),
-        bufferEnd(0), itsBuffer(bufferCapacity) {}
+        itsStream(stream), bufferSize(bufferSize), bufferStart(0), bufferEnd(0),
+        itsBuffer(bufferSize) {}
 
   ~BinaryInputArchive() noexcept = default;
 
@@ -150,11 +156,11 @@ private:
   void loadFromStream(char* data, std::streamsize size) {
     assert(bufferEnd == bufferStart);
 
-    if (4 * size > bufferCapacity) {
+    if (4 * size > bufferSize) {
       load(data, size, size);
     } else {
       bufferStart = 0;
-      bufferEnd = load(itsBuffer.data(), bufferCapacity, size);
+      bufferEnd = load(itsBuffer.data(), bufferSize, size);
       auto bytesRead = flush(data, size);
       assert(bytesRead == size);
     }
@@ -173,7 +179,7 @@ private:
 
   std::istream& itsStream;
 
-  size_t bufferCapacity;
+  size_t bufferSize;
   size_t bufferStart;
   size_t bufferEnd;
   std::vector<char> itsBuffer;
