@@ -58,14 +58,15 @@ const char char_seq_to_c_str<Cs...>::str[sizeof...(Cs) + size] = {
     @tparam C The sequence built so far
     @internal */
 template <size_t Q, size_t R, char... C> struct to_string_impl {
-  using type = typename to_string_impl<
+  using type CEREAL_NODEBUG = typename to_string_impl<
       Q / 10, Q % 10, static_cast<char>(R + std::size_t{'0'}), C...>::type;
 };
 
 //! Base case with no quotient
 /*! @internal */
 template <size_t R, char... C> struct to_string_impl<0, R, C...> {
-  using type = char_seq_to_c_str<static_cast<char>(R + std::size_t{'0'}), C...>;
+  using type CEREAL_NODEBUG =
+      char_seq_to_c_str<static_cast<char>(R + std::size_t{'0'}), C...>;
 };
 
 //! Generates a c string for a given index of a tuple
@@ -75,7 +76,7 @@ template <size_t R, char... C> struct to_string_impl<0, R, C...> {
     @endcode
     @internal */
 template <size_t T> struct tuple_element_name {
-  using type = typename to_string_impl<T / 10, T % 10>::type;
+  using type CEREAL_NODEBUG = typename to_string_impl<T / 10, T % 10>::type;
   static const typename type::arr_type c_str() { return type::str; }
 };
 

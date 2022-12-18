@@ -49,7 +49,8 @@ namespace cereal {
 /*! @relates NameValuePair
     @ingroup Utility */
 template <class T>
-inline NameValuePair<T> make_nvp(std::string const& name, T&& value) {
+CEREAL_HIDE_FUNCTION inline NameValuePair<T> make_nvp(std::string const& name,
+                                                      T&& value) {
   return {name.c_str(), std::forward<T>(value)};
 }
 
@@ -57,7 +58,8 @@ inline NameValuePair<T> make_nvp(std::string const& name, T&& value) {
 /*! @relates NameValuePair
     @ingroup Utility */
 template <class T>
-inline NameValuePair<T> make_nvp(const char* name, T&& value) {
+CEREAL_HIDE_FUNCTION inline NameValuePair<T> make_nvp(const char* name,
+                                                      T&& value) {
   return {name, std::forward<T>(value)};
 }
 
@@ -74,7 +76,8 @@ inline NameValuePair<T> make_nvp(const char* name, T&& value) {
     @param size The size in bytes of the data
     @relates BinaryData
     @ingroup Utility */
-template <class T> inline BinaryData<T> binary_data(T&& data, size_t size) {
+template <class T>
+CEREAL_HIDE_FUNCTION inline BinaryData<T> binary_data(T&& data, size_t size) {
   return {std::forward<T>(data), size};
 }
 
@@ -87,7 +90,8 @@ template <class T> inline BinaryData<T> binary_data(T&& data, size_t size) {
 
     @relates SizeTag
     @ingroup Utility */
-template <class T> inline SizeTag<T> make_size_tag(T&& sz) {
+template <class T>
+CEREAL_HIDE_FUNCTION inline SizeTag<T> make_size_tag(T&& sz) {
   return {std::forward<T>(sz)};
 }
 
@@ -137,7 +141,8 @@ template <class T> inline SizeTag<T> make_size_tag(T&& sz) {
 
     @relates DeferredData
     @ingroup Utility */
-template <class T> inline DeferredData<T> defer(T&& value) {
+template <class T>
+CEREAL_HIDE_FUNCTION inline DeferredData<T> defer(T&& value) {
   return {std::forward<T>(value)};
 }
 
@@ -149,13 +154,15 @@ template <class T> inline DeferredData<T> defer(T&& value) {
     for the archive type and the types that require the extra information.
     @ingroup Internal */
 template <class Archive, class T>
-inline void prologue(Archive& /* archive */, T const& /* data */) {}
+CEREAL_HIDE_FUNCTION inline void prologue(Archive& /* archive */,
+                                          T const& /* data */) {}
 
 //! Called after a type is serialized to tear down any special archive state
 //! for processing some type
 /*! @ingroup Internal */
 template <class Archive, class T>
-inline void epilogue(Archive& /* archive */, T const& /* data */) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(Archive& /* archive */,
+                                          T const& /* data */) {}
 
 // ######################################################################
 //! Special flags for archives
@@ -183,9 +190,9 @@ enum Flags { AllowEmptyClassElision = 1 };
 #define CEREAL_REGISTER_ARCHIVE(Archive)                                       \
   namespace cereal {                                                           \
   namespace detail {                                                           \
-  template <class T, class BindingTag>                                         \
+  template <class T>                                             \
   typename polymorphic_serialization_support<Archive, T>::type                 \
-  instantiate_polymorphic_binding(T*, Archive*, BindingTag, adl_tag);          \
+  instantiate_polymorphic_binding(T*, Archive*, adl_tag);                      \
   }                                                                            \
   } /* end namespaces */
 
@@ -298,7 +305,8 @@ public:
 
   //! Serializes all passed in data
   /*! This is the primary interface for serializing data with an archive */
-  template <class... Types> inline ArchiveType& operator()(Types&&... args) {
+  template <class... Types>
+  CEREAL_HIDE_FUNCTION inline ArchiveType& operator()(Types&&... args) {
     self->process(std::forward<Types>(args)...);
     return *self;
   }
@@ -337,7 +345,8 @@ public:
   /*! This is a boost compatability layer and is not the preferred way of using
       cereal.  If you are transitioning from boost, use this until you can
       transition to the operator() overload */
-  template <class T> inline ArchiveType& operator&(T&& arg) {
+  template <class T>
+  CEREAL_HIDE_FUNCTION inline ArchiveType& operator&(T&& arg) {
     self->process(std::forward<T>(arg));
     return *self;
   }
@@ -346,7 +355,8 @@ public:
   /*! This is a boost compatability layer and is not the preferred way of using
       cereal.  If you are transitioning from boost, use this until you can
       transition to the operator() overload */
-  template <class T> inline ArchiveType& operator<<(T&& arg) {
+  template <class T>
+  CEREAL_HIDE_FUNCTION inline ArchiveType& operator<<(T&& arg) {
     self->process(std::forward<T>(arg));
     return *self;
   }
@@ -402,14 +412,15 @@ public:
 
 private:
   //! Serializes data after calling prologue, then calls epilogue
-  template <class T> inline void process(T&& head) {
+  template <class T> CEREAL_HIDE_FUNCTION inline void process(T&& head) {
     prologue(*self, head);
     self->processImpl(head);
     epilogue(*self, head);
   }
 
   //! Unwinds to process all data
-  template <class... Args> inline void process(Args&&... args) {
+  template <class... Args>
+  CEREAL_HIDE_FUNCTION inline void process(Args&&... args) {
     (self->process(std::forward<Args>(args)), ...);
   }
 
@@ -458,42 +469,47 @@ private:
 
   //! Member serialization
   template <class T>
-  inline ArchiveType& processImpl(T const& t) PROCESS_IF(member_serialize) {
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(member_serialize) {
     access::member_serialize(*self, const_cast<T&>(t));
     return *self;
   }
 
   //! Non member serialization
   template <class T>
-  inline ArchiveType& processImpl(T const& t) PROCESS_IF(non_member_serialize) {
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(non_member_serialize) {
     CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T&>(t));
     return *self;
   }
 
   //! Member split (save)
   template <class T>
-  inline ArchiveType& processImpl(T const& t) PROCESS_IF(member_save) {
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(member_save) {
     access::member_save(*self, t);
     return *self;
   }
 
   //! Non member split (save)
   template <class T>
-  inline ArchiveType& processImpl(T const& t) PROCESS_IF(non_member_save) {
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(non_member_save) {
     CEREAL_SAVE_FUNCTION_NAME(*self, t);
     return *self;
   }
 
   //! Member split (save_minimal)
   template <class T>
-  inline ArchiveType& processImpl(T const& t) PROCESS_IF(member_save_minimal) {
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
+      PROCESS_IF(member_save_minimal) {
     self->process(access::member_save_minimal(*self, t));
     return *self;
   }
 
   //! Non member split (save_minimal)
   template <class T>
-  inline ArchiveType& processImpl(T const& t)
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_save_minimal) {
     self->process(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t));
     return *self;
@@ -501,7 +517,7 @@ private:
 
   //! Empty class specialization
   template <class T>
-  inline ArchiveType& processImpl(T const&) requires(
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const&) requires(
       bool(Flags& AllowEmptyClassElision) &&
       !traits::is_output_serializable_v<T, ArchiveType> && std::is_empty_v<T>) {
     return *self;
@@ -570,7 +586,7 @@ private:
   //! Member serialization
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& processImpl(T const& t)
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(member_versioned_serialize) {
     access::member_serialize(*self, const_cast<T&>(t),
                              registerClassVersion<T>());
@@ -580,7 +596,7 @@ private:
   //! Non member serialization
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& processImpl(T const& t)
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_versioned_serialize) {
     CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T&>(t),
                                    registerClassVersion<T>());
@@ -590,7 +606,7 @@ private:
   //! Member split (save)
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& processImpl(T const& t)
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(member_versioned_save) {
     access::member_save(*self, t, registerClassVersion<T>());
     return *self;
@@ -599,7 +615,7 @@ private:
   //! Non member split (save)
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& processImpl(T const& t)
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_versioned_save) {
     CEREAL_SAVE_FUNCTION_NAME(*self, t, registerClassVersion<T>());
     return *self;
@@ -608,7 +624,7 @@ private:
   //! Member split (save_minimal)
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& processImpl(T const& t)
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(member_versioned_save_minimal) {
     self->process(
         access::member_save_minimal(*self, t, registerClassVersion<T>()));
@@ -618,7 +634,7 @@ private:
   //! Non member split (save_minimal)
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& processImpl(T const& t)
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_versioned_save_minimal) {
     self->process(
         CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t, registerClassVersion<T>()));
@@ -688,7 +704,8 @@ public:
 
   //! Serializes all passed in data
   /*! This is the primary interface for serializing data with an archive */
-  template <class... Types> inline ArchiveType& operator()(Types&&... args) {
+  template <class... Types>
+  CEREAL_HIDE_FUNCTION inline ArchiveType& operator()(Types&&... args) {
     process(std::forward<Types>(args)...);
     return *self;
   }
@@ -727,7 +744,8 @@ public:
   /*! This is a boost compatability layer and is not the preferred way of using
       cereal.  If you are transitioning from boost, use this until you can
       transition to the operator() overload */
-  template <class T> inline ArchiveType& operator&(T&& arg) {
+  template <class T>
+  CEREAL_HIDE_FUNCTION inline ArchiveType& operator&(T&& arg) {
     self->process(std::forward<T>(arg));
     return *self;
   }
@@ -736,7 +754,8 @@ public:
   /*! This is a boost compatability layer and is not the preferred way of using
       cereal.  If you are transitioning from boost, use this until you can
       transition to the operator() overload */
-  template <class T> inline ArchiveType& operator>>(T&& arg) {
+  template <class T>
+  CEREAL_HIDE_FUNCTION inline ArchiveType& operator>>(T&& arg) {
     self->process(std::forward<T>(arg));
     return *self;
   }
@@ -809,14 +828,15 @@ public:
 
 private:
   //! Serializes data after calling prologue, then calls epilogue
-  template <class T> inline void process(T&& head) {
+  template <class T> CEREAL_HIDE_FUNCTION inline void process(T&& head) {
     prologue(*self, head);
     self->processImpl(head);
     epilogue(*self, head);
   }
 
   //! Unwinds to process all data
-  template <class... Args> inline void process(Args&&... args) {
+  template <class... Args>
+  CEREAL_HIDE_FUNCTION inline void process(Args&&... args) {
     (process(std::forward<Args>(args)), ...);
   }
 
@@ -858,34 +878,38 @@ private:
 #define PROCESS_IF(name)                                                       \
   requires(traits::has_##name##_v<T, ArchiveType> &&                           \
            !traits::has_invalid_input_versioning_v<T, ArchiveType> &&          \
-           (traits::is_input_serializable_v<T, ArchiveType> &&                 \
-            (traits::is_specialized_##name##_v<T, ArchiveType> ||              \
-             !traits::is_specialized_v<T, ArchiveType>)))
+           traits::is_input_serializable_v<T, ArchiveType> &&                  \
+           (!traits::is_specialized_v<T, ArchiveType> ||                       \
+            traits::is_specialized_##name##_v<T, ArchiveType>))
 
   //! Member serialization
   template <class T>
-  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_serialize) {
+  inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
+      PROCESS_IF(member_serialize) {
     access::member_serialize(*self, t);
     return *self;
   }
 
   //! Non member serialization
   template <class T>
-  inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_serialize) {
+  inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
+      PROCESS_IF(non_member_serialize) {
     CEREAL_SERIALIZE_FUNCTION_NAME(*self, t);
     return *self;
   }
 
   //! Member split (load)
   template <class T>
-  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_load) {
+  inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
+      PROCESS_IF(member_load) {
     access::member_load(*self, t);
     return *self;
   }
 
   //! Non member split (load)
   template <class T>
-  inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_load) {
+  inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
+      PROCESS_IF(non_member_load) {
     CEREAL_LOAD_FUNCTION_NAME(*self, t);
     return *self;
   }
@@ -914,7 +938,7 @@ private:
 
   //! Empty class specialization
   template <class T>
-  inline ArchiveType& processImpl(T const&) requires(
+  inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T const&) requires(
       bool(Flags& AllowEmptyClassElision) &&
       !traits::is_input_serializable_v<T, ArchiveType> && std::is_empty_v<T>) {
     return *self;
@@ -989,7 +1013,8 @@ private:
   //! Member serialization
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_versioned_serialize) {
+  inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
+      PROCESS_IF(member_versioned_serialize) {
     const auto version = loadClassVersion<T>();
     access::member_serialize(*self, t, version);
     return *self;

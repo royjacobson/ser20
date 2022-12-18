@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.6...3.15)
+cmake_minimum_required(VERSION 3.20)
 
-project(cereal LANGUAGES CXX VERSION 1.3.2)
+project(cereal LANGUAGES CXX VERSION 1.4.0)
 
 if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(CEREAL_MASTER_PROJECT ON)
@@ -11,26 +11,10 @@ if(APPLE)
     option(SKIP_PORTABILITY_TEST "Skip portability (32 bit) tests" ON)
 endif()
 
-option(BUILD_DOC "Build documentation" ON)
-option(BUILD_SANDBOX "Build sandbox examples" ON)
+option(BUILD_DOC "Build documentation" ${CEREAL_MASTER_PROJECT})
+option(BUILD_SANDBOX "Build sandbox examples" ${CEREAL_MASTER_PROJECT})
+option(BUILD_TESTS "Build tests" ${CEREAL_MASTER_PROJECT})
 option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" OFF)
-
-# TODO: should not be needed! CK
-if(NOT CMAKE_VERSION VERSION_LESS 3.0) # installing cereal requires INTERFACE lib
-    option(JUST_INSTALL_CEREAL "Don't do anything besides installing the library" OFF)
-endif()
-
-
-set(CEREAL_THREAD_LIBS)
-if(UNIX)
-    option(THREAD_SAFE "Use mutexes to ensure thread safety" OFF)
-    if(THREAD_SAFE)
-        message(STATUS "Use mutexes")
-        add_definitions(-DCEREAL_THREAD_SAFE=1)
-        set(CEREAL_THREAD_LIBS pthread)
-    endif()
-endif()
-
 
 if(MSVC)
     add_compile_options(/bigobj /W3 /WX)
@@ -45,8 +29,7 @@ else()
     if(APPLE OR CLANG_USE_LIBCPP)
         message(STATUS "Use libc++")
         add_compile_options(-stdlib=libc++)
-        # TODO: use add_link_options(-stdlib=libc++ -lc++abi") bud this needs cmake 3.13! CK
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+        add_link_options(-stdlib=libc++ -lc++abi)
     endif()
 
     if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD STREQUAL "98")
@@ -57,17 +40,29 @@ else()
 endif()
 
 
-add_library(cereal INTERFACE)
+set(CEREAL_SOURCES "src/cereal.cpp")
+add_library(cereal STATIC ${CEREAL_SOURCES})
 add_library(cereal::cereal ALIAS cereal)
-target_include_directories(cereal INTERFACE
+
+target_include_directories(cereal SYSTEM PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+
+
+set(CEREAL_THREAD_LIBS)
+if(UNIX)
+    option(THREAD_SAFE "Use mutexes to ensure thread safety" OFF)
+    if(THREAD_SAFE)
+        message(STATUS "Use mutexes")
+        target_compile_definitions(cereal PUBLIC CEREAL_THREAD_SAFE=1)
+        set(CEREAL_THREAD_LIBS pthread)
+    endif()
+endif()
+
 list(APPEND CEREAL_THREAD_LIBS cereal::cereal)
 
-if(NOT CMAKE_VERSION VERSION_LESS 3.8)
-    target_compile_features(cereal INTERFACE cxx_std_11)
-endif()
+target_compile_features(cereal INTERFACE cxx_std_20)
 
 
 option(CEREAL_INSTALL "Generate the install target" ${CEREAL_MASTER_PROJECT})
@@ -100,19 +95,12 @@ if(CEREAL_INSTALL)
     )
 endif()
 
-
-if(JUST_INSTALL_CEREAL)
-    return()
-endif()
-
-
 if(NOT SKIP_PERFORMANCE_COMPARISON)
     # Boost serialization for performance sandbox
     find_package(Boost REQUIRED COMPONENTS serialization)
 endif()
 
 
-option(BUILD_TESTS "Build tests" ${CEREAL_MASTER_PROJECT})
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(unittests)

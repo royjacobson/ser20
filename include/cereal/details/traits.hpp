@@ -62,10 +62,10 @@ template <class OutputArchive> struct get_input_from_output : std::false_type {
   namespace traits {                                                           \
   namespace detail {                                                           \
   template <> struct get_output_from_input<InputArchive> {                     \
-    using type = OutputArchive;                                                \
+    using type CEREAL_NODEBUG = OutputArchive;                                 \
   };                                                                           \
   template <> struct get_input_from_output<OutputArchive> {                    \
-    using type = InputArchive;                                                 \
+    using type CEREAL_NODEBUG = InputArchive;                                  \
   };                                                                           \
   }                                                                            \
   }                                                                            \
@@ -405,7 +405,7 @@ struct NoConvertBase {};
 
     @tparam Source the type of the original source */
 template <class Source> struct NoConvertConstRef : NoConvertBase {
-  using type = Source; //!< Used to get underlying type easily
+  using type CEREAL_NODEBUG = Source; //!< Used to get underlying type easily
 
   template <class Dest>
   requires(std::is_same_v<Source, Dest>) operator Dest() = delete;
@@ -929,7 +929,7 @@ template <class> struct get_base_class;
 
 template <template <typename> class Cast, class Base>
 struct get_base_class<Cast<Base>> {
-  using type = Base;
+  using type CEREAL_NODEBUG = Base;
 };
 
 //! Base class cast, behave as the test
@@ -973,12 +973,12 @@ concept has_shared_from_this = requires(T t) {
 template <class T, bool IsCerealMinimalTrait =
                        std::is_base_of_v<detail::NoConvertBase, T>>
 struct strip_minimal {
-  using type = T;
+  using type CEREAL_NODEBUG = T;
 };
 
 //! Specialization for types wrapped in a NoConvert
 template <class T> struct strip_minimal<T, true> {
-  using type = typename T::type;
+  using type CEREAL_NODEBUG = typename T::type;
 };
 
 // ######################################################################

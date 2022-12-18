@@ -165,7 +165,7 @@ namespace rapidxml
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_no_data_nodes = 0x1;
+    inline constexpr int parse_no_data_nodes = 0x1;
 
     //! Parse flag instructing the parser to not use text of first data node as a value of parent element.
     //! Can be combined with other flags by use of | operator.
@@ -174,42 +174,42 @@ namespace rapidxml
     //! Use rapidxml::parse_no_data_nodes flag to prevent creation of data nodes if you want to manipulate data using values of elements.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_no_element_values = 0x2;
+    inline constexpr int parse_no_element_values = 0x2;
 
     //! Parse flag instructing the parser to not place zero terminators after strings in the source text.
     //! By default zero terminators are placed, modifying source text.
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_no_string_terminators = 0x4;
+    inline constexpr int parse_no_string_terminators = 0x4;
 
     //! Parse flag instructing the parser to not translate entities in the source text.
     //! By default entities are translated, modifying source text.
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_no_entity_translation = 0x8;
+    inline constexpr int parse_no_entity_translation = 0x8;
 
     //! Parse flag instructing the parser to disable UTF-8 handling and assume plain 8 bit characters.
     //! By default, UTF-8 handling is enabled.
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_no_utf8 = 0x10;
+    inline constexpr int parse_no_utf8 = 0x10;
 
     //! Parse flag instructing the parser to create XML declaration node.
     //! By default, declaration node is not created.
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_declaration_node = 0x20;
+    inline constexpr int parse_declaration_node = 0x20;
 
     //! Parse flag instructing the parser to create comments nodes.
     //! By default, comment nodes are not created.
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_comment_nodes = 0x40;
+    inline constexpr int parse_comment_nodes = 0x40;
 
     //! Parse flag instructing the parser to create DOCTYPE node.
     //! By default, doctype node is not created.
@@ -217,14 +217,14 @@ namespace rapidxml
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_doctype_node = 0x80;
+    inline constexpr int parse_doctype_node = 0x80;
 
     //! Parse flag instructing the parser to create PI nodes.
     //! By default, PI nodes are not created.
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_pi_nodes = 0x100;
+    inline constexpr int parse_pi_nodes = 0x100;
 
     //! Parse flag instructing the parser to validate closing tag names.
     //! If not set, name inside closing tag is irrelevant to the parser.
@@ -232,7 +232,7 @@ namespace rapidxml
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_validate_closing_tags = 0x200;
+    inline constexpr int parse_validate_closing_tags = 0x200;
 
     //! Parse flag instructing the parser to trim all leading and trailing whitespace of data nodes.
     //! By default, whitespace is not trimmed.
@@ -240,7 +240,7 @@ namespace rapidxml
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_trim_whitespace = 0x400;
+    inline constexpr int parse_trim_whitespace = 0x400;
 
     //! Parse flag instructing the parser to condense all whitespace runs of data nodes to a single space character.
     //! Trimming of leading and trailing whitespace of data is controlled by rapidxml::parse_trim_whitespace flag.
@@ -249,7 +249,7 @@ namespace rapidxml
     //! Can be combined with other flags by use of | operator.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_normalize_whitespace = 0x800;
+    inline constexpr int parse_normalize_whitespace = 0x800;
 
     // Compound flags
 
@@ -261,7 +261,7 @@ namespace rapidxml
     //! and using the flag will disable it.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_default = 0;
+    inline constexpr int parse_default = 0;
 
     //! A combination of parse flags that forbids any modifications of the source text.
     //! This also results in faster parsing. However, note that the following will occur:
@@ -271,18 +271,18 @@ namespace rapidxml
     //! <li>whitespace will not be normalized</li>
     //! </ul>
     //! See xml_document::parse() function.
-    const int parse_non_destructive = parse_no_string_terminators | parse_no_entity_translation;
+    inline constexpr int parse_non_destructive = parse_no_string_terminators | parse_no_entity_translation;
 
     //! A combination of parse flags resulting in fastest possible parsing, without sacrificing important data.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_fastest = parse_non_destructive | parse_no_data_nodes;
+    inline constexpr int parse_fastest = parse_non_destructive | parse_no_data_nodes;
 
     //! A combination of parse flags resulting in largest amount of data being extracted.
     //! This usually results in slowest parsing.
     //! <br><br>
     //! See xml_document::parse() function.
-    const int parse_full = parse_declaration_node | parse_comment_nodes | parse_doctype_node | parse_pi_nodes | parse_validate_closing_tags;
+    inline constexpr int parse_full = parse_declaration_node | parse_comment_nodes | parse_doctype_node | parse_pi_nodes | parse_validate_closing_tags;
 
     ///////////////////////////////////////////////////////////////////////
     // Internals

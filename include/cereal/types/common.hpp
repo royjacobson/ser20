@@ -52,7 +52,7 @@ inline void serializeArray(Archive& ar, T& array,
     ar(i);
 }
 
-namespace {
+namespace detail {
 //! Gets the underlying type of an enum
 /*! @internal */
 template <class T, bool IsEnum>
@@ -62,7 +62,7 @@ struct enum_underlying_type : std::false_type {};
 /*! Specialization for when we actually have an enum
     @internal */
 template <class T> struct enum_underlying_type<T, true> {
-  using type = std::underlying_type_t<T>;
+  using type CEREAL_NODEBUG = std::underlying_type_t<T>;
 };
 } // namespace
 
@@ -80,8 +80,9 @@ private:
 
 public:
   static const bool value = std::is_enum_v<StrippedT>;
-  using type = StrippedT;
-  using base_type = typename enum_underlying_type<StrippedT, value>::type;
+  using type CEREAL_NODEBUG = StrippedT;
+  using base_type CEREAL_NODEBUG =
+      typename detail::enum_underlying_type<StrippedT, value>::type;
 };
 } // namespace common_detail
 

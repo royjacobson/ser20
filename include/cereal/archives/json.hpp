@@ -830,64 +830,78 @@ private:
 //! Prologue for NVPs for JSON archives
 /*! NVPs do not start or finish nodes - they just set up the names */
 template <class T>
-inline void prologue(JSONOutputArchive&, NameValuePair<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void prologue(JSONOutputArchive&,
+                                          NameValuePair<T> const&) {}
 
 //! Prologue for NVPs for JSON archives
 template <class T>
-inline void prologue(JSONInputArchive&, NameValuePair<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void prologue(JSONInputArchive&,
+                                          NameValuePair<T> const&) {}
 
 // ######################################################################
 //! Epilogue for NVPs for JSON archives
 /*! NVPs do not start or finish nodes - they just set up the names */
 template <class T>
-inline void epilogue(JSONOutputArchive&, NameValuePair<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(JSONOutputArchive&,
+                                          NameValuePair<T> const&) {}
 
 //! Epilogue for NVPs for JSON archives
 /*! NVPs do not start or finish nodes - they just set up the names */
 template <class T>
-inline void epilogue(JSONInputArchive&, NameValuePair<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(JSONInputArchive&,
+                                          NameValuePair<T> const&) {}
 
 // ######################################################################
 //! Prologue for deferred data for JSON archives
 /*! Do nothing for the defer wrapper */
 template <class T>
-inline void prologue(JSONOutputArchive&, DeferredData<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void prologue(JSONOutputArchive&,
+                                          DeferredData<T> const&) {}
 
 //! Prologue for deferred data for JSON archives
 template <class T>
-inline void prologue(JSONInputArchive&, DeferredData<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void prologue(JSONInputArchive&,
+                                          DeferredData<T> const&) {}
 
 // ######################################################################
 //! Epilogue for deferred for JSON archives
 /*! NVPs do not start or finish nodes - they just set up the names */
 template <class T>
-inline void epilogue(JSONOutputArchive&, DeferredData<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(JSONOutputArchive&,
+                                          DeferredData<T> const&) {}
 
 //! Epilogue for deferred for JSON archives
 /*! Do nothing for the defer wrapper */
 template <class T>
-inline void epilogue(JSONInputArchive&, DeferredData<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(JSONInputArchive&,
+                                          DeferredData<T> const&) {}
 
 // ######################################################################
 //! Prologue for SizeTags for JSON archives
 /*! SizeTags are strictly ignored for JSON, they just indicate
     that the current node should be made into an array */
 template <class T>
-inline void prologue(JSONOutputArchive& ar, SizeTag<T> const&) {
+CEREAL_HIDE_FUNCTION inline void prologue(JSONOutputArchive& ar,
+                                          SizeTag<T> const&) {
   ar.makeArray();
 }
 
 //! Prologue for SizeTags for JSON archives
-template <class T> inline void prologue(JSONInputArchive&, SizeTag<T> const&) {}
+template <class T>
+CEREAL_HIDE_FUNCTION inline void prologue(JSONInputArchive&,
+                                          SizeTag<T> const&) {}
 
 // ######################################################################
 //! Epilogue for SizeTags for JSON archives
 /*! SizeTags are strictly ignored for JSON */
 template <class T>
-inline void epilogue(JSONOutputArchive&, SizeTag<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(JSONOutputArchive&,
+                                          SizeTag<T> const&) {}
 
 //! Epilogue for SizeTags for JSON archives
-template <class T> inline void epilogue(JSONInputArchive&, SizeTag<T> const&) {}
+template <class T>
+CEREAL_HIDE_FUNCTION inline void epilogue(JSONInputArchive&,
+                                          SizeTag<T> const&) {}
 
 // ######################################################################
 //! Prologue for all other types for JSON archives (except minimal types)
@@ -896,7 +910,8 @@ template <class T> inline void epilogue(JSONInputArchive&, SizeTag<T> const&) {}
 
     Minimal types do not start or finish nodes */
 template <class T>
-inline void prologue(JSONOutputArchive& ar, T const&) requires(
+CEREAL_HIDE_FUNCTION inline void
+prologue(JSONOutputArchive& ar, T const&) requires(
     !std::is_arithmetic_v<T> &&
     !traits::has_minimal_base_class_serialization<
         T, traits::has_minimal_output_serialization,
@@ -907,7 +922,8 @@ inline void prologue(JSONOutputArchive& ar, T const&) requires(
 
 //! Prologue for all other types for JSON archives
 template <class T>
-inline void prologue(JSONInputArchive& ar, T const&) requires(
+CEREAL_HIDE_FUNCTION inline void
+prologue(JSONInputArchive& ar, T const&) requires(
     !std::is_arithmetic_v<T> &&
     !traits::has_minimal_base_class_serialization<
         T, traits::has_minimal_input_serialization, JSONInputArchive>::value &&
@@ -922,7 +938,8 @@ inline void prologue(JSONInputArchive& ar, T const&) requires(
 
     Minimal types do not start or finish nodes */
 template <class T>
-inline void epilogue(JSONOutputArchive& ar, T const&) requires(
+CEREAL_HIDE_FUNCTION inline void
+epilogue(JSONOutputArchive& ar, T const&) requires(
     !std::is_arithmetic_v<T> &&
     !traits::has_minimal_base_class_serialization<
         T, traits::has_minimal_output_serialization,
@@ -933,7 +950,8 @@ inline void epilogue(JSONOutputArchive& ar, T const&) requires(
 
 //! Epilogue for all other types other for JSON archives
 template <class T>
-inline void epilogue(JSONInputArchive& ar, T const&) requires(
+CEREAL_HIDE_FUNCTION inline void
+epilogue(JSONInputArchive& ar, T const&) requires(
     !std::is_arithmetic_v<T> &&
     !traits::has_minimal_base_class_serialization<
         T, traits::has_minimal_input_serialization, JSONInputArchive>::value &&
@@ -943,67 +961,72 @@ inline void epilogue(JSONInputArchive& ar, T const&) requires(
 
 // ######################################################################
 //! Prologue for arithmetic types for JSON archives
-inline void prologue(JSONOutputArchive& ar, std::nullptr_t const&) {
+CEREAL_HIDE_FUNCTION inline void prologue(JSONOutputArchive& ar,
+                                          std::nullptr_t const&) {
   ar.writeName();
 }
 
 //! Prologue for arithmetic types for JSON archives
-inline void prologue(JSONInputArchive&, std::nullptr_t const&) {}
+CEREAL_HIDE_FUNCTION inline void prologue(JSONInputArchive&,
+                                          std::nullptr_t const&) {}
 
 // ######################################################################
 //! Epilogue for arithmetic types for JSON archives
-inline void epilogue(JSONOutputArchive&, std::nullptr_t const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(JSONOutputArchive&,
+                                          std::nullptr_t const&) {}
 
 //! Epilogue for arithmetic types for JSON archives
-inline void epilogue(JSONInputArchive&, std::nullptr_t const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(JSONInputArchive&,
+                                          std::nullptr_t const&) {}
 
 // ######################################################################
 //! Prologue for arithmetic types for JSON archives
 template <class T>
-inline void prologue(JSONOutputArchive& ar,
-                     T const&) requires(std::is_arithmetic_v<T>) {
+CEREAL_HIDE_FUNCTION inline void
+prologue(JSONOutputArchive& ar, T const&) requires(std::is_arithmetic_v<T>) {
   ar.writeName();
 }
 
 //! Prologue for arithmetic types for JSON archives
 template <class T>
-inline void prologue(JSONInputArchive&,
-                     T const&) requires(std::is_arithmetic_v<T>) {}
+CEREAL_HIDE_FUNCTION inline void
+prologue(JSONInputArchive&, T const&) requires(std::is_arithmetic_v<T>) {}
 
 // ######################################################################
 //! Epilogue for arithmetic types for JSON archives
 template <class T>
-inline void epilogue(JSONOutputArchive&,
-                     T const&) requires(std::is_arithmetic_v<T>) {}
+CEREAL_HIDE_FUNCTION inline void
+epilogue(JSONOutputArchive&, T const&) requires(std::is_arithmetic_v<T>) {}
 
 //! Epilogue for arithmetic types for JSON archives
 template <class T>
-inline void epilogue(JSONInputArchive&,
-                     T const&) requires(std::is_arithmetic_v<T>) {}
+CEREAL_HIDE_FUNCTION inline void
+epilogue(JSONInputArchive&, T const&) requires(std::is_arithmetic_v<T>) {}
 
 // ######################################################################
 //! Prologue for strings for JSON archives
 template <class CharT, class Traits, class Alloc>
-inline void prologue(JSONOutputArchive& ar,
-                     std::basic_string<CharT, Traits, Alloc> const&) {
+CEREAL_HIDE_FUNCTION inline void
+prologue(JSONOutputArchive& ar,
+         std::basic_string<CharT, Traits, Alloc> const&) {
   ar.writeName();
 }
 
 //! Prologue for strings for JSON archives
 template <class CharT, class Traits, class Alloc>
-inline void prologue(JSONInputArchive&,
-                     std::basic_string<CharT, Traits, Alloc> const&) {}
+CEREAL_HIDE_FUNCTION inline void
+prologue(JSONInputArchive&, std::basic_string<CharT, Traits, Alloc> const&) {}
 
 // ######################################################################
 //! Epilogue for strings for JSON archives
 template <class CharT, class Traits, class Alloc>
-inline void epilogue(JSONOutputArchive&,
-                     std::basic_string<CharT, Traits, Alloc> const&) {}
+CEREAL_HIDE_FUNCTION inline void
+epilogue(JSONOutputArchive&, std::basic_string<CharT, Traits, Alloc> const&) {}
 
 //! Epilogue for strings for JSON archives
 template <class CharT, class Traits, class Alloc>
-inline void epilogue(JSONInputArchive&,
-                     std::basic_string<CharT, Traits, Alloc> const&) {}
+CEREAL_HIDE_FUNCTION inline void
+epilogue(JSONInputArchive&, std::basic_string<CharT, Traits, Alloc> const&) {}
 
 // ######################################################################
 // Common JSONArchive serialization functions
@@ -1024,19 +1047,20 @@ inline void CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar,
 }
 
 //! Saving for nullptr to JSON
-inline void CEREAL_SAVE_FUNCTION_NAME(JSONOutputArchive& ar,
-                                      std::nullptr_t const& t) {
+CEREAL_HIDE_FUNCTION inline void
+CEREAL_SAVE_FUNCTION_NAME(JSONOutputArchive& ar, std::nullptr_t const& t) {
   ar.saveValue(t);
 }
 
 //! Loading arithmetic from JSON
-inline void CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar, std::nullptr_t& t) {
+CEREAL_HIDE_FUNCTION inline void CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar,
+                                                           std::nullptr_t& t) {
   ar.loadValue(t);
 }
 
 //! Saving for arithmetic to JSON
 template <class T>
-inline void
+CEREAL_HIDE_FUNCTION inline void
 CEREAL_SAVE_FUNCTION_NAME(JSONOutputArchive& ar,
                           T const& t) requires(std::is_arithmetic_v<T>) {
   ar.saveValue(t);
@@ -1044,14 +1068,15 @@ CEREAL_SAVE_FUNCTION_NAME(JSONOutputArchive& ar,
 
 //! Loading arithmetic from JSON
 template <class T>
-inline void CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar,
-                                      T& t) requires(std::is_arithmetic_v<T>) {
+CEREAL_HIDE_FUNCTION inline void
+CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar,
+                          T& t) requires(std::is_arithmetic_v<T>) {
   ar.loadValue(t);
 }
 
 //! saving string to JSON
 template <class CharT, class Traits, class Alloc>
-inline void
+CEREAL_HIDE_FUNCTION inline void
 CEREAL_SAVE_FUNCTION_NAME(JSONOutputArchive& ar,
                           std::basic_string<CharT, Traits, Alloc> const& str) {
   ar.saveValue(str);
@@ -1059,7 +1084,7 @@ CEREAL_SAVE_FUNCTION_NAME(JSONOutputArchive& ar,
 
 //! loading string from JSON
 template <class CharT, class Traits, class Alloc>
-inline void
+CEREAL_HIDE_FUNCTION inline void
 CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar,
                           std::basic_string<CharT, Traits, Alloc>& str) {
   ar.loadValue(str);
@@ -1068,13 +1093,15 @@ CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar,
 // ######################################################################
 //! Saving SizeTags to JSON
 template <class T>
-inline void CEREAL_SAVE_FUNCTION_NAME(JSONOutputArchive&, SizeTag<T> const&) {
+CEREAL_HIDE_FUNCTION inline void CEREAL_SAVE_FUNCTION_NAME(JSONOutputArchive&,
+                                                           SizeTag<T> const&) {
   // nothing to do here, we don't explicitly save the size
 }
 
 //! Loading SizeTags from JSON
 template <class T>
-inline void CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar, SizeTag<T>& st) {
+CEREAL_HIDE_FUNCTION inline void CEREAL_LOAD_FUNCTION_NAME(JSONInputArchive& ar,
+                                                           SizeTag<T>& st) {
   ar.loadSize(st.size);
 }
 } // namespace cereal

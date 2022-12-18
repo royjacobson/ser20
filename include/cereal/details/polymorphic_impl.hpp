@@ -152,7 +152,7 @@ struct PolymorphicCasters {
       registered caster. If no matching caster exists, the bool in the pair will
      be false and the vector reference should not be used. */
   // TODO: Put it in a source file.
-  static std::pair<bool, std::vector<PolymorphicCaster const*> const&>
+  inline static std::pair<bool, std::vector<PolymorphicCaster const*> const&>
   lookup_if_exists(std::type_index const& baseIndex,
                    std::type_index const& derivedIndex) {
     // First phase of lookup - match base type index
@@ -445,7 +445,7 @@ struct PolymorphicVirtualCaster : PolymorphicCaster {
 template <class Base, class Derived> struct RegisterPolymorphicCaster {
   //! Performs registration (binding) between Base and Derived
   /*! If the type is not polymorphic, nothing will happen */
-  static PolymorphicCaster const* bind() {
+  inline static PolymorphicCaster const* bind() {
     return std::is_polymorphic_v<Base>
                ? &StaticObject<
                      PolymorphicVirtualCaster<Base, Derived>>::getInstance()
@@ -580,7 +580,7 @@ template <class Archive, class T> struct InputBindingCreator {
     casting for serializing polymorphic objects */
 template <class Archive, class T> struct OutputBindingCreator {
   //! Writes appropriate metadata to the archive for this polymorphic type
-  static void writeMetadata(Archive& ar) {
+  static inline void writeMetadata(Archive& ar) {
     // Register the polymorphic type name with the archive, and get the id
     char const* name = binding_name<T>::name();
     std::uint32_t id = ar.registerPolymorphicType(name);
@@ -590,7 +590,7 @@ template <class Archive, class T> struct OutputBindingCreator {
 
     // If the msb of the id is 1, then the type name is new, and we should
     // serialize it
-    if (id & detail::msb_32bit) {
+    if (id & msb_32bit) {
       std::string namestring(name);
       ar(CEREAL_NVP_("polymorphic_name", namestring));
     }
@@ -703,26 +703,6 @@ template <class Archive, class T> struct OutputBindingCreator {
 //! of instantiate_polymorphic_binding
 struct adl_tag {};
 
-//! Tag for init_binding, bind_to_archives and instantiate_polymorphic_binding.
-//! For C++14 and below, we must instantiate a unique StaticObject per TU that
-//! is otherwise identical -- otherwise we get multiple definition problems (ODR
-//! violations). To achieve this, put a tag in an anonymous namespace and use it
-//! as a template argument.
-//!
-//! For C++17, we can use static inline global variables to unify these
-//! definitions across all TUs in the same shared object (DLL).  The tag is
-//! therefore not necessary. For convenience, keep it to not complicate other
-//! code, but don't put it in an anonymous namespace.  Now the template
-//! instantiations will correspond to the same type, and since they are marked
-//! inline with C++17, they will be merged across all TUs.
-#ifdef CEREAL_HAS_CPP17
-struct polymorphic_binding_tag {};
-#else
-namespace {
-struct polymorphic_binding_tag {};
-} // namespace
-#endif
-
 //! Causes the static object bindings between an archive type and a serializable
 //! type T
 template <class Archive, class T> struct create_bindings {
@@ -756,7 +736,7 @@ template <class Archive, class T> struct polymorphic_serialization_support {
 #else  // NOT _MSC_VER
   //! Creates the appropriate bindings depending on whether the archive supports
   //! saving or loading
-  static CEREAL_DLL_EXPORT void instantiate() CEREAL_USED;
+  inline static CEREAL_DLL_EXPORT void instantiate() CEREAL_USED;
   //! This typedef causes the compiler to instantiate this static function
   typedef instantiate_function<instantiate> unused;
 #endif // _MSC_VER
@@ -768,13 +748,13 @@ CEREAL_DLL_EXPORT void
 polymorphic_serialization_support<Archive, T>::instantiate() {
   create_bindings<Archive, T>::save(
       std::integral_constant < bool,
-      std::is_base_of_v<detail::OutputArchiveBase, Archive>&&
+      std::is_base_of_v<OutputArchiveBase, Archive>&&
               traits::is_output_serializable_v < T,
       Archive >> {});
 
   create_bindings<Archive, T>::load(
       std::integral_constant < bool,
-      std::is_base_of_v<detail::InputArchiveBase, Archive>&&
+      std::is_base_of_v<InputArchiveBase, Archive>&&
               traits::is_input_serializable_v < T,
       Archive >> {});
 }
@@ -784,8 +764,7 @@ polymorphic_serialization_support<Archive, T>::instantiate() {
     the CEREAL_REGISTER_ARCHIVE macro.  Overload resolution will then force
     several static objects to be made that allow us to bind together all
     registered archive types with the parameter type T. */
-template <class T, class Tag = polymorphic_binding_tag>
-struct bind_to_archives {
+template <class T> struct bind_to_archives {
   //! Binds the type T to all registered archives
   /*! If T is abstract, we will not serialize it and thus
       do not need to make a binding */
@@ -793,15 +772,14 @@ struct bind_to_archives {
     static_assert(std::is_polymorphic_v<T>,
                   "Attempting to register non polymorphic type");
     if constexpr (!std::is_abstract_v<T>) {
-      instantiate_polymorphic_binding(static_cast<T*>(nullptr), 0, Tag{},
-                                      adl_tag{});
+      instantiate_polymorphic_binding(static_cast<T*>(nullptr), 0, adl_tag{});
     }
     return *this;
   }
 };
 
 //! Used to hide the static object used to bind T to registered archives
-template <class T, class Tag = polymorphic_binding_tag> struct init_binding;
+template <class T> struct init_binding;
 
 //! Base case overload for instantiation
 /*! This will end up always being the best overload due to the second
@@ -815,8 +793,7 @@ template <class T, class Tag = polymorphic_binding_tag> struct init_binding;
     mechanisms even though they are never called.
 
     See the documentation for the other functions to try and understand this */
-template <class T, typename BindingTag>
-void instantiate_polymorphic_binding(T*, int, BindingTag, adl_tag) {}
+template <class T> void instantiate_polymorphic_binding(T*, int, adl_tag) {}
 } // namespace detail
 } // namespace cereal
 

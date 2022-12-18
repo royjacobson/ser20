@@ -31,7 +31,6 @@
 #define CEREAL_DETAILS_HELPERS_HPP_
 
 #include <cstdint>
-// #include <memory>
 #include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
@@ -45,6 +44,8 @@ namespace cereal {
 //! An exception class thrown when things go wrong at runtime
 /*! @ingroup Utility */
 struct Exception : public std::runtime_error {
+  explicit Exception(std::string&& what_)
+      : std::runtime_error(std::move(what_)) {}
   explicit Exception(const std::string& what_) : std::runtime_error(what_) {}
   explicit Exception(const char* what_) : std::runtime_error(what_) {}
 };
@@ -166,7 +167,7 @@ public:
 /*! @relates NameValuePair
     @internal */
 template <class Archive, class T>
-inline T&& make_nvp(const char*, T&& value) requires(
+CEREAL_HIDE_FUNCTION inline T&& make_nvp(const char*, T&& value) requires(
     std::is_same_v<Archive, ::cereal::BinaryInputArchive> ||
     std::is_same_v<Archive, ::cereal::BinaryOutputArchive>) {
   return std::forward<T>(value);
@@ -177,7 +178,8 @@ inline T&& make_nvp(const char*, T&& value) requires(
 /*! @relates NameValuePair
     @internal */
 template <class Archive, class T>
-inline NameValuePair<T> make_nvp(const char* name, T&& value) requires(
+CEREAL_HIDE_FUNCTION inline NameValuePair<T>
+make_nvp(const char* name, T&& value) requires(
     !std::is_same_v<Archive, ::cereal::BinaryInputArchive> &&
     !std::is_same_v<Archive, ::cereal::BinaryOutputArchive>) {
   return {name, std::forward<T>(value)};
@@ -275,8 +277,8 @@ template <class Archive, class T> struct polymorphic_serialization_support;
 struct adl_tag;
 
 // used during saving pointers
-static const uint32_t msb_32bit = 0x80000000;
-static const int32_t msb2_32bit = 0x40000000;
+inline constexpr uint32_t msb_32bit = 0x80000000;
+inline constexpr int32_t msb2_32bit = 0x40000000;
 } // namespace detail
 
 // ######################################################################
@@ -343,7 +345,8 @@ template <class Key, class Value> struct MapItem {
 
   //! Serialize the MapItem with the NVPs "key" and "value"
   template <class Archive>
-  inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& archive) {
+  CEREAL_HIDE_FUNCTION inline void
+  CEREAL_SERIALIZE_FUNCTION_NAME(Archive& archive) {
     archive(make_nvp<Archive>("key", key), make_nvp<Archive>("value", value));
   }
 };
@@ -353,8 +356,8 @@ template <class Key, class Value> struct MapItem {
 /*! @internal
     @relates MapItem */
 template <class KeyType, class ValueType>
-inline MapItem<KeyType, ValueType> make_map_item(KeyType&& key,
-                                                 ValueType&& value) {
+CEREAL_HIDE_FUNCTION inline MapItem<KeyType, ValueType>
+make_map_item(KeyType&& key, ValueType&& value) {
   return {std::forward<KeyType>(key), std::forward<ValueType>(value)};
 }
 
@@ -362,7 +365,7 @@ namespace detail {
 //! Tag for Version, which due to its anonymous namespace, becomes a different
 //! type in each translation unit
 /*! This allows CEREAL_CLASS_VERSION to be safely called in a header file */
-namespace {
+namespace detail {
 struct version_binding_tag {};
 } // namespace
 
@@ -370,7 +373,7 @@ struct version_binding_tag {};
 //! Version information class
 /*! This is the base case for classes that have not been explicitly
     registered */
-template <class T, class BindingTag = version_binding_tag> struct Version {
+template <class T, class BindingTag = detail::version_binding_tag> struct Version {
   static const std::uint32_t version = 0;
   // we don't need to explicitly register these types since they
   // always get a version number of 0

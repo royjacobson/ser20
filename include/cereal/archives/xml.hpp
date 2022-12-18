@@ -53,7 +53,7 @@ namespace xml_detail {
 #endif // CEREAL_XML_STRING_VALUE
 
 //! The name given to the root node in a cereal xml archive
-static const char* CEREAL_XML_STRING = CEREAL_XML_STRING_VALUE;
+constexpr inline const char* CEREAL_XML_STRING = CEREAL_XML_STRING_VALUE;
 
 //! Returns true if the character is whitespace
 inline bool isWhitespace(char c) {
@@ -746,42 +746,50 @@ private:
 //! Prologue for NVPs for XML output archives
 /*! NVPs do not start or finish nodes - they just set up the names */
 template <class T>
-inline void prologue(XMLOutputArchive&, NameValuePair<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void prologue(XMLOutputArchive&,
+                                          NameValuePair<T> const&) {}
 
 //! Prologue for NVPs for XML input archives
 template <class T>
-inline void prologue(XMLInputArchive&, NameValuePair<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void prologue(XMLInputArchive&,
+                                          NameValuePair<T> const&) {}
 
 // ######################################################################
 //! Epilogue for NVPs for XML output archives
 /*! NVPs do not start or finish nodes - they just set up the names */
 template <class T>
-inline void epilogue(XMLOutputArchive&, NameValuePair<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(XMLOutputArchive&,
+                                          NameValuePair<T> const&) {}
 
 //! Epilogue for NVPs for XML input archives
 template <class T>
-inline void epilogue(XMLInputArchive&, NameValuePair<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(XMLInputArchive&,
+                                          NameValuePair<T> const&) {}
 
 // ######################################################################
 //! Prologue for deferred data for XML archives
 /*! Do nothing for the defer wrapper */
 template <class T>
-inline void prologue(XMLOutputArchive&, DeferredData<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void prologue(XMLOutputArchive&,
+                                          DeferredData<T> const&) {}
 
 //! Prologue for deferred data for XML archives
 template <class T>
-inline void prologue(XMLInputArchive&, DeferredData<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void prologue(XMLInputArchive&,
+                                          DeferredData<T> const&) {}
 
 // ######################################################################
 //! Epilogue for deferred for XML archives
 /*! NVPs do not start or finish nodes - they just set up the names */
 template <class T>
-inline void epilogue(XMLOutputArchive&, DeferredData<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(XMLOutputArchive&,
+                                          DeferredData<T> const&) {}
 
 //! Epilogue for deferred for XML archives
 /*! Do nothing for the defer wrapper */
 template <class T>
-inline void epilogue(XMLInputArchive&, DeferredData<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void epilogue(XMLInputArchive&,
+                                          DeferredData<T> const&) {}
 
 // ######################################################################
 //! Prologue for SizeTags for XML output archives
@@ -793,13 +801,19 @@ inline void prologue(XMLOutputArchive& ar, SizeTag<T> const&) {
   }
 }
 
-template <class T> inline void prologue(XMLInputArchive&, SizeTag<T> const&) {}
+template <class T>
+CEREAL_HIDE_FUNCTION inline void prologue(XMLInputArchive&, SizeTag<T> const&) {
+}
 
 //! Epilogue for SizeTags for XML output archives
 /*! SizeTags do not start or finish nodes */
-template <class T> inline void epilogue(XMLOutputArchive&, SizeTag<T> const&) {}
+template <class T>
+CEREAL_HIDE_FUNCTION inline void epilogue(XMLOutputArchive&,
+                                          SizeTag<T> const&) {}
 
-template <class T> inline void epilogue(XMLInputArchive&, SizeTag<T> const&) {}
+template <class T>
+CEREAL_HIDE_FUNCTION inline void epilogue(XMLInputArchive&, SizeTag<T> const&) {
+}
 
 // ######################################################################
 //! Prologue for all other types for XML output archives (except minimal types)
@@ -818,7 +832,8 @@ inline void prologue(XMLOutputArchive& ar, T const&) requires(!(
 
 //! Prologue for all other types for XML input archives (except minimal types)
 template <class T>
-inline void prologue(XMLInputArchive& ar, T const&) requires(
+CEREAL_HIDE_FUNCTION inline void
+prologue(XMLInputArchive& ar, T const&) requires(
     !(traits::has_minimal_base_class_serialization<
           T, traits::has_minimal_input_serialization, XMLInputArchive>::value ||
       traits::has_minimal_input_serialization<T, XMLInputArchive>::value)) {
@@ -832,7 +847,8 @@ inline void prologue(XMLInputArchive& ar, T const&) requires(
 
     Minimal types do not start or end nodes */
 template <class T>
-inline void epilogue(XMLOutputArchive& ar, T const&) requires(!(
+CEREAL_HIDE_FUNCTION inline void
+epilogue(XMLOutputArchive& ar, T const&) requires(!(
     traits::has_minimal_base_class_serialization<
         T, traits::has_minimal_output_serialization, XMLOutputArchive>::value ||
     traits::has_minimal_output_serialization<T, XMLOutputArchive>::value)) {
@@ -842,7 +858,8 @@ inline void epilogue(XMLOutputArchive& ar, T const&) requires(!(
 //! Epilogue for all other types other for XML output archives (except minimal
 //! types)
 template <class T>
-inline void epilogue(XMLInputArchive& ar, T const&) requires(
+CEREAL_HIDE_FUNCTION inline void
+epilogue(XMLInputArchive& ar, T const&) requires(
     !(traits::has_minimal_base_class_serialization<
           T, traits::has_minimal_input_serialization, XMLInputArchive>::value ||
       traits::has_minimal_input_serialization<T, XMLInputArchive>::value)) {
@@ -872,18 +889,20 @@ inline void CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar,
 // ######################################################################
 //! Saving SizeTags to XML
 template <class T>
-inline void CEREAL_SAVE_FUNCTION_NAME(XMLOutputArchive&, SizeTag<T> const&) {}
+CEREAL_HIDE_FUNCTION inline void CEREAL_SAVE_FUNCTION_NAME(XMLOutputArchive&,
+                                                           SizeTag<T> const&) {}
 
 //! Loading SizeTags from XML
 template <class T>
-inline void CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar, SizeTag<T>& st) {
+CEREAL_HIDE_FUNCTION inline void CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar,
+                                                           SizeTag<T>& st) {
   ar.loadSize(st.size);
 }
 
 // ######################################################################
 //! Saving for POD types to xml
 template <class T>
-inline void
+CEREAL_HIDE_FUNCTION inline void
 CEREAL_SAVE_FUNCTION_NAME(XMLOutputArchive& ar,
                           T const& t) requires(std::is_arithmetic_v<T>) {
   ar.saveValue(t);
@@ -891,15 +910,16 @@ CEREAL_SAVE_FUNCTION_NAME(XMLOutputArchive& ar,
 
 //! Loading for POD types from xml
 template <class T>
-inline void CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar,
-                                      T& t) requires(std::is_arithmetic_v<T>) {
+CEREAL_HIDE_FUNCTION inline void
+CEREAL_LOAD_FUNCTION_NAME(XMLInputArchive& ar,
+                          T& t) requires(std::is_arithmetic_v<T>) {
   ar.loadValue(t);
 }
 
 // ######################################################################
 //! saving string to xml
 template <class CharT, class Traits, class Alloc>
-inline void
+CEREAL_HIDE_FUNCTION inline void
 CEREAL_SAVE_FUNCTION_NAME(XMLOutputArchive& ar,
                           std::basic_string<CharT, Traits, Alloc> const& str) {
   ar.saveValue(str);

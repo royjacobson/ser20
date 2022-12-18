@@ -114,4 +114,24 @@
 #define CEREAL_ALIGNOF alignof
 #endif // end MSVC check
 
+#if __has_attribute(__nodebug__)
+#define CEREAL_NODEBUG __attribute__((__nodebug__))
+#else
+#define CEREAL_NODEBUG
+#endif
+
+#if __has_attribute(__always_inline__)
+#define CEREAL_FORCE_INLINE __attribute__((__always_inline__))
+#else
+#ifdef _MSC_VER
+#define CEREAL_FORCE_INLINE __forceinline
+#else 
+#define CEREAL_FORCE_INLINE
+#endif
+#endif
+
+#ifndef CEREAL_HIDE_FUNCTION
+#define CEREAL_HIDE_FUNCTION CEREAL_NODEBUG CEREAL_FORCE_INLINE
+#endif
+
 #endif // CEREAL_MACROS_HPP_
