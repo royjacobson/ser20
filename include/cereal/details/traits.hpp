@@ -87,9 +87,10 @@ template <class OutputArchive> struct get_input_from_output : std::false_type {
     @param versioned Either blank or the macro CEREAL_MAKE_VERSIONED_TEST */
 #define CEREAL_MAKE_HAS_MEMBER_TEST(name, test_name, versioned)                \
   template <class T, class A>                                                  \
-  concept has_member_##test_name##_v = requires(T & t, A & a) {                \
-    {cereal::access::member_##name(a, t versioned)};                           \
-  };
+  concept has_member_##test_name##_v =                                         \
+      requires(T & t, A & a) {                                                 \
+        { cereal::access::member_##name(a, t versioned) };                     \
+      };
 
 // ######################################################################
 //! Creates a test for whether a non const non-member function exists
@@ -98,8 +99,8 @@ template <class OutputArchive> struct get_input_from_output : std::false_type {
 #define CEREAL_MAKE_HAS_NON_MEMBER_TEST(test_name, func, versioned)            \
   template <class T, class A>                                                  \
   concept has_non_member_##test_name##_v = requires(T & t, A & a) {            \
-    {func(a, t versioned)};                                                    \
-  };
+                                             { func(a, t versioned) };         \
+                                           };
 
 // ######################################################################
 // Member Serialize
@@ -159,14 +160,16 @@ template <bool Detected, bool Valid> struct HasMemberSaveResult {
 #define CEREAL_MAKE_HAS_MEMBER_SAVE_IMPL(test_name, versioned)                 \
   namespace detail {                                                           \
   template <class T, class A>                                                  \
-  concept HasMemberNonConst##test_name##Save = requires(T & t, A& a) {         \
-    {cereal::access::member_save_non_const(a, t versioned)};                   \
-  };                                                                           \
+  concept HasMemberNonConst##test_name##Save =                                 \
+      requires(T & t, A& a) {                                                  \
+        { cereal::access::member_save_non_const(a, t versioned) };             \
+      };                                                                       \
                                                                                \
   template <class T, class A>                                                  \
-  concept HasMemberConst##test_name##Save = requires(const T& t, A& a) {       \
-    {cereal::access::member_save(a, t versioned)};                             \
-  };                                                                           \
+  concept HasMemberConst##test_name##Save =                                    \
+      requires(const T& t, A& a) {                                             \
+        { cereal::access::member_save(a, t versioned) };                       \
+      };                                                                       \
   }                                                                            \
   template <class T, class A>                                                  \
   constexpr inline bool has_member_##test_name##_v =                           \
@@ -200,14 +203,16 @@ template <bool Detected, bool Valid> struct HasNonMemberSaveResult {
 #define CEREAL_MAKE_HAS_NON_MEMBER_SAVE_TEST(test_name, versioned)             \
   namespace detail {                                                           \
   template <class T, class A>                                                  \
-  concept HasNonMemberNonConst##test_name##Save = requires(T & t, A& a) {      \
-    {CEREAL_SAVE_FUNCTION_NAME(a, t versioned)};                               \
-  };                                                                           \
+  concept HasNonMemberNonConst##test_name##Save =                              \
+      requires(T & t, A& a) {                                                  \
+        { CEREAL_SAVE_FUNCTION_NAME(a, t versioned) };                         \
+      };                                                                       \
                                                                                \
   template <class T, class A>                                                  \
-  concept HasNonMemberConst##test_name##Save = requires(const T& t, A& a) {    \
-    {CEREAL_SAVE_FUNCTION_NAME(a, t versioned)};                               \
-  };                                                                           \
+  concept HasNonMemberConst##test_name##Save =                                 \
+      requires(const T& t, A& a) {                                             \
+        { CEREAL_SAVE_FUNCTION_NAME(a, t versioned) };                         \
+      };                                                                       \
   }                                                                            \
   template <class T, class A>                                                  \
   constexpr inline bool has_non_member_##test_name##_v =                       \
@@ -269,24 +274,25 @@ struct HasMemberSaveMinimalResult {
 #define CEREAL_MAKE_HAS_MEMBER_SAVE_MINIMAL_TEST(test_name, versioned)         \
   namespace detail {                                                           \
   template <class T, class A>                                                  \
-  concept HasMemberMinimalNonConst##test_name##Save = requires(T & t, A& a) {  \
-    {                                                                          \
-      cereal::access::member_save_minimal_non_const(a, t versioned)            \
-      } -> ValidMinimalReturnType;                                             \
-  };                                                                           \
+  concept HasMemberMinimalNonConst##test_name##Save =                          \
+      requires(T & t, A& a) {                                                  \
+        {                                                                      \
+          cereal::access::member_save_minimal_non_const(a, t versioned)        \
+          } -> ValidMinimalReturnType;                                         \
+      };                                                                       \
                                                                                \
   template <class T, class A>                                                  \
   concept HasMemberMinimalConstValidType##test_name##Save =                    \
       requires(const T& t, A& a) {                                             \
-    {                                                                          \
-      cereal::access::member_save_minimal(a, t versioned)                      \
-      } -> ValidMinimalReturnType;                                             \
-  };                                                                           \
+        {                                                                      \
+          cereal::access::member_save_minimal(a, t versioned)                  \
+          } -> ValidMinimalReturnType;                                         \
+      };                                                                       \
   template <class T, class A>                                                  \
-  concept HasMemberMinimalConst##test_name##Save = requires(const T& t,        \
-                                                            A& a) {            \
-    {cereal::access::member_save_minimal(a, t versioned)};                     \
-  };                                                                           \
+  concept HasMemberMinimalConst##test_name##Save =                             \
+      requires(const T& t, A& a) {                                             \
+        { cereal::access::member_save_minimal(a, t versioned) };               \
+      };                                                                       \
   }                                                                            \
   template <class T, class A>                                                  \
   constexpr inline bool has_member_##test_name##_v =                           \
@@ -340,25 +346,25 @@ struct HasNonMemberSaveMinimalResult {
 #define CEREAL_MAKE_HAS_NON_MEMBER_SAVE_MINIMAL_TEST(test_name, versioned)     \
   namespace detail {                                                           \
   template <class T, class A>                                                  \
-  concept HasNonMemberMinimalNonConst##test_name##Save = requires(T & t,       \
-                                                                  A& a) {      \
-    {                                                                          \
-      CEREAL_SAVE_MINIMAL_FUNCTION_NAME(a, t versioned)                        \
-      } -> ValidMinimalReturnType;                                             \
-  };                                                                           \
+  concept HasNonMemberMinimalNonConst##test_name##Save =                       \
+      requires(T & t, A& a) {                                                  \
+        {                                                                      \
+          CEREAL_SAVE_MINIMAL_FUNCTION_NAME(a, t versioned)                    \
+          } -> ValidMinimalReturnType;                                         \
+      };                                                                       \
                                                                                \
   template <class T, class A>                                                  \
   concept HasNonMemberMinimalConstValidType##test_name##Save =                 \
       requires(const T& t, A& a) {                                             \
-    {                                                                          \
-      CEREAL_SAVE_MINIMAL_FUNCTION_NAME(a, t versioned)                        \
-      } -> ValidMinimalReturnType;                                             \
-  };                                                                           \
+        {                                                                      \
+          CEREAL_SAVE_MINIMAL_FUNCTION_NAME(a, t versioned)                    \
+          } -> ValidMinimalReturnType;                                         \
+      };                                                                       \
   template <class T, class A>                                                  \
-  concept HasNonMemberMinimalConst##test_name##Save = requires(const T& t,     \
-                                                               A& a) {         \
-    {CEREAL_SAVE_MINIMAL_FUNCTION_NAME(a, t versioned)};                       \
-  };                                                                           \
+  concept HasNonMemberMinimalConst##test_name##Save =                          \
+      requires(const T& t, A& a) {                                             \
+        { CEREAL_SAVE_MINIMAL_FUNCTION_NAME(a, t versioned) };                 \
+      };                                                                       \
   }                                                                            \
   template <class T, class A>                                                  \
   constexpr inline bool has_non_member_##test_name##_v =                       \
@@ -408,12 +414,14 @@ template <class Source> struct NoConvertConstRef : NoConvertBase {
   using type CEREAL_NODEBUG = Source; //!< Used to get underlying type easily
 
   template <class Dest>
-  requires(std::is_same_v<Source, Dest>) operator Dest() = delete;
+    requires(std::is_same_v<Source, Dest>)
+  operator Dest() = delete;
 
   //! only allow conversion if the types are the same and we are converting into
   //! a const reference
   template <class Dest>
-  requires(std::is_same_v<Source, Dest>) operator Dest const&();
+    requires(std::is_same_v<Source, Dest>)
+  operator Dest const&();
 };
 
 //! A struct that prevents implicit conversion
@@ -425,18 +433,21 @@ template <class Source> struct NoConvertRef : NoConvertBase {
   using type = Source; //!< Used to get underlying type easily
 
   template <class Dest>
-  requires(std::is_same_v<Source, Dest>) operator Dest() = delete;
+    requires(std::is_same_v<Source, Dest>)
+  operator Dest() = delete;
 
   // TODO: Is this still needed?
 #ifdef __clang__
   template <class Dest>
-  requires(std::is_same_v<Source, Dest>) operator Dest const&() = delete;
+    requires(std::is_same_v<Source, Dest>)
+  operator Dest const&() = delete;
 #endif // __clang__
 
   //! only allow conversion if the types are the same and we are converting into
   //! a const reference
   template <class Dest>
-  requires(std::is_same_v<Source, Dest>) operator Dest&();
+    requires(std::is_same_v<Source, Dest>)
+  operator Dest&();
 };
 
 //! A type that can implicitly convert to anything else
@@ -472,10 +483,13 @@ struct AnyConvert {
 
 #define CEREAL_MAKE_HAS_MEMBER_LOAD_MINIMAL_TEST(load_test_name, versioned)    \
   template <class T, class A>                                                  \
-  concept has_member_##load_test_name##_v = requires(T & t, const A& a) {      \
-    {cereal::access::member_load_minimal(a, t,                                 \
-                                         detail::AnyConvert() versioned)};     \
-  };
+  concept has_member_##load_test_name##_v =                                    \
+      requires(T & t, const A& a) {                                            \
+        {                                                                      \
+          cereal::access::member_load_minimal(a, t,                            \
+                                              detail::AnyConvert() versioned)  \
+        };                                                                     \
+      };
 
 // ######################################################################
 // Member Load Minimal
@@ -535,23 +549,30 @@ template <bool Detected, bool TypeValid> struct HasNonMemberLoadMinimalResult {
                                                      versioned)                \
   namespace detail {                                                           \
   template <class T, class A>                                                  \
-  concept has_##test_name = requires(T & t, const A& a) {                      \
-    {CEREAL_LOAD_MINIMAL_FUNCTION_NAME(a, t, AnyConvert() versioned)};         \
-  };                                                                           \
+  concept has_##test_name =                                                    \
+      requires(T & t, const A& a) {                                            \
+        { CEREAL_LOAD_MINIMAL_FUNCTION_NAME(a, t, AnyConvert() versioned) };   \
+      };                                                                       \
   template <class T, class A>                                                  \
-  concept has_##test_name##_consistent_type =                                  \
-      std::is_base_of_v<cereal::detail::InputArchiveBase, A>&& requires(       \
-          T & t, const A& a) {                                                 \
-    {CEREAL_LOAD_MINIMAL_FUNCTION_NAME(                                        \
-        a, t,                                                                  \
-        NoConvertConstRef<get_non_member_##save_name##_t<                      \
-            T, typename get_output_from_input<A>::type>>() versioned)};        \
-  };                                                                           \
+  concept has_##test_name##_consistent_type = std::is_base_of_v<               \
+      cereal::detail::InputArchiveBase,                                        \
+      A>&& requires(T & t, const A& a) {                                       \
+             {                                                                 \
+               CEREAL_LOAD_MINIMAL_FUNCTION_NAME(                              \
+                   a, t,                                                       \
+                   NoConvertConstRef<get_non_member_##save_name##_t<           \
+                       T, typename get_output_from_input<A>::type>>()          \
+                       versioned)                                              \
+             };                                                                \
+           };                                                                  \
   template <class T, class A>                                                  \
-  concept has_##test_name##_const_correct = requires(const A& a) {             \
-    {CEREAL_LOAD_MINIMAL_FUNCTION_NAME(a, NoConvertRef<T>(),                   \
-                                       AnyConvert() versioned)};               \
-  };                                                                           \
+  concept has_##test_name##_const_correct =                                    \
+      requires(const A& a) {                                                   \
+        {                                                                      \
+          CEREAL_LOAD_MINIMAL_FUNCTION_NAME(a, NoConvertRef<T>(),              \
+                                            AnyConvert() versioned)            \
+        };                                                                     \
+      };                                                                       \
   } /* namespace detail */                                                     \
                                                                                \
   template <class T, class A>                                                  \
@@ -613,9 +634,10 @@ constexpr inline bool has_member_versioned_load_and_construct_v =
                                                            versioned)          \
   namespace detail {                                                           \
   template <class Construct, class T, class A>                                 \
-  concept has_non_member_##test_name##_impl = requires(Construct & c, A& a) {  \
-    {LoadAndConstruct<T>::load_and_construct(a, c versioned)};                 \
-  };                                                                           \
+  concept has_non_member_##test_name##_impl =                                  \
+      requires(Construct & c, A& a) {                                          \
+        { LoadAndConstruct<T>::load_and_construct(a, c versioned) };           \
+      };                                                                       \
   } /* end namespace detail */                                                 \
   template <class T, class A>                                                  \
   constexpr inline bool has_non_member_##test_name##_v =                       \
@@ -650,11 +672,11 @@ constexpr inline bool has_load_and_construct_v =
 
 // ######################################################################
 template <class T, class InputArchive, class OutputArchive>
-constexpr inline bool
-    has_member_split_v = (has_member_load_v<T, InputArchive> &&
-                          has_member_save_v<T, OutputArchive>) ||
-                         (has_member_versioned_load_v<T, InputArchive> &&
-                          has_member_versioned_save_v<T, OutputArchive>);
+constexpr inline bool has_member_split_v =
+    (has_member_load_v<T, InputArchive> &&
+     has_member_save_v<T, OutputArchive>) ||
+    (has_member_versioned_load_v<T, InputArchive> &&
+     has_member_versioned_save_v<T, OutputArchive>);
 
 // ######################################################################
 template <class T, class InputArchive, class OutputArchive>
@@ -957,8 +979,8 @@ struct has_minimal_base_class_serialization
 //! std::enable_shared_from_this
 template <class T>
 concept has_shared_from_this = requires(T t) {
-  {t.shared_from_this()};
-};
+                                 { t.shared_from_this() };
+                               };
 
 // ######################################################################
 //! Extracts the true type from something possibly wrapped in a cereal NoConvert
@@ -985,8 +1007,8 @@ template <class T> struct strip_minimal<T, true> {
 //! Determines whether the class T can be default constructed by cereal::access
 template <class T>
 concept is_default_constructible = requires() {
-  {cereal::access::construct<T>()};
-};
+                                     { cereal::access::construct<T>() };
+                                   };
 
 // ######################################################################
 namespace detail {

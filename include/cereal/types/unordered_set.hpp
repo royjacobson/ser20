@@ -63,14 +63,14 @@ template <class Archive, class SetT> inline void load(Archive& ar, SetT& set) {
 
 //! Saving for std::unordered_set
 template <class Archive, class K, class H, class KE, class A>
-inline void CEREAL_SAVE_FUNCTION_NAME(
+CEREAL_HIDE_FUNCTION inline void CEREAL_SAVE_FUNCTION_NAME(
     Archive& ar, std::unordered_set<K, H, KE, A> const& unordered_set) {
   unordered_set_detail::save(ar, unordered_set);
 }
 
 //! Loading for std::unordered_set
 template <class Archive, class K, class H, class KE, class A>
-inline void
+CEREAL_HIDE_FUNCTION inline void
 CEREAL_LOAD_FUNCTION_NAME(Archive& ar,
                           std::unordered_set<K, H, KE, A>& unordered_set) {
   unordered_set_detail::load(ar, unordered_set);
@@ -78,7 +78,7 @@ CEREAL_LOAD_FUNCTION_NAME(Archive& ar,
 
 //! Saving for std::unordered_multiset
 template <class Archive, class K, class H, class KE, class A>
-inline void CEREAL_SAVE_FUNCTION_NAME(
+CEREAL_HIDE_FUNCTION inline void CEREAL_SAVE_FUNCTION_NAME(
     Archive& ar,
     std::unordered_multiset<K, H, KE, A> const& unordered_multiset) {
   unordered_set_detail::save(ar, unordered_multiset);
@@ -86,7 +86,7 @@ inline void CEREAL_SAVE_FUNCTION_NAME(
 
 //! Loading for std::unordered_multiset
 template <class Archive, class K, class H, class KE, class A>
-inline void CEREAL_LOAD_FUNCTION_NAME(
+CEREAL_HIDE_FUNCTION inline void CEREAL_LOAD_FUNCTION_NAME(
     Archive& ar, std::unordered_multiset<K, H, KE, A>& unordered_multiset) {
   unordered_set_detail::load(ar, unordered_multiset);
 }

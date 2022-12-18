@@ -190,7 +190,7 @@ enum Flags { AllowEmptyClassElision = 1 };
 #define CEREAL_REGISTER_ARCHIVE(Archive)                                       \
   namespace cereal {                                                           \
   namespace detail {                                                           \
-  template <class T>                                             \
+  template <class T>                                                           \
   typename polymorphic_serialization_support<Archive, T>::type                 \
   instantiate_polymorphic_binding(T*, Archive*, adl_tag);                      \
   }                                                                            \
@@ -204,6 +204,62 @@ enum Flags { AllowEmptyClassElision = 1 };
 #define CEREAL_UNUSED_FUNCTION                                                 \
   static void unused() { (void)version; }
 #endif
+
+class OutputSharedPointerStorage {
+public:
+  //! Registers a shared pointer with the archive
+  /*! This function is used to track shared pointer targets to prevent
+      unnecessary saves from taking place if multiple shared pointers
+      point to the same data.
+
+      @internal
+      @param sharedPointer The shared pointer itself (the adress is taked via
+     get()). The archive takes a copy to prevent the memory location to be freed
+                           as long as the address is used as id. This is needed
+     to prevent CVE-2020-11105.
+      @return A key that uniquely identifies the pointer */
+  std::uint32_t
+  registerSharedPointer(const std::shared_ptr<const void>& sharedPointer);
+
+private:
+  //! Maps from addresses to pointer ids
+  std::unordered_map<void const*, std::uint32_t> itsSharedPointerMap;
+
+  std::uint32_t itsCurrentPointerId = 1;
+
+  //! Copy of shared pointers used in #itsSharedPointerMap to make sure they are
+  //! kept alive
+  //  during lifetime of itsSharedPointerMap to prevent CVE-2020-11105.
+  std::vector<std::shared_ptr<const void>> itsSharedPointerStorage;
+};
+
+class InputSharedPointerStorage {
+public:
+  //! Retrieves a shared pointer given a unique key for it
+  /*! This is used to retrieve a previously registered shared_ptr
+      which has already been loaded.
+
+      @internal
+      @param id The unique id that was serialized for the pointer
+      @return A shared pointer to the data
+      @throw Exception if the id does not exist */
+  std::shared_ptr<void> getSharedPointer(std::uint32_t const id);
+
+  //! Registers a shared pointer to its unique identifier
+  /*! After a shared pointer has been allocated for the first time, it should
+      be registered with its loaded id for future references to it.
+
+      @internal
+      @param id The unique identifier for the shared pointer
+      @param ptr The actual shared pointer */
+  void registerSharedPointer(std::uint32_t const id, std::shared_ptr<void> ptr);
+
+private:
+  std::unordered_map<std::uint32_t, std::shared_ptr<void>> itsSharedPointerMap;
+};
+
+//! Helper macro for CRTP.
+#define SELF static_cast<ArchiveType*>(this)
 
 // ######################################################################
 //! Defines a class version for some type
@@ -299,7 +355,7 @@ public:
   /*! @param derived A pointer to the derived ArchiveType (pass this from the
    * derived archive) */
   OutputArchive(ArchiveType* const derived)
-      : self(derived), itsCurrentPointerId(1), itsCurrentPolymorphicTypeId(1) {}
+      : itsSharedPointerStorage(), itsCurrentPolymorphicTypeId(1) {}
 
   OutputArchive& operator=(OutputArchive const&) = delete;
 
@@ -307,8 +363,8 @@ public:
   /*! This is the primary interface for serializing data with an archive */
   template <class... Types>
   CEREAL_HIDE_FUNCTION inline ArchiveType& operator()(Types&&... args) {
-    self->process(std::forward<Types>(args)...);
-    return *self;
+    SELF->process(std::forward<Types>(args)...);
+    return *SELF;
   }
 
   //! Serializes any data marked for deferment using defer
@@ -316,7 +372,7 @@ public:
    * serialized */
   void serializeDeferments() {
     for (auto& deferment : itsDeferments)
-      deferment(*self);
+      deferment(*SELF);
   }
 
   /*! @name Boost Transition Layer
@@ -347,8 +403,8 @@ public:
       transition to the operator() overload */
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& operator&(T&& arg) {
-    self->process(std::forward<T>(arg));
-    return *self;
+    SELF->process(std::forward<T>(arg));
+    return *SELF;
   }
 
   //! Serializes passed in data
@@ -357,39 +413,15 @@ public:
       transition to the operator() overload */
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& operator<<(T&& arg) {
-    self->process(std::forward<T>(arg));
-    return *self;
+    SELF->process(std::forward<T>(arg));
+    return *SELF;
   }
 
   //! @}
 
-  //! Registers a shared pointer with the archive
-  /*! This function is used to track shared pointer targets to prevent
-      unnecessary saves from taking place if multiple shared pointers
-      point to the same data.
-
-      @internal
-      @param sharedPointer The shared pointer itself (the adress is taked via
-     get()). The archive takes a copy to prevent the memory location to be freed
-                           as long as the address is used as id. This is needed
-     to prevent CVE-2020-11105.
-      @return A key that uniquely identifies the pointer */
   inline std::uint32_t
   registerSharedPointer(const std::shared_ptr<const void>& sharedPointer) {
-    void const* addr = sharedPointer.get();
-
-    // Handle null pointers by just returning 0
-    if (addr == 0)
-      return 0;
-    itsSharedPointerStorage.push_back(sharedPointer);
-
-    auto id = itsSharedPointerMap.find(addr);
-    if (id == itsSharedPointerMap.end()) {
-      auto ptrId = itsCurrentPointerId++;
-      itsSharedPointerMap.emplace(addr, ptrId);
-      return ptrId | detail::msb_32bit; // mask MSB to be 1
-    } else
-      return id->second;
+    return itsSharedPointerStorage.registerSharedPointer(sharedPointer);
   }
 
   //! Registers a polymorphic type name with the archive
@@ -413,15 +445,15 @@ public:
 private:
   //! Serializes data after calling prologue, then calls epilogue
   template <class T> CEREAL_HIDE_FUNCTION inline void process(T&& head) {
-    prologue(*self, head);
-    self->processImpl(head);
-    epilogue(*self, head);
+    prologue(*SELF, head);
+    SELF->processImpl(head);
+    epilogue(*SELF, head);
   }
 
   //! Unwinds to process all data
   template <class... Args>
   CEREAL_HIDE_FUNCTION inline void process(Args&&... args) {
-    (self->process(std::forward<Args>(args)), ...);
+    (SELF->process(std::forward<Args>(args)), ...);
   }
 
   //! Serialization of a virtual_base_class wrapper
@@ -431,16 +463,16 @@ private:
     traits::detail::base_class_id id(b.base_ptr);
     if (itsBaseClassSet.count(id) == 0) {
       itsBaseClassSet.insert(id);
-      self->processImpl(*b.base_ptr);
+      SELF->processImpl(*b.base_ptr);
     }
-    return *self;
+    return *SELF;
   }
 
   //! Serialization of a base_class wrapper
   /*! \sa base_class */
   template <class T> inline ArchiveType& processImpl(base_class<T> const& b) {
-    self->processImpl(*b.base_ptr);
-    return *self;
+    SELF->processImpl(*b.base_ptr);
+    return *SELF;
   }
 
   std::vector<std::function<void(ArchiveType&)>> itsDeferments;
@@ -450,7 +482,7 @@ private:
         [d](ArchiveType& ar) { ar.process(d.value); });
     itsDeferments.emplace_back(std::move(deferment));
 
-    return *self;
+    return *SELF;
   }
 
 //! Helper macro that expands the requirements for activating an overload
@@ -471,56 +503,58 @@ private:
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(member_serialize) {
-    access::member_serialize(*self, const_cast<T&>(t));
-    return *self;
+    access::member_serialize(*SELF, const_cast<T&>(t));
+    return *SELF;
   }
 
   //! Non member serialization
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_serialize) {
-    CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T&>(t));
-    return *self;
+    CEREAL_SERIALIZE_FUNCTION_NAME(*SELF, const_cast<T&>(t));
+    return *SELF;
   }
 
   //! Member split (save)
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(member_save) {
-    access::member_save(*self, t);
-    return *self;
+    access::member_save(*SELF, t);
+    return *SELF;
   }
 
   //! Non member split (save)
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_save) {
-    CEREAL_SAVE_FUNCTION_NAME(*self, t);
-    return *self;
+    CEREAL_SAVE_FUNCTION_NAME(*SELF, t);
+    return *SELF;
   }
 
   //! Member split (save_minimal)
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(member_save_minimal) {
-    self->process(access::member_save_minimal(*self, t));
-    return *self;
+    SELF->process(access::member_save_minimal(*SELF, t));
+    return *SELF;
   }
 
   //! Non member split (save_minimal)
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_save_minimal) {
-    self->process(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t));
-    return *self;
+    SELF->process(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*SELF, t));
+    return *SELF;
   }
 
   //! Empty class specialization
   template <class T>
-  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const&) requires(
-      bool(Flags& AllowEmptyClassElision) &&
-      !traits::is_output_serializable_v<T, ArchiveType> && std::is_empty_v<T>) {
-    return *self;
+  CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const&)
+    requires(bool(Flags& AllowEmptyClassElision) &&
+             !traits::is_output_serializable_v<T, ArchiveType> &&
+             std::is_empty_v<T>)
+  {
+    return *SELF;
   }
 
   //! No matching serialization
@@ -529,11 +563,12 @@ private:
       don't allow empty class ellision or allow it but are not serializing an
      empty class */
   template <class T>
-  inline ArchiveType& processImpl(T const&) requires(
-      traits::has_invalid_output_versioning_v<T, ArchiveType> ||
-      (!traits::is_output_serializable_v<T, ArchiveType> &&
-       (!bool(Flags & AllowEmptyClassElision) ||
-        (bool(Flags & AllowEmptyClassElision) && !std::is_empty_v<T>)))) {
+  inline ArchiveType& processImpl(T const&)
+    requires(traits::has_invalid_output_versioning_v<T, ArchiveType> ||
+             (!traits::is_output_serializable_v<T, ArchiveType> &&
+              (!bool(Flags & AllowEmptyClassElision) ||
+               (bool(Flags & AllowEmptyClassElision) && !std::is_empty_v<T>))))
+  {
     static_assert(
         traits::detail::count_output_serializers<T, ArchiveType> != 0,
         "cereal could not find any output serialization functions for the "
@@ -560,7 +595,7 @@ private:
         "In addition, you may not mix versioned with non-versioned "
         "serialization functions. \n\n ");
 
-    return *self;
+    return *SELF;
   }
 
   //! Registers a class version with the archive and serializes it if necessary
@@ -588,9 +623,9 @@ private:
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(member_versioned_serialize) {
-    access::member_serialize(*self, const_cast<T&>(t),
+    access::member_serialize(*SELF, const_cast<T&>(t),
                              registerClassVersion<T>());
-    return *self;
+    return *SELF;
   }
 
   //! Non member serialization
@@ -598,9 +633,9 @@ private:
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_versioned_serialize) {
-    CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T&>(t),
+    CEREAL_SERIALIZE_FUNCTION_NAME(*SELF, const_cast<T&>(t),
                                    registerClassVersion<T>());
-    return *self;
+    return *SELF;
   }
 
   //! Member split (save)
@@ -608,8 +643,8 @@ private:
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(member_versioned_save) {
-    access::member_save(*self, t, registerClassVersion<T>());
-    return *self;
+    access::member_save(*SELF, t, registerClassVersion<T>());
+    return *SELF;
   }
 
   //! Non member split (save)
@@ -617,8 +652,8 @@ private:
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_versioned_save) {
-    CEREAL_SAVE_FUNCTION_NAME(*self, t, registerClassVersion<T>());
-    return *self;
+    CEREAL_SAVE_FUNCTION_NAME(*SELF, t, registerClassVersion<T>());
+    return *SELF;
   }
 
   //! Member split (save_minimal)
@@ -626,9 +661,9 @@ private:
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(member_versioned_save_minimal) {
-    self->process(
-        access::member_save_minimal(*self, t, registerClassVersion<T>()));
-    return *self;
+    SELF->process(
+        access::member_save_minimal(*SELF, t, registerClassVersion<T>()));
+    return *SELF;
   }
 
   //! Non member split (save_minimal)
@@ -636,31 +671,20 @@ private:
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_versioned_save_minimal) {
-    self->process(
-        CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t, registerClassVersion<T>()));
-    return *self;
+    SELF->process(
+        CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*SELF, t, registerClassVersion<T>()));
+    return *SELF;
   }
 
 #undef PROCESS_IF
 
 private:
-  ArchiveType* const self;
-
   //! A set of all base classes that have been serialized
   std::unordered_set<traits::detail::base_class_id,
                      traits::detail::base_class_id_hash>
       itsBaseClassSet;
 
-  //! Maps from addresses to pointer ids
-  std::unordered_map<void const*, std::uint32_t> itsSharedPointerMap;
-
-  //! Copy of shared pointers used in #itsSharedPointerMap to make sure they are
-  //! kept alive
-  //  during lifetime of itsSharedPointerMap to prevent CVE-2020-11105.
-  std::vector<std::shared_ptr<const void>> itsSharedPointerStorage;
-
-  //! The id to be given to the next pointer
-  std::uint32_t itsCurrentPointerId;
+  OutputSharedPointerStorage itsSharedPointerStorage;
 
   //! Maps from polymorphic type name strings to ids
   std::unordered_map<char const*, std::uint32_t> itsPolymorphicTypeMap;
@@ -697,8 +721,8 @@ public:
   /*! @param derived A pointer to the derived ArchiveType (pass this from the
    * derived archive) */
   InputArchive(ArchiveType* const derived)
-      : self(derived), itsBaseClassSet(), itsSharedPointerMap(),
-        itsPolymorphicTypeMap(), itsVersionedTypes() {}
+      : itsBaseClassSet(), itsSharedPointerStorage(), itsPolymorphicTypeMap(),
+        itsVersionedTypes() {}
 
   InputArchive& operator=(InputArchive const&) = delete;
 
@@ -707,7 +731,7 @@ public:
   template <class... Types>
   CEREAL_HIDE_FUNCTION inline ArchiveType& operator()(Types&&... args) {
     process(std::forward<Types>(args)...);
-    return *self;
+    return *SELF;
   }
 
   //! Serializes any data marked for deferment using defer
@@ -715,7 +739,7 @@ public:
    * serialized */
   void serializeDeferments() {
     for (auto& deferment : itsDeferments)
-      deferment(*self);
+      deferment(*SELF);
   }
 
   /*! @name Boost Transition Layer
@@ -746,8 +770,8 @@ public:
       transition to the operator() overload */
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& operator&(T&& arg) {
-    self->process(std::forward<T>(arg));
-    return *self;
+    SELF->process(std::forward<T>(arg));
+    return *SELF;
   }
 
   //! Serializes passed in data
@@ -756,44 +780,19 @@ public:
       transition to the operator() overload */
   template <class T>
   CEREAL_HIDE_FUNCTION inline ArchiveType& operator>>(T&& arg) {
-    self->process(std::forward<T>(arg));
-    return *self;
+    SELF->process(std::forward<T>(arg));
+    return *SELF;
   }
 
   //! @}
 
-  //! Retrieves a shared pointer given a unique key for it
-  /*! This is used to retrieve a previously registered shared_ptr
-      which has already been loaded.
-
-      @internal
-      @param id The unique id that was serialized for the pointer
-      @return A shared pointer to the data
-      @throw Exception if the id does not exist */
   inline std::shared_ptr<void> getSharedPointer(std::uint32_t const id) {
-    if (id == 0)
-      return std::shared_ptr<void>(nullptr);
-
-    auto iter = itsSharedPointerMap.find(id);
-    if (iter == itsSharedPointerMap.end())
-      throw Exception("Error while trying to deserialize a smart pointer. "
-                      "Could not find id " +
-                      std::to_string(id));
-
-    return iter->second;
+    return itsSharedPointerStorage.getSharedPointer(id);
   }
 
-  //! Registers a shared pointer to its unique identifier
-  /*! After a shared pointer has been allocated for the first time, it should
-      be registered with its loaded id for future references to it.
-
-      @internal
-      @param id The unique identifier for the shared pointer
-      @param ptr The actual shared pointer */
   inline void registerSharedPointer(std::uint32_t const id,
                                     std::shared_ptr<void> ptr) {
-    std::uint32_t const stripped_id = id & ~detail::msb_32bit;
-    itsSharedPointerMap[stripped_id] = ptr;
+    itsSharedPointerStorage.registerSharedPointer(id, std::move(ptr));
   }
 
   //! Retrieves the string for a polymorphic type given a unique key for it
@@ -829,9 +828,9 @@ public:
 private:
   //! Serializes data after calling prologue, then calls epilogue
   template <class T> CEREAL_HIDE_FUNCTION inline void process(T&& head) {
-    prologue(*self, head);
-    self->processImpl(head);
-    epilogue(*self, head);
+    prologue(*SELF, head);
+    SELF->processImpl(head);
+    epilogue(*SELF, head);
   }
 
   //! Unwinds to process all data
@@ -846,16 +845,16 @@ private:
     traits::detail::base_class_id id(b.base_ptr);
     if (itsBaseClassSet.count(id) == 0) {
       itsBaseClassSet.insert(id);
-      self->processImpl(*b.base_ptr);
+      SELF->processImpl(*b.base_ptr);
     }
-    return *self;
+    return *SELF;
   }
 
   //! Serialization of a base_class wrapper
   /*! \sa base_class */
   template <class T> inline ArchiveType& processImpl(base_class<T>& b) {
-    self->processImpl(*b.base_ptr);
-    return *self;
+    SELF->processImpl(*b.base_ptr);
+    return *SELF;
   }
 
   std::vector<std::function<void(ArchiveType&)>> itsDeferments;
@@ -865,7 +864,7 @@ private:
         [d](ArchiveType& ar) { ar.process(d.value); });
     itsDeferments.emplace_back(std::move(deferment));
 
-    return *self;
+    return *SELF;
   }
 
 //! Helper macro that expands the requirements for activating an overload
@@ -886,32 +885,32 @@ private:
   template <class T>
   inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
       PROCESS_IF(member_serialize) {
-    access::member_serialize(*self, t);
-    return *self;
+    access::member_serialize(*SELF, t);
+    return *SELF;
   }
 
   //! Non member serialization
   template <class T>
   inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
       PROCESS_IF(non_member_serialize) {
-    CEREAL_SERIALIZE_FUNCTION_NAME(*self, t);
-    return *self;
+    CEREAL_SERIALIZE_FUNCTION_NAME(*SELF, t);
+    return *SELF;
   }
 
   //! Member split (load)
   template <class T>
   inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
       PROCESS_IF(member_load) {
-    access::member_load(*self, t);
-    return *self;
+    access::member_load(*SELF, t);
+    return *SELF;
   }
 
   //! Non member split (load)
   template <class T>
   inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
       PROCESS_IF(non_member_load) {
-    CEREAL_LOAD_FUNCTION_NAME(*self, t);
-    return *self;
+    CEREAL_LOAD_FUNCTION_NAME(*SELF, t);
+    return *SELF;
   }
 
   //! Member split (load_minimal)
@@ -920,9 +919,9 @@ private:
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     traits::get_member_save_minimal_t<T, OutArchiveType> value;
-    self->process(value);
-    access::member_load_minimal(*self, t, value);
-    return *self;
+    SELF->process(value);
+    access::member_load_minimal(*SELF, t, value);
+    return *SELF;
   }
 
   //! Non member split (load_minimal)
@@ -931,17 +930,19 @@ private:
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     traits::get_non_member_save_minimal_t<T, OutArchiveType> value;
-    self->process(value);
-    CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*self, t, value);
-    return *self;
+    SELF->process(value);
+    CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*SELF, t, value);
+    return *SELF;
   }
 
   //! Empty class specialization
   template <class T>
-  inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T const&) requires(
-      bool(Flags& AllowEmptyClassElision) &&
-      !traits::is_input_serializable_v<T, ArchiveType> && std::is_empty_v<T>) {
-    return *self;
+  inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T const&)
+    requires(bool(Flags& AllowEmptyClassElision) &&
+             !traits::is_input_serializable_v<T, ArchiveType> &&
+             std::is_empty_v<T>)
+  {
+    return *SELF;
   }
 
   //! No matching serialization
@@ -950,11 +951,12 @@ private:
       don't allow empty class ellision or allow it but are not serializing an
      empty class */
   template <class T>
-  inline ArchiveType& processImpl(T const&) requires(
-      traits::has_invalid_input_versioning_v<T, ArchiveType> ||
-      (!traits::is_input_serializable_v<T, ArchiveType> &&
-       (!bool(Flags & AllowEmptyClassElision) ||
-        (bool(Flags & AllowEmptyClassElision) && !std::is_empty_v<T>)))) {
+  inline ArchiveType& processImpl(T const&)
+    requires(traits::has_invalid_input_versioning_v<T, ArchiveType> ||
+             (!traits::is_input_serializable_v<T, ArchiveType> &&
+              (!bool(Flags & AllowEmptyClassElision) ||
+               (bool(Flags & AllowEmptyClassElision) && !std::is_empty_v<T>))))
+  {
     static_assert(
         traits::detail::count_input_serializers<T, ArchiveType> != 0,
         "cereal could not find any input serialization functions for the "
@@ -981,7 +983,7 @@ private:
         "In addition, you may not mix versioned with non-versioned "
         "serialization functions. \n\n ");
 
-    return *self;
+    return *SELF;
   }
 
   //! Befriend for versioning in load_and_construct
@@ -1016,8 +1018,8 @@ private:
   inline ArchiveType& CEREAL_HIDE_FUNCTION processImpl(T& t)
       PROCESS_IF(member_versioned_serialize) {
     const auto version = loadClassVersion<T>();
-    access::member_serialize(*self, t, version);
-    return *self;
+    access::member_serialize(*SELF, t, version);
+    return *SELF;
   }
 
   //! Non member serialization
@@ -1026,8 +1028,8 @@ private:
   inline ArchiveType& processImpl(T& t)
       PROCESS_IF(non_member_versioned_serialize) {
     const auto version = loadClassVersion<T>();
-    CEREAL_SERIALIZE_FUNCTION_NAME(*self, t, version);
-    return *self;
+    CEREAL_SERIALIZE_FUNCTION_NAME(*SELF, t, version);
+    return *SELF;
   }
 
   //! Member split (load)
@@ -1035,8 +1037,8 @@ private:
   template <class T>
   inline ArchiveType& processImpl(T& t) PROCESS_IF(member_versioned_load) {
     const auto version = loadClassVersion<T>();
-    access::member_load(*self, t, version);
-    return *self;
+    access::member_load(*SELF, t, version);
+    return *SELF;
   }
 
   //! Non member split (load)
@@ -1044,8 +1046,8 @@ private:
   template <class T>
   inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_versioned_load) {
     const auto version = loadClassVersion<T>();
-    CEREAL_LOAD_FUNCTION_NAME(*self, t, version);
-    return *self;
+    CEREAL_LOAD_FUNCTION_NAME(*SELF, t, version);
+    return *SELF;
   }
 
   //! Member split (load_minimal)
@@ -1057,9 +1059,9 @@ private:
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     const auto version = loadClassVersion<T>();
     traits::get_member_versioned_save_minimal_t<T, OutArchiveType> value;
-    self->process(value);
-    access::member_load_minimal(*self, t, value, version);
-    return *self;
+    SELF->process(value);
+    access::member_load_minimal(*SELF, t, value, version);
+    return *SELF;
   }
 
   //! Non member split (load_minimal)
@@ -1071,23 +1073,20 @@ private:
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     const auto version = loadClassVersion<T>();
     traits::get_non_member_versioned_save_minimal_t<T, OutArchiveType> value;
-    self->process(value);
-    CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*self, t, value, version);
-    return *self;
+    SELF->process(value);
+    CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*SELF, t, value, version);
+    return *SELF;
   }
 
 #undef PROCESS_IF
 
 private:
-  ArchiveType* const self;
-
   //! A set of all base classes that have been serialized
   std::unordered_set<traits::detail::base_class_id,
                      traits::detail::base_class_id_hash>
       itsBaseClassSet;
 
-  //! Maps from pointer ids to metadata
-  std::unordered_map<std::uint32_t, std::shared_ptr<void>> itsSharedPointerMap;
+  InputSharedPointerStorage itsSharedPointerStorage;
 
   //! Maps from name ids to names
   std::unordered_map<std::uint32_t, std::string> itsPolymorphicTypeMap;

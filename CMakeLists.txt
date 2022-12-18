@@ -14,31 +14,12 @@ endif()
 option(BUILD_DOC "Build documentation" ${CEREAL_MASTER_PROJECT})
 option(BUILD_SANDBOX "Build sandbox examples" ${CEREAL_MASTER_PROJECT})
 option(BUILD_TESTS "Build tests" ${CEREAL_MASTER_PROJECT})
-option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" OFF)
+option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 
-if(MSVC)
-    add_compile_options(/bigobj /W3 /WX)
-else()
-    add_compile_options(-Wall -Wextra -pedantic -Wshadow -Wold-style-cast)
-    option(WITH_WERROR "Compile with '-Werror' C++ compiler flag" ON)
-    if(WITH_WERROR)
-        add_compile_options(-Werror)
-    endif()
-
-    option(CLANG_USE_LIBCPP "Use libc++ for clang compilation" OFF)
-    if(APPLE OR CLANG_USE_LIBCPP)
-        message(STATUS "Use libc++")
-        add_compile_options(-stdlib=libc++)
-        add_link_options(-stdlib=libc++ -lc++abi)
-    endif()
-
-    if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD STREQUAL "98")
-        set(CMAKE_CXX_STANDARD 20)
-    endif()
-
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD STREQUAL "98")
+    set(CMAKE_CXX_STANDARD 20)
 endif()
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CEREAL_SOURCES "src/cereal.cpp")
 add_library(cereal STATIC ${CEREAL_SOURCES})
@@ -48,6 +29,24 @@ target_include_directories(cereal SYSTEM PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+
+
+if(MSVC)
+    target_compile_options(cereal PRIVATE /bigobj /W3 /WX)
+else()
+    target_compile_options(cereal PRIVATE -Wall -Wextra -pedantic -Wshadow -Wold-style-cast)
+    option(WITH_WERROR "Compile with '-Werror' C++ compiler flag" ON)
+    if(WITH_WERROR)
+        target_compile_options(cereal PRIVATE -Werror)
+    endif()
+
+    option(CLANG_USE_LIBCPP "Use libc++ for clang compilation" OFF)
+    if(APPLE OR CLANG_USE_LIBCPP)
+        message(STATUS "Use libc++")
+        target_compile_options(cereal PUBLIC -stdlib=libc++)
+        target_link_options(cereal PUBLIC -stdlib=libc++ -lc++abi)
+    endif()
+endif()
 
 
 set(CEREAL_THREAD_LIBS)
