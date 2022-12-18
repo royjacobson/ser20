@@ -16,6 +16,7 @@
     \ingroup utility */
 /*
   Copyright (c) 2014, Randolph Voorhies, Shane Grant
+  Copyright (c) 2022, Roy Jacobson
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
