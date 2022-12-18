@@ -461,7 +461,7 @@ private:
   template <class T>
   inline ArchiveType& processImpl(virtual_base_class<T> const& b) {
     traits::detail::base_class_id id(b.base_ptr);
-    if (itsBaseClassSet.count(id) == 0) {
+    if (!itsBaseClassSet.contains(id)) {
       itsBaseClassSet.insert(id);
       SELF->processImpl(*b.base_ptr);
     }
@@ -843,7 +843,7 @@ private:
   /*! \sa virtual_base_class */
   template <class T> inline ArchiveType& processImpl(virtual_base_class<T>& b) {
     traits::detail::base_class_id id(b.base_ptr);
-    if (itsBaseClassSet.count(id) == 0) {
+    if (!itsBaseClassSet.contains(id)) {
       itsBaseClassSet.insert(id);
       SELF->processImpl(*b.base_ptr);
     }

@@ -30,7 +30,9 @@
 #define CEREAL_ARCHIVES_BINARY_HPP_
 
 #include "cereal/cereal.hpp"
+#include <cstring>
 #include <sstream>
+#include <cassert>
 
 namespace cereal {
 // ######################################################################
@@ -53,25 +55,51 @@ public:
   //! Construct, outputting to the provided stream
   /*! @param stream The stream to output to.  Can be a stringstream, a file
      stream, or even cout! */
-  BinaryOutputArchive(std::ostream& stream)
+  BinaryOutputArchive(std::ostream& stream, size_t bufferCapacity = 0x1000)
       : OutputArchive<BinaryOutputArchive, AllowEmptyClassElision>(this),
-        itsStream(stream) {}
+        itsStream(stream), bufferCapacity(bufferCapacity), bufferSize(0),
+        itsBuffer(bufferCapacity) {}
 
-  ~BinaryOutputArchive() noexcept = default;
+  ~BinaryOutputArchive() {
+    if (bufferSize) {
+      flush();
+    }
+  }
 
   //! Writes size bytes of data to the output stream
   void saveBinary(const void* data, std::streamsize size) {
-    auto const writtenSize =
-        itsStream.rdbuf()->sputn(reinterpret_cast<const char*>(data), size);
+    auto as_char = reinterpret_cast<const char*>(data);
+    if (4 * size > bufferCapacity) {
+      flush();
+      write(as_char, size);
+    } else {
+      if (bufferSize + size > bufferCapacity) {
+        flush();
+      }
+      std::memcpy(itsBuffer.data() + bufferSize, as_char, size);
+      bufferSize += size;
+    }
+  }
 
+private:
+  void flush() {
+    write(itsBuffer.data(), bufferSize);
+    bufferSize = 0;
+  }
+
+  void write(const char* data, std::streamsize size) {
+    auto const writtenSize = itsStream.rdbuf()->sputn(data, size);
     if (writtenSize != size)
       throw Exception("Failed to write " + std::to_string(size) +
                       " bytes to output stream! Wrote " +
                       std::to_string(writtenSize));
   }
 
-private:
   std::ostream& itsStream;
+
+  size_t bufferCapacity;
+  size_t bufferSize;
+  std::vector<char> itsBuffer;
 };
 
 // ######################################################################
@@ -89,25 +117,65 @@ class BinaryInputArchive
     : public InputArchive<BinaryInputArchive, AllowEmptyClassElision> {
 public:
   //! Construct, loading from the provided stream
-  BinaryInputArchive(std::istream& stream)
+  BinaryInputArchive(std::istream& stream, size_t bufferCapacity = 0x1000)
       : InputArchive<BinaryInputArchive, AllowEmptyClassElision>(this),
-        itsStream(stream) {}
+        itsStream(stream), bufferCapacity(bufferCapacity), bufferStart(0),
+        bufferEnd(0), itsBuffer(bufferCapacity) {}
 
   ~BinaryInputArchive() noexcept = default;
 
   //! Reads size bytes of data from the input stream
   void loadBinary(void* const data, std::streamsize size) {
-    auto const readSize =
-        itsStream.rdbuf()->sgetn(reinterpret_cast<char*>(data), size);
+    auto* as_chars = reinterpret_cast<char*>(data);
 
-    if (readSize != size)
-      throw Exception("Failed to read " + std::to_string(size) +
-                      " bytes from input stream! Read " +
-                      std::to_string(readSize));
+    auto bytesRead = flush(as_chars, size);
+    if (bytesRead == size) {
+      return;
+    }
+
+    loadFromStream(as_chars + bytesRead, size - bytesRead);
   }
 
 private:
+  std::streamsize flush(char* data, std::streamsize size) {
+    auto size_to_read =
+        std::min<std::streamsize>(bufferEnd - bufferStart, size);
+    std::memcpy(data, itsBuffer.data() + bufferStart, size_to_read);
+    bufferStart += size_to_read;
+    return size_to_read;
+  }
+
+  // Can only be called when the buffer is empty!
+  void loadFromStream(char* data, std::streamsize size) {
+    assert(bufferEnd == bufferStart);
+
+    if (4 * size > bufferCapacity) {
+      load(data, size, size);
+    } else {
+      bufferStart = 0;
+      bufferEnd = load(itsBuffer.data(), bufferCapacity, size);
+      auto bytesRead = flush(data, size);
+      assert(bytesRead == size);
+    }
+  }
+
+  std::streamsize load(char* data, std::streamsize size,
+                       std::streamsize min_required) {
+    auto const readSize = itsStream.rdbuf()->sgetn(data, size);
+
+    if (readSize < min_required)
+      throw Exception("Failed to read " + std::to_string(min_required) +
+                      " bytes from input stream! Read " +
+                      std::to_string(readSize));
+    return readSize;
+  }
+
   std::istream& itsStream;
+
+  size_t bufferCapacity;
+  size_t bufferStart;
+  size_t bufferEnd;
+  std::vector<char> itsBuffer;
 };
 
 // ######################################################################
@@ -115,44 +183,49 @@ private:
 
 //! Saving for POD types to binary
 template <class T>
-inline void
-CEREAL_SAVE_FUNCTION_NAME(BinaryOutputArchive& ar,
-                          T const& t) requires(std::is_arithmetic_v<T>) {
+CEREAL_HIDE_FUNCTION inline void
+CEREAL_SAVE_FUNCTION_NAME(BinaryOutputArchive& ar, T const& t)
+  requires(std::is_arithmetic_v<T>)
+{
   ar.saveBinary(std::addressof(t), sizeof(t));
 }
 
 //! Loading for POD types from binary
 template <class T>
-inline void CEREAL_LOAD_FUNCTION_NAME(BinaryInputArchive& ar,
-                                      T& t) requires(std::is_arithmetic_v<T>) {
+CEREAL_HIDE_FUNCTION inline void
+CEREAL_LOAD_FUNCTION_NAME(BinaryInputArchive& ar, T& t)
+  requires(std::is_arithmetic_v<T>)
+{
   ar.loadBinary(std::addressof(t), sizeof(t));
 }
 
 //! Serializing NVP types to binary
 template <class Archive, class T>
-inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, NameValuePair<T>& t)
+CEREAL_HIDE_FUNCTION inline void
+CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, NameValuePair<T>& t)
     CEREAL_ARCHIVE_RESTRICT(BinaryInputArchive, BinaryOutputArchive) {
   ar(t.value);
 }
 
 //! Serializing SizeTags to binary
 template <class Archive, class T>
-inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, SizeTag<T>& t)
+CEREAL_HIDE_FUNCTION inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar,
+                                                                SizeTag<T>& t)
     CEREAL_ARCHIVE_RESTRICT(BinaryInputArchive, BinaryOutputArchive) {
   ar(t.size);
 }
 
 //! Saving binary data
 template <class T>
-inline void CEREAL_SAVE_FUNCTION_NAME(BinaryOutputArchive& ar,
-                                      BinaryData<T> const& bd) {
+CEREAL_HIDE_FUNCTION inline void
+CEREAL_SAVE_FUNCTION_NAME(BinaryOutputArchive& ar, BinaryData<T> const& bd) {
   ar.saveBinary(bd.data, static_cast<std::streamsize>(bd.size));
 }
 
 //! Loading binary data
 template <class T>
-inline void CEREAL_LOAD_FUNCTION_NAME(BinaryInputArchive& ar,
-                                      BinaryData<T>& bd) {
+CEREAL_HIDE_FUNCTION inline void
+CEREAL_LOAD_FUNCTION_NAME(BinaryInputArchive& ar, BinaryData<T>& bd) {
   ar.loadBinary(bd.data, static_cast<std::streamsize>(bd.size));
 }
 } // namespace cereal

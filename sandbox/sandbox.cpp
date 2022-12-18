@@ -219,7 +219,7 @@ struct Everything
     ar(CEREAL_NVP(s));
   }
 
-  bool operator==(Everything const & o)
+  bool operator==(Everything const & o) const
   {
     return
       x == o.x &&
@@ -269,7 +269,7 @@ public:
   template <class Archive>
   static void load_and_construct( Archive & ar, cereal::construct<NoDefaultCtor> & construct )
   {
-    int yy;
+    int yy = 0;
     ar( yy );
     construct( yy, true );
     construct->z = 33;
