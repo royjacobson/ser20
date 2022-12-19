@@ -59,6 +59,15 @@ int main() {
 }
 ```
 
+### Performance
+
+Although it's by far not the fastest serialization library out there, Ser20 is
+sometimes two times as fast as cereal and boost::serialization in binary serialization:
+
+![A three way benchmark of boost cereal and ser20](doc/benchmarks.png)
+
+This difference is mostly due to buffering of small reads and writes to ostreams.
+
 ## Ser20 has a permissive license
 
 Ser20 is licensed under the [BSD license](http://opensource.org/licenses/BSD-3-Clause).
