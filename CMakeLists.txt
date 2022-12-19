@@ -6,10 +6,6 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(SER20_MASTER_PROJECT ON)
 endif()
 
-if(APPLE)
-    option(SKIP_PORTABILITY_TEST "Skip portability (32 bit) tests" ON)
-endif()
-
 option(BUILD_DOC "Build documentation" ${SER20_MASTER_PROJECT})
 option(BUILD_SANDBOX "Build sandbox examples" ${SER20_MASTER_PROJECT})
 option(BUILD_TESTS "Build tests" ${SER20_MASTER_PROJECT})

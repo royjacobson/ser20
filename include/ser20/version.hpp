@@ -37,15 +37,15 @@
 #define SER20_VERSION_HPP_
 
 //! The major version
-#define SER20_VERSION_MAJOR 1
+#define SER20_VERSION_MAJOR 0
 //! The minor version
-#define SER20_VERSION_MINOR 4
+#define SER20_VERSION_MINOR 9
 //! The patch version
 #define SER20_VERSION_PATCH 0
 
 //! The full version as a single number
-#define SER20_VERSION                                                         \
-  (SER20_VERSION_MAJOR * 10000 + SER20_VERSION_MINOR * 100 +                 \
+#define SER20_VERSION                                                          \
+  (SER20_VERSION_MAJOR * 10000 + SER20_VERSION_MINOR * 100 +                   \
    SER20_VERSION_PATCH)
 
 #endif // SER20_VERSION_HPP_
