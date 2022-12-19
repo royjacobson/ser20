@@ -1,12 +1,12 @@
 if(CMAKE_VERSION LESS 3.0)
-  message(FATAL_ERROR "Cereal can't be installed with CMake < 3.0")
+  message(FATAL_ERROR "Ser20 can't be installed with CMake < 3.0")
 endif()
 
 get_filename_component(BINARY_DIR ${CMAKE_BINARY_DIR}/build ABSOLUTE)
 get_filename_component(INSTALL_DIR ${CMAKE_BINARY_DIR}/out ABSOLUTE)
 
-# cmake configure step for cereal
-file(MAKE_DIRECTORY ${BINARY_DIR}/cereal)
+# cmake configure step for ser20
+file(MAKE_DIRECTORY ${BINARY_DIR}/ser20)
 execute_process(
   COMMAND ${CMAKE_COMMAND}
     -DBUILD_DOC=OFF
@@ -15,28 +15,28 @@ execute_process(
     -DSKIP_PERFORMANCE_COMPARISON=OFF
     -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/..
-  WORKING_DIRECTORY ${BINARY_DIR}/cereal
+  WORKING_DIRECTORY ${BINARY_DIR}/ser20
   RESULT_VARIABLE result
 )
 if(result)
-  message(FATAL_ERROR "Cereal cmake configure-step failed")
+  message(FATAL_ERROR "Ser20 cmake configure-step failed")
 endif()
 
-# cmake install cereal
+# cmake install ser20
 execute_process(
   COMMAND ${CMAKE_COMMAND}
-    --build ${BINARY_DIR}/cereal
+    --build ${BINARY_DIR}/ser20
     --target install
   RESULT_VARIABLE result
 )
 if(result)
-  message(FATAL_ERROR "Cereal cmake install-step failed")
+  message(FATAL_ERROR "Ser20 cmake install-step failed")
 endif()
 
 # create test project sources
 file(WRITE ${BINARY_DIR}/test_source/CMakeLists.txt "
   cmake_minimum_required(VERSION ${CMAKE_VERSION})
-  project(cereal-test-config-module)
+  project(ser20-test-config-module)
   if(NOT MSVC)
       if(CMAKE_VERSION VERSION_LESS 3.1)
           set(CMAKE_CXX_FLAGS \"-std=c++11 \${CMAKE_CXX_FLAGS}\")
@@ -45,15 +45,15 @@ file(WRITE ${BINARY_DIR}/test_source/CMakeLists.txt "
           set(CMAKE_CXX_STANDARD_REQUIRED ON)
       endif()
   endif()
-  find_package(cereal REQUIRED)
-  add_executable(cereal-test-config-module main.cpp)
-  target_link_libraries(cereal-test-config-module cereal::cereal)
+  find_package(ser20 REQUIRED)
+  add_executable(ser20-test-config-module main.cpp)
+  target_link_libraries(ser20-test-config-module ser20::ser20)
   enable_testing()
-  add_test(NAME test-cereal-test-config-module COMMAND cereal-test-config-module)
+  add_test(NAME test-ser20-test-config-module COMMAND ser20-test-config-module)
 ")
 
 file(WRITE ${BINARY_DIR}/test_source/main.cpp "
-  #include <cereal/archives/binary.hpp>
+  #include <ser20/archives/binary.hpp>
   #include <sstream>
   #include <cstdlib>
   struct MyData
@@ -62,7 +62,7 @@ file(WRITE ${BINARY_DIR}/test_source/main.cpp "
     void set() { x = 1; y = 2; z = 3; }
     bool is_set() const { return x == 1 && y == 2 && z == 3; }
 
-    // This method lets cereal know which data members to serialize
+    // This method lets ser20 know which data members to serialize
     template<class Archive>
     void serialize(Archive & archive)
     {
@@ -74,7 +74,7 @@ file(WRITE ${BINARY_DIR}/test_source/main.cpp "
     std::stringstream ss; // any stream can be used
 
     {
-      cereal::BinaryOutputArchive oarchive(ss); // Create an output archive
+      ser20::BinaryOutputArchive oarchive(ss); // Create an output archive
 
       MyData m1, m2, m3;
       m1.set();
@@ -84,7 +84,7 @@ file(WRITE ${BINARY_DIR}/test_source/main.cpp "
     }
 
     {
-      cereal::BinaryInputArchive iarchive(ss); // Create an input archive
+      ser20::BinaryInputArchive iarchive(ss); // Create an input archive
 
       MyData m1, m2, m3;
       iarchive(m1, m2, m3); // Read the data from the archive
@@ -107,7 +107,7 @@ if(result)
   message(FATAL_ERROR "Test cmake configure-step failed")
 endif()
 
-# cmake install cereal
+# cmake install ser20
 execute_process(
   COMMAND ${CMAKE_COMMAND}
     --build ${BINARY_DIR}/test

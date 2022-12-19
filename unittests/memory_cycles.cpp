@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("memory_cycles");
 
 TEST_CASE("binary_memory_cycles")
 {
-  test_memory_cycles<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_memory_cycles<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_memory_cycles")
 {
-  test_memory_cycles<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_memory_cycles<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_memory_cycles")
 {
-  test_memory_cycles<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_memory_cycles<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_memory_cycles")
 {
-  test_memory_cycles<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_memory_cycles<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

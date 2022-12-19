@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("chrono");
 
 TEST_CASE("binary_chrono")
 {
-  test_chrono<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_chrono<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_chrono")
 {
-  test_chrono<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_chrono<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_chrono")
 {
-  test_chrono<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_chrono<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_chrono")
 {
-  test_chrono<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_chrono<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

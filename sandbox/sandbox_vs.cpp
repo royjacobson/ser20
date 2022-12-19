@@ -28,51 +28,51 @@
 #include <base.hpp>
 #include <derived.hpp>
 
-#include <cereal/access.hpp>
-#include <cereal/details/traits.hpp>
-#include <cereal/details/helpers.hpp>
-#include <cereal/types/base_class.hpp>
-#include <cereal/cereal.hpp>
+#include <ser20/access.hpp>
+#include <ser20/details/traits.hpp>
+#include <ser20/details/helpers.hpp>
+#include <ser20/types/base_class.hpp>
+#include <ser20/ser20.hpp>
 
-#include <cereal/types/array.hpp>
-#include <cereal/types/bitset.hpp>
-#include <cereal/types/chrono.hpp>
-#include <cereal/types/common.hpp>
-#include <cereal/types/complex.hpp>
-#include <cereal/types/deque.hpp>
-#include <cereal/types/forward_list.hpp>
-#include <cereal/types/list.hpp>
-#include <cereal/types/map.hpp>
-#include <cereal/types/memory.hpp>
+#include <ser20/types/array.hpp>
+#include <ser20/types/bitset.hpp>
+#include <ser20/types/chrono.hpp>
+#include <ser20/types/common.hpp>
+#include <ser20/types/complex.hpp>
+#include <ser20/types/deque.hpp>
+#include <ser20/types/forward_list.hpp>
+#include <ser20/types/list.hpp>
+#include <ser20/types/map.hpp>
+#include <ser20/types/memory.hpp>
 
-#include <cereal/details/util.hpp>
+#include <ser20/details/util.hpp>
 
-#include <cereal/details/polymorphic_impl.hpp>
-#include <cereal/types/polymorphic.hpp>
+#include <ser20/details/polymorphic_impl.hpp>
+#include <ser20/types/polymorphic.hpp>
 
-#include <cereal/types/queue.hpp>
-#include <cereal/types/set.hpp>
-#include <cereal/types/stack.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/tuple.hpp>
-#include <cereal/types/unordered_map.hpp>
-#include <cereal/types/unordered_set.hpp>
-#include <cereal/types/utility.hpp>
-#include <cereal/types/vector.hpp>
+#include <ser20/types/queue.hpp>
+#include <ser20/types/set.hpp>
+#include <ser20/types/stack.hpp>
+#include <ser20/types/string.hpp>
+#include <ser20/types/tuple.hpp>
+#include <ser20/types/unordered_map.hpp>
+#include <ser20/types/unordered_set.hpp>
+#include <ser20/types/utility.hpp>
+#include <ser20/types/vector.hpp>
 
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/portable_binary.hpp>
-#include <cereal/archives/xml.hpp>
-#include <cereal/archives/json.hpp>
+#include <ser20/archives/binary.hpp>
+#include <ser20/archives/portable_binary.hpp>
+#include <ser20/archives/xml.hpp>
+#include <ser20/archives/json.hpp>
 
 #include <iostream>
 #include <type_traits>
 #include <functional>
 
-//CEREAL_FORCE_LINK_SHARED_LIBRARY(Sandbox)
+//SER20_FORCE_LINK_SHARED_LIBRARY(Sandbox)
 
 struct Archive {};
-CEREAL_SETUP_ARCHIVE_TRAITS(Archive, Archive)
+SER20_SETUP_ARCHIVE_TRAITS(Archive, Archive)
 
 struct Test
 {
@@ -95,7 +95,7 @@ struct Test
   }
 
   template <class Archive>
-  static void load_and_construct( Archive &, cereal::construct<Test> & )
+  static void load_and_construct( Archive &, ser20::construct<Test> & )
   {
   }
 
@@ -136,13 +136,13 @@ template <class Archive>
 int save_minimal( Test const &, const std::uint32_t )
 { return 0; }
 
-namespace cereal
+namespace ser20
 {
   template <>
   struct LoadAndConstruct<Test>
   {
     template <class Archive>
-    static void load_and_construct( Archive &, cereal::construct<Test> & construct )
+    static void load_and_construct( Archive &, ser20::construct<Test> & construct )
     {
       construct();
     }
@@ -172,8 +172,8 @@ struct C
   char a;
 };
 
-CEREAL_REGISTER_TYPE(B)
-CEREAL_REGISTER_POLYMORPHIC_RELATION(A, B)
+SER20_REGISTER_TYPE(B)
+SER20_REGISTER_POLYMORPHIC_RELATION(A, B)
 
 class MemberMinimal
 {
@@ -202,76 +202,76 @@ int main()
 
   // Test Load and Construct internal/external
   std::cout << "\tload_and_construct" << std::endl;
-  std::cout << cereal::traits::has_member_load_and_construct_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::has_non_member_load_and_construct_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_load_and_construct_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_non_member_load_and_construct_v<T, Archive> << std::endl;
 
   // serialize
   std::cout << "\tserialize" << std::endl;
-  std::cout << cereal::traits::has_member_serialize_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::has_non_member_serialize_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_serialize_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_non_member_serialize_v<T, Archive> << std::endl;
 
   // load
   std::cout << "\tload" << std::endl;
-  std::cout << cereal::traits::has_member_load_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::has_non_member_load_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_load_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_non_member_load_v<T, Archive> << std::endl;
 
   // load minimal
   std::cout << "\tload minimal" << std::endl;
-  std::cout << cereal::traits::has_member_load_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_load_v<T, Archive> << std::endl;
 
   // save
   std::cout << "\tsave" << std::endl;
-  std::cout << cereal::traits::has_member_save_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::has_non_member_save_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_save_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_non_member_save_v<T, Archive> << std::endl;
 
   // save_minimal
   std::cout << "\tsave_minimal" << std::endl;
-  std::cout << cereal::traits::has_member_save_minimal_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::has_non_member_save_minimal_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_save_minimal_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_non_member_save_minimal_v<T, Archive> << std::endl;
 
   // save_minimal_versioned
   std::cout << "\tsave_minimal versioned" << std::endl;
-  std::cout << cereal::traits::has_member_versioned_save_minimal_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::has_non_member_versioned_save_minimal_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_versioned_save_minimal_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::has_non_member_versioned_save_minimal_v<T, Archive> << std::endl;
 
   // splittable
   std::cout << "\t splittable" << std::endl;
-  std::cout << cereal::traits::has_member_split_v<T, Archive, Archive> << std::endl;
-  std::cout << cereal::traits::has_non_member_split_v<T, Archive, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_split_v<T, Archive, Archive> << std::endl;
+  std::cout << ser20::traits::has_non_member_split_v<T, Archive, Archive> << std::endl;
 
   // serialiable
   std::cout << "\toutput serializable" << std::endl;
-  std::cout << cereal::traits::is_output_serializable_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::is_output_serializable_v<T, Archive> << std::endl;
 
 #if !defined(__INTEL_COMPILER)
   //! TODO: This causes icc to crash
-  std::cout << cereal::traits::is_input_serializable_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::is_input_serializable_v<T, Archive> << std::endl;
 #endif
 
   // specialized
   std::cout << "\tspecialized" << std::endl;
-  std::cout << cereal::traits::detail::is_specialized_member_serialize_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::detail::is_specialized_member_load_save_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::detail::is_specialized_non_member_serialize_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::detail::is_specialized_non_member_load_save_v<T, Archive> << std::endl;
-  std::cout << cereal::traits::detail::count_specializations<T, Archive> << std::endl;
-  std::cout << cereal::traits::is_specialized_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::detail::is_specialized_member_serialize_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::detail::is_specialized_member_load_save_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::detail::is_specialized_non_member_serialize_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::detail::is_specialized_non_member_load_save_v<T, Archive> << std::endl;
+  std::cout << ser20::traits::detail::count_specializations<T, Archive> << std::endl;
+  std::cout << ser20::traits::is_specialized_v<T, Archive> << std::endl;
 
   // array size
   std::cout << typeid(A).name() << std::endl;
-  std::cout << cereal::traits::has_load_and_construct_v<int, bool> << std::endl;
+  std::cout << ser20::traits::has_load_and_construct_v<int, bool> << std::endl;
 
   // extra testing
   std::cout << "\textra" << std::endl;
-  std::cout << cereal::traits::has_member_save_minimal_v<MemberMinimal, Archive> << std::endl;
-  std::cout << cereal::traits::has_member_load_minimal_v<MemberMinimal, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_save_minimal_v<MemberMinimal, Archive> << std::endl;
+  std::cout << ser20::traits::has_member_load_minimal_v<MemberMinimal, Archive> << std::endl;
 
   // DLL testing
   std::cout << "------DLL TESTING------" << std::endl;
   std::stringstream dllSS1;
   std::stringstream dllSS2;
   {
-    cereal::XMLOutputArchive out(dllSS1);
+    ser20::XMLOutputArchive out(dllSS1);
     VersionTest x{1};
     std::shared_ptr<Base> p = std::make_shared<Derived>();
     out(x);
@@ -288,13 +288,13 @@ int main()
     std::shared_ptr<Base> p;
     std::shared_ptr<A> ay;
     {
-      cereal::XMLInputArchive in(dllSS1);
+      ser20::XMLInputArchive in(dllSS1);
       in(x);
       in( p );
       in( ay );
     }
     {
-      cereal::XMLOutputArchive out(dllSS2);
+      ser20::XMLOutputArchive out(dllSS2);
       out( x );
       out( p );
       out( ay );

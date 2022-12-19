@@ -45,7 +45,7 @@ before_build: "scripts\\appveyor.bat"
 
 build:
   parallel: true
-  project: build/cereal.sln
+  project: build/ser20.sln
   verbosity: minimal
 
 test_script: "scripts\\appveyor.bat test"

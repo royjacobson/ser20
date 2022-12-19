@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("queue");
 
 TEST_CASE("binary_queue")
 {
-  test_queue<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_queue<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_queue")
 {
-  test_queue<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_queue<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_queue")
 {
-  test_queue<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_queue<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_queue")
 {
-  test_queue<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_queue<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

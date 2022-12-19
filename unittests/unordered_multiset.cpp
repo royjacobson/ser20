@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("unordered_multiset");
 
 TEST_CASE("binary_unordered_multiset")
 {
-  test_unordered_multiset<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_unordered_multiset<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_unordered_multiset")
 {
-  test_unordered_multiset<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_unordered_multiset<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_unordered_multiset")
 {
-  test_unordered_multiset<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_unordered_multiset<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_unordered_multiset")
 {
-  test_unordered_multiset<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_unordered_multiset<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

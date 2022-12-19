@@ -1,34 +1,34 @@
 /**
-\mainpage cereal code documentation
+\mainpage ser20 code documentation
 
 \tableofcontents
 
-Aside from the <a href="../../index.html">documentation</a> presented on the main cereal site, this doxygen
+Aside from the <a href="../../index.html">documentation</a> presented on the main ser20 site, this doxygen
 page offers code level documentation.
 
 \section modules Browse modules
 
-cereal's code is organized into modules of similar functionality.  Take a look at the <a href="modules.html">modules</a>
+ser20's code is organized into modules of similar functionality.  Take a look at the <a href="modules.html">modules</a>
 section to learn more.  Average users will not need to understand the workings of any code that falls under the
 <i>internal</i> module.
 
 \section files Browse files
 
-If you need reference on a specific file, the <a href="files.html">files</a> page lists all files in cereal.
+If you need reference on a specific file, the <a href="files.html">files</a> page lists all files in ser20.
 */
 
   //! \defgroup Archives Input and Output Archive Types
 
   /*! \defgroup Access Access Control and Disambiguation
-      Provides ways to give cereal access to protected member functions, disambiguate
-      which serialization function cereal should use, and provide ways of using smart
+      Provides ways to give ser20 access to protected member functions, disambiguate
+      which serialization function ser20 should use, and provide ways of using smart
       pointers with types that have no default constructor. */
 
   /*! \defgroup Utility Utility Functionality
       Name-value pairs, binary data wrappers, exceptions, and other utility functions */
 
   /*! \defgroup TypeSupport Support for Serializing Various Types
-      Serialization of many types is shipped with cereal, including most of the standard library as well as a few others.  */
+      Serialization of many types is shipped with ser20, including most of the standard library as well as a few others.  */
 
   /*! \defgroup STLSupport Standard Library Support
       Serialization methods for nearly all types found in the C++ standard library.
@@ -43,5 +43,5 @@ If you need reference on a specific file, the <a href="files.html">files</a> pag
       \ingroup TypeSupport */
 
   /*! \defgroup Internal Internal Functionality
-      Various classes and functions that are critical for the operation of cereal but of no
+      Various classes and functions that are critical for the operation of ser20 but of no
       interest to users */

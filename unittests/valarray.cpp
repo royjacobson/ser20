@@ -9,7 +9,7 @@ notice, this list of conditions and the following disclaimer.
 * Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-* Neither the name of cereal nor the
+* Neither the name of ser20 nor the
 names of its contributors may be used to endorse or promote products
 derived from this software without specific prior written permission.
 
@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("valarray");
 
 TEST_CASE("binary_valarray")
 {
-  test_valarray<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_valarray<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_valarray")
 {
-  test_valarray<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_valarray<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_valarray")
 {
-  test_valarray<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_valarray<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_valarray")
 {
-  test_valarray<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_valarray<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

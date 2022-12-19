@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("defer");
 
 TEST_CASE("binary_defer")
 {
-  test_defer<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_defer<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_defer")
 {
-  test_defer<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_defer<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_defer")
 {
-  test_defer<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_defer<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_defer")
 {
-  test_defer<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_defer<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

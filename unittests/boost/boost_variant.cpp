@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("boost_variant");
 
 TEST_CASE("binary_boost_variant")
 {
-  test_boost_variant<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_boost_variant<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_boost_variant")
 {
-  test_boost_variant<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_boost_variant<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_boost_variant")
 {
-  test_boost_variant<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_boost_variant<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_boost_variant")
 {
-  test_boost_variant<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_boost_variant<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

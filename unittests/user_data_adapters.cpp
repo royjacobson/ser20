@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("user_data_adapters");
 
 TEST_CASE("binary_user_data_adapters")
 {
-  test_user_data_adapters<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_user_data_adapters<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_user_data_adapters")
 {
-  test_user_data_adapters<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_user_data_adapters<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_user_data_adapters")
 {
-  test_user_data_adapters<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_user_data_adapters<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_user_data_adapters")
 {
-  test_user_data_adapters<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_user_data_adapters<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

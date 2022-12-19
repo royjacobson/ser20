@@ -31,42 +31,42 @@ TEST_SUITE_BEGIN("map");
 
 TEST_CASE("binary_map")
 {
-  test_map<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_map<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_map")
 {
-  test_map<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_map<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_map")
 {
-  test_map<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_map<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_map")
 {
-  test_map<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_map<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_CASE("binary_map_memory")
 {
-  test_map_memory<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_map_memory<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_map_memory")
 {
-  test_map_memory<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_map_memory<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_map_memory")
 {
-  test_map_memory<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_map_memory<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_map_memory")
 {
-  test_map_memory<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_map_memory<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

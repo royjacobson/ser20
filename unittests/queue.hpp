@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_QUEUE_H_
-#define CEREAL_TEST_QUEUE_H_
+#ifndef SER20_TEST_QUEUE_H_
+#define SER20_TEST_QUEUE_H_
 #include "common.hpp"
 
 template <class IArchive, class OArchive> inline
@@ -84,17 +84,17 @@ void test_queue()
       iar(i_esplqueue);
     }
 
-    auto & i_podqueue_c  = cereal::queue_detail::container(i_podqueue);
-    auto & i_iserqueue_c = cereal::queue_detail::container(i_iserqueue);
-    auto & i_isplqueue_c = cereal::queue_detail::container(i_isplqueue);
-    auto & i_eserqueue_c = cereal::queue_detail::container(i_eserqueue);
-    auto & i_esplqueue_c = cereal::queue_detail::container(i_esplqueue);
+    auto & i_podqueue_c  = ser20::queue_detail::container(i_podqueue);
+    auto & i_iserqueue_c = ser20::queue_detail::container(i_iserqueue);
+    auto & i_isplqueue_c = ser20::queue_detail::container(i_isplqueue);
+    auto & i_eserqueue_c = ser20::queue_detail::container(i_eserqueue);
+    auto & i_esplqueue_c = ser20::queue_detail::container(i_esplqueue);
 
-    auto & o_podqueue_c  = cereal::queue_detail::container(o_podqueue);
-    auto & o_iserqueue_c = cereal::queue_detail::container(o_iserqueue);
-    auto & o_isplqueue_c = cereal::queue_detail::container(o_isplqueue);
-    auto & o_eserqueue_c = cereal::queue_detail::container(o_eserqueue);
-    auto & o_esplqueue_c = cereal::queue_detail::container(o_esplqueue);
+    auto & o_podqueue_c  = ser20::queue_detail::container(o_podqueue);
+    auto & o_iserqueue_c = ser20::queue_detail::container(o_iserqueue);
+    auto & o_isplqueue_c = ser20::queue_detail::container(o_isplqueue);
+    auto & o_eserqueue_c = ser20::queue_detail::container(o_eserqueue);
+    auto & o_esplqueue_c = ser20::queue_detail::container(o_esplqueue);
 
     check_collection(i_podqueue_c,  o_podqueue_c);
     check_collection(i_iserqueue_c, o_iserqueue_c);
@@ -104,4 +104,4 @@ void test_queue()
   }
 }
 
-#endif // CEREAL_TEST_QUEUE_H_
+#endif // SER20_TEST_QUEUE_H_

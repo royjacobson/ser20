@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_STRUCTS_MINIMAL_H_
-#define CEREAL_TEST_STRUCTS_MINIMAL_H_
+#ifndef SER20_TEST_STRUCTS_MINIMAL_H_
+#define SER20_TEST_STRUCTS_MINIMAL_H_
 #include "common.hpp"
 
 struct BogusBase
@@ -83,7 +83,7 @@ class SpecializedMSerialize : public BogusBase
     int x;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template <class Archive>
     void serialize( Archive & ar )
     {
@@ -100,7 +100,7 @@ class SpecializedMSerializeVersioned : public BogusBaseVersioned
     int x;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template <class Archive>
     void serialize( Archive & ar, const std::uint32_t )
     {
@@ -117,7 +117,7 @@ class SpecializedMSplit : public BogusBase
     int x;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template <class Archive>
     void save( Archive & ar ) const
     {
@@ -140,7 +140,7 @@ class SpecializedMSplitVersioned : public BogusBaseVersioned
     int x;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template <class Archive>
     void save( Archive & ar, const std::uint32_t ) const
     {
@@ -165,7 +165,7 @@ class SpecializedMSplitPolymorphic : public BogusBasePolymorphic
     int x;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template <class Archive>
     void save( Archive & ar ) const
     {
@@ -188,7 +188,7 @@ class SpecializedMSplitMinimal : public BogusBase
     int x;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template <class Archive>
     int save_minimal( Archive const & ) const
     {
@@ -211,7 +211,7 @@ class SpecializedMSplitVersionedMinimal : public BogusBaseVersioned
     int x;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template <class Archive>
     int save_minimal( Archive const &, const std::uint32_t ) const
     {
@@ -339,32 +339,32 @@ int save_minimal( Archive const &, SpecializedNMSplitVersionedMinimal const & s,
   return s.x;
 }
 
-namespace cereal
+namespace ser20
 {
-  template <class Archive> struct specialize<Archive, SpecializedMSerialize, cereal::specialization::member_serialize> {};
-  template <class Archive> struct specialize<Archive, SpecializedMSerializeVersioned, cereal::specialization::member_serialize> {};
+  template <class Archive> struct specialize<Archive, SpecializedMSerialize, ser20::specialization::member_serialize> {};
+  template <class Archive> struct specialize<Archive, SpecializedMSerializeVersioned, ser20::specialization::member_serialize> {};
 
-  template <class Archive> struct specialize<Archive, SpecializedMSplit, cereal::specialization::member_load_save> {};
-  template <class Archive> struct specialize<Archive, SpecializedMSplitVersioned, cereal::specialization::member_load_save> {};
-  template <class Archive> struct specialize<Archive, SpecializedMSplitPolymorphic, cereal::specialization::member_load_save> {};
+  template <class Archive> struct specialize<Archive, SpecializedMSplit, ser20::specialization::member_load_save> {};
+  template <class Archive> struct specialize<Archive, SpecializedMSplitVersioned, ser20::specialization::member_load_save> {};
+  template <class Archive> struct specialize<Archive, SpecializedMSplitPolymorphic, ser20::specialization::member_load_save> {};
 
-  template <class Archive> struct specialize<Archive, SpecializedMSplitMinimal, cereal::specialization::member_load_save_minimal> {};
-  template <class Archive> struct specialize<Archive, SpecializedMSplitVersionedMinimal, cereal::specialization::member_load_save_minimal> {};
+  template <class Archive> struct specialize<Archive, SpecializedMSplitMinimal, ser20::specialization::member_load_save_minimal> {};
+  template <class Archive> struct specialize<Archive, SpecializedMSplitVersionedMinimal, ser20::specialization::member_load_save_minimal> {};
 
-  template <class Archive> struct specialize<Archive, SpecializedNMSerialize, cereal::specialization::non_member_serialize> {};
-  template <class Archive> struct specialize<Archive, SpecializedNMSerializeVersioned, cereal::specialization::non_member_serialize> {};
+  template <class Archive> struct specialize<Archive, SpecializedNMSerialize, ser20::specialization::non_member_serialize> {};
+  template <class Archive> struct specialize<Archive, SpecializedNMSerializeVersioned, ser20::specialization::non_member_serialize> {};
 
-  template <class Archive> struct specialize<Archive, SpecializedNMSplit, cereal::specialization::non_member_load_save> {};
-  template <class Archive> struct specialize<Archive, SpecializedNMSplitVersioned, cereal::specialization::non_member_load_save> {};
+  template <class Archive> struct specialize<Archive, SpecializedNMSplit, ser20::specialization::non_member_load_save> {};
+  template <class Archive> struct specialize<Archive, SpecializedNMSplitVersioned, ser20::specialization::non_member_load_save> {};
 
   template <class Archive> struct specialize<Archive, SpecializedNMSplitMinimal,
-           cereal::specialization::non_member_load_save_minimal> {};
+           ser20::specialization::non_member_load_save_minimal> {};
   template <class Archive> struct specialize<Archive, SpecializedNMSplitVersionedMinimal,
-           cereal::specialization::non_member_load_save_minimal> {};
+           ser20::specialization::non_member_load_save_minimal> {};
 }
 
-CEREAL_REGISTER_TYPE(SpecializedMSplitPolymorphic)
-CEREAL_REGISTER_POLYMORPHIC_RELATION(BogusBasePolymorphic, SpecializedMSplitPolymorphic)
+SER20_REGISTER_TYPE(SpecializedMSplitPolymorphic)
+SER20_REGISTER_POLYMORPHIC_RELATION(BogusBasePolymorphic, SpecializedMSplitPolymorphic)
 
 template <class IArchive, class OArchive> inline
 void test_structs_specialized()
@@ -462,4 +462,4 @@ void test_structs_specialized()
   }
 }
 
-#endif // CEREAL_TEST_STRUCTS_SPECIALIZED_H_
+#endif // SER20_TEST_STRUCTS_SPECIALIZED_H_

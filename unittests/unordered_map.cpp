@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("unordered_map");
 
 TEST_CASE("binary_unordered_map")
 {
-  test_unordered_map<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_unordered_map<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_unordered_map")
 {
-  test_unordered_map<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_unordered_map<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_unordered_map")
 {
-  test_unordered_map<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_unordered_map<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_unordered_map")
 {
-  test_unordered_map<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_unordered_map<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

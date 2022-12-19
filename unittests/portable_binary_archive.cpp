@@ -32,26 +32,26 @@ TEST_SUITE_BEGIN("portable_binary_archive");
 #ifdef _MSC_VER
 TEST_CASE("util")
 {
-  CHECK_EQ( cereal::util::demangledName<mynamespace::MyCustomClass>(), "struct mynamespace::MyCustomClass" );
+  CHECK_EQ( ser20::util::demangledName<mynamespace::MyCustomClass>(), "struct mynamespace::MyCustomClass" );
 }
 #else
 TEST_CASE("util")
 {
-  CHECK_EQ( cereal::util::demangledName<mynamespace::MyCustomClass>(), "mynamespace::MyCustomClass" );
+  CHECK_EQ( ser20::util::demangledName<mynamespace::MyCustomClass>(), "mynamespace::MyCustomClass" );
 }
 #endif
 
 TEST_CASE("portable_binary_archive_endian_conversions")
 {
   // (last parameter is whether we load as little endian)
-  test_endian_serialization<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>(
-      cereal::PortableBinaryInputArchive::Options::BigEndian(), cereal::PortableBinaryOutputArchive::Options::BigEndian(), false );
-  test_endian_serialization<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>(
-      cereal::PortableBinaryInputArchive::Options::LittleEndian(), cereal::PortableBinaryOutputArchive::Options::BigEndian(), true );
-  test_endian_serialization<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>(
-      cereal::PortableBinaryInputArchive::Options::BigEndian(), cereal::PortableBinaryOutputArchive::Options::LittleEndian(), false );
-  test_endian_serialization<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>(
-      cereal::PortableBinaryInputArchive::Options::LittleEndian(), cereal::PortableBinaryOutputArchive::Options::LittleEndian(), true );
+  test_endian_serialization<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>(
+      ser20::PortableBinaryInputArchive::Options::BigEndian(), ser20::PortableBinaryOutputArchive::Options::BigEndian(), false );
+  test_endian_serialization<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>(
+      ser20::PortableBinaryInputArchive::Options::LittleEndian(), ser20::PortableBinaryOutputArchive::Options::BigEndian(), true );
+  test_endian_serialization<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>(
+      ser20::PortableBinaryInputArchive::Options::BigEndian(), ser20::PortableBinaryOutputArchive::Options::LittleEndian(), false );
+  test_endian_serialization<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>(
+      ser20::PortableBinaryInputArchive::Options::LittleEndian(), ser20::PortableBinaryOutputArchive::Options::LittleEndian(), true );
 }
 
 // Tests the default behavior to swap bytes to current machine's endianness
@@ -75,13 +75,13 @@ TEST_CASE("portable_binary_archive_default_behavior")
     double   o_double = random_value<double>(gen);
 
     // swap the bytes on all of the data
-    CEREAL_TEST_SWAP_OUTPUT
+    SER20_TEST_SWAP_OUTPUT
 
     std::ostringstream os;
     {
-      cereal::BinaryOutputArchive oar(os);
+      ser20::BinaryOutputArchive oar(os);
       // manually insert incorrect endian encoding
-      oar(!cereal::portable_binary_detail::is_little_endian());
+      oar(!ser20::portable_binary_detail::is_little_endian());
 
       oar(o_bool);
       oar(o_uint8);
@@ -97,7 +97,7 @@ TEST_CASE("portable_binary_archive_default_behavior")
     }
 
     // swap back to original values
-    CEREAL_TEST_SWAP_OUTPUT
+    SER20_TEST_SWAP_OUTPUT
 
     bool     i_bool   = false;
     uint8_t  i_uint8  = 0;
@@ -113,7 +113,7 @@ TEST_CASE("portable_binary_archive_default_behavior")
 
     std::istringstream is(os.str());
     {
-      cereal::PortableBinaryInputArchive iar(is);
+      ser20::PortableBinaryInputArchive iar(is);
       iar(i_bool);
       iar(i_uint8);
       iar(i_int8);
@@ -127,7 +127,7 @@ TEST_CASE("portable_binary_archive_default_behavior")
       iar(i_double);
     }
 
-    CEREAL_TEST_CHECK_EQUAL
+    SER20_TEST_CHECK_EQUAL
   }
 }
 

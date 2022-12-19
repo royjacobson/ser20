@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(cereal LANGUAGES CXX VERSION 1.4.0)
+project(ser20 LANGUAGES CXX VERSION 1.4.0)
 
 if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    set(CEREAL_MASTER_PROJECT ON)
+    set(SER20_MASTER_PROJECT ON)
 endif()
 
 if(APPLE)
     option(SKIP_PORTABILITY_TEST "Skip portability (32 bit) tests" ON)
 endif()
 
-option(BUILD_DOC "Build documentation" ${CEREAL_MASTER_PROJECT})
-option(BUILD_SANDBOX "Build sandbox examples" ${CEREAL_MASTER_PROJECT})
-option(BUILD_TESTS "Build tests" ${CEREAL_MASTER_PROJECT})
+option(BUILD_DOC "Build documentation" ${SER20_MASTER_PROJECT})
+option(BUILD_SANDBOX "Build sandbox examples" ${SER20_MASTER_PROJECT})
+option(BUILD_TESTS "Build tests" ${SER20_MASTER_PROJECT})
 option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 
 if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD STREQUAL "98")
@@ -21,58 +21,58 @@ endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CEREAL_SOURCES "src/cereal.cpp" "src/polymorphic_impl.cpp")
-add_library(cereal ${CEREAL_SOURCES})
-add_library(cereal::cereal ALIAS cereal)
+set(SER20_SOURCES "src/ser20.cpp" "src/polymorphic_impl.cpp")
+add_library(ser20 ${SER20_SOURCES})
+add_library(ser20::ser20 ALIAS ser20)
 
-target_include_directories(cereal SYSTEM PUBLIC
+target_include_directories(ser20 SYSTEM PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
 if(MSVC)
-    target_compile_options(cereal PRIVATE /bigobj /W3 /WX)
+    target_compile_options(ser20 PRIVATE /bigobj /W3 /WX)
 else()
-    target_compile_options(cereal PRIVATE -Wall -Wextra -pedantic -Wshadow -Wold-style-cast)
+    target_compile_options(ser20 PRIVATE -Wall -Wextra -pedantic -Wshadow -Wold-style-cast)
     option(WITH_WERROR "Compile with '-Werror' C++ compiler flag" ON)
 
     if(WITH_WERROR)
-        target_compile_options(cereal PRIVATE -Werror)
+        target_compile_options(ser20 PRIVATE -Werror)
     endif()
 
     option(CLANG_USE_LIBCPP "Use libc++ for clang compilation" OFF)
 
     if(APPLE OR CLANG_USE_LIBCPP)
         message(STATUS "Use libc++")
-        target_compile_options(cereal PUBLIC -stdlib=libc++)
-        target_link_options(cereal PUBLIC -stdlib=libc++ -lc++abi)
+        target_compile_options(ser20 PUBLIC -stdlib=libc++)
+        target_link_options(ser20 PUBLIC -stdlib=libc++ -lc++abi)
     endif()
 endif()
 
-set(CEREAL_THREAD_LIBS)
+set(SER20_THREAD_LIBS)
 
 if(UNIX)
     option(THREAD_SAFE "Use mutexes to ensure thread safety" OFF)
 
     if(THREAD_SAFE)
         message(STATUS "Use mutexes")
-        target_compile_definitions(cereal PUBLIC CEREAL_THREAD_SAFE=1)
-        set(CEREAL_THREAD_LIBS pthread)
+        target_compile_definitions(ser20 PUBLIC SER20_THREAD_SAFE=1)
+        set(SER20_THREAD_LIBS pthread)
     endif()
 endif()
 
-list(APPEND CEREAL_THREAD_LIBS cereal::cereal)
+list(APPEND SER20_THREAD_LIBS ser20::ser20)
 
-target_compile_features(cereal INTERFACE cxx_std_20)
+target_compile_features(ser20 INTERFACE cxx_std_20)
 
-option(CEREAL_INSTALL "Generate the install target" ${CEREAL_MASTER_PROJECT})
+option(SER20_INSTALL "Generate the install target" ${SER20_MASTER_PROJECT})
 
-if(CEREAL_INSTALL)
+if(SER20_INSTALL)
     include(GNUInstallDirs)
     include(CMakePackageConfigHelpers)
 
-    install(TARGETS cereal EXPORT ${PROJECT_NAME}Targets)
-    install(DIRECTORY include/cereal DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(TARGETS ser20 EXPORT ${PROJECT_NAME}Targets)
+    install(DIRECTORY include/ser20 DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
     set(configFile ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake)
     set(versionFile ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake)
@@ -91,7 +91,7 @@ if(CEREAL_INSTALL)
     install(FILES ${configFile} ${versionFile} DESTINATION ${configInstallDestination})
     install(
         EXPORT ${PROJECT_NAME}Targets
-        NAMESPACE "cereal::"
+        NAMESPACE "ser20::"
         DESTINATION ${configInstallDestination}
     )
 endif()

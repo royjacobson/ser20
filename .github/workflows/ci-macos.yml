@@ -1,8 +1,8 @@
-name: cereal mac ci
+name: ser20 mac ci
 on: [push, pull_request]
 
 jobs:
-  test_cereal_macos:
+  test_ser20_macos:
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -33,7 +33,7 @@ jobs:
         export CXX=${COMPILER}
         ${CXX} --version
 
-        # Build cereal and test
+        # Build ser20 and test
         cmake --version
         mkdir build && cd build
         cmake ${CMAKE_OPTIONS} .. && make -j4 VERBOSE=1

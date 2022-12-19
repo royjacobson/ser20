@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_LOAD_CONSTRUCT_H_
-#define CEREAL_TEST_LOAD_CONSTRUCT_H_
+#ifndef SER20_TEST_LOAD_CONSTRUCT_H_
+#define SER20_TEST_LOAD_CONSTRUCT_H_
 #include "common.hpp"
 
 struct OneLA
@@ -39,7 +39,7 @@ struct OneLA
   { ar( x ); }
 
   template <class Archive>
-  static void load_and_construct( Archive & ar, cereal::construct<OneLA> & construct )
+  static void load_and_construct( Archive & ar, ser20::construct<OneLA> & construct )
   {
     int xx;
     ar( xx );
@@ -69,7 +69,7 @@ struct OneLAVersioned
   { ar( x ); v = version; }
 
   template <class Archive>
-  static void load_and_construct( Archive & ar, cereal::construct<OneLAVersioned> & construct, const std::uint32_t version )
+  static void load_and_construct( Archive & ar, ser20::construct<OneLAVersioned> & construct, const std::uint32_t version )
   {
     int xx;
     ar( xx );
@@ -86,7 +86,7 @@ std::ostream& operator<<(std::ostream& os, OneLAVersioned const & s)
   return os;
 }
 
-CEREAL_CLASS_VERSION( OneLAVersioned, 13 )
+SER20_CLASS_VERSION( OneLAVersioned, 13 )
 
 struct TwoLA
 {
@@ -108,13 +108,13 @@ std::ostream& operator<<(std::ostream& os, TwoLA const & s)
   return os;
 }
 
-namespace cereal
+namespace ser20
 {
   template <>
   struct LoadAndConstruct<TwoLA>
   {
     template <class Archive>
-    static void load_and_construct( Archive & ar, cereal::construct<TwoLA> & construct )
+    static void load_and_construct( Archive & ar, ser20::construct<TwoLA> & construct )
     {
       int xx;
       ar( xx );
@@ -145,13 +145,13 @@ std::ostream& operator<<(std::ostream& os, TwoLAVersioned const & s)
   return os;
 }
 
-namespace cereal
+namespace ser20
 {
   template <>
   struct LoadAndConstruct<TwoLAVersioned>
   {
     template <class Archive>
-    static void load_and_construct( Archive & ar, cereal::construct<TwoLAVersioned> & construct, const std::uint32_t version )
+    static void load_and_construct( Archive & ar, ser20::construct<TwoLAVersioned> & construct, const std::uint32_t version )
     {
       int xx;
       ar( xx );
@@ -160,7 +160,7 @@ namespace cereal
   };
 }
 
-CEREAL_CLASS_VERSION( TwoLAVersioned, 1 )
+SER20_CLASS_VERSION( TwoLAVersioned, 1 )
 
 struct ThreeLA : std::enable_shared_from_this<ThreeLA>
 {
@@ -176,7 +176,7 @@ struct ThreeLA : std::enable_shared_from_this<ThreeLA>
   { return x == other.x; }
 
   template <class Archive>
-  static void load_and_construct( Archive & ar, cereal::construct<ThreeLA> & construct )
+  static void load_and_construct( Archive & ar, ser20::construct<ThreeLA> & construct )
   {
     int xx;
     ar( xx );
@@ -300,4 +300,4 @@ void test_memory_load_construct()
   }
 }
 
-#endif // CEREAL_TEST_LOAD_CONSTRUCT_H_
+#endif // SER20_TEST_LOAD_CONSTRUCT_H_

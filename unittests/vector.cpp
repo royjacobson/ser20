@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("vector");
 
 TEST_CASE("binary_vector")
 {
-  test_vector<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_vector<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_vector")
 {
-  test_vector<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_vector<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_vector")
 {
-  test_vector<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_vector<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_vector")
 {
-  test_vector<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_vector<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

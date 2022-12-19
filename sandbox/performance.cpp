@@ -47,10 +47,10 @@
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/base_object.hpp>
 
-#include <cereal/archives/binary.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/map.hpp>
+#include <ser20/archives/binary.hpp>
+#include <ser20/types/vector.hpp>
+#include <ser20/types/string.hpp>
+#include <ser20/types/map.hpp>
 
 //! Runs serialization to save data to an ostringstream
 /*! Used to time how long it takes to save data to an ostringstream.
@@ -90,21 +90,21 @@ loadData( std::ostringstream const & dataStream, std::function<void(std::istring
   return {data, std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::high_resolution_clock::now() - start )};
 }
 
-struct cerealBinary
+struct ser20Binary
 {
-  //! Saves data to a cereal binary archive
+  //! Saves data to a ser20 binary archive
   template <class T>
   static void save( std::ostringstream & os, T const & data )
   {
-    cereal::BinaryOutputArchive oar(os);
+    ser20::BinaryOutputArchive oar(os);
     oar(data);
   }
 
-  //! Loads data to a cereal binary archive
+  //! Loads data to a ser20 binary archive
   template <class T>
   static void load( std::istringstream & is, T & data )
   {
-    cereal::BinaryInputArchive iar(is);
+    ser20::BinaryInputArchive iar(is);
     iar(data);
   }
 };
@@ -131,7 +131,7 @@ struct boostBinary
 struct binary
 {
   typedef boostBinary  boost;
-  typedef cerealBinary cereal;
+  typedef ser20Binary ser20;
 };
 
 //! Times how long it takes to serialize (load and store) some data
@@ -139,23 +139,23 @@ struct binary
     some data.  Result is output to standard out.
 
     @tparam SerializationT The serialization struct that has all save and load functions
-    @tparam DataTCereal The type of data to test for cereal
+    @tparam DataTSer20 The type of data to test for ser20
     @tparam DataTBoost The type of data to test for boost
     @param name The name for this test
-    @param data The data to serialize for cereal
+    @param data The data to serialize for ser20
     @param data The data to serialize for boost
     @param numAverages The number of times to average
     @param validateData Whether data should be validated (input == output) */
-template <class SerializationT, class DataTCereal, class DataTBoost>
+template <class SerializationT, class DataTSer20, class DataTBoost>
 void test( std::string const & name,
-            DataTCereal const & dataC,
+            DataTSer20 const & dataC,
             DataTBoost const & dataB,
             size_t numAverages = 100,
             bool validateData = false );
 
-template <class SerializationT, class DataTCereal, class DataTBoost>
+template <class SerializationT, class DataTSer20, class DataTBoost>
 void test( std::string const & name,
-            DataTCereal const & dataC,
+            DataTSer20 const & dataC,
             DataTBoost const & dataB,
             size_t numAverages,
             bool /*validateData*/ )
@@ -166,11 +166,11 @@ void test( std::string const & name,
   std::chrono::nanoseconds totalBoostSave{0};
   std::chrono::nanoseconds totalBoostLoad{0};
 
-  std::chrono::nanoseconds totalCerealSave{0};
-  std::chrono::nanoseconds totalCerealLoad{0};
+  std::chrono::nanoseconds totalSer20Save{0};
+  std::chrono::nanoseconds totalSer20Load{0};
 
   size_t boostSize = 0;
-  size_t cerealSize = 0;
+  size_t ser20Size = 0;
 
   for(size_t i = 0; i < numAverages; ++i)
   {
@@ -186,16 +186,16 @@ void test( std::string const & name,
       totalBoostLoad += loadResult.second;
     }
 
-    // Cereal
+    // Ser20
     {
       std::ostringstream os;
-      auto saveResult = saveData<DataTCereal>( dataC, {SerializationT::cereal::template save<DataTCereal>}, os );
-      totalCerealSave += saveResult;
-      if(!cerealSize)
-        cerealSize = os.tellp();
+      auto saveResult = saveData<DataTSer20>( dataC, {SerializationT::ser20::template save<DataTSer20>}, os );
+      totalSer20Save += saveResult;
+      if(!ser20Size)
+        ser20Size = os.tellp();
 
-      auto loadResult = loadData<DataTCereal>( os, {SerializationT::cereal::template load<DataTCereal>} );
-      totalCerealLoad += loadResult.second;
+      auto loadResult = loadData<DataTSer20>( os, {SerializationT::ser20::template load<DataTSer20>} );
+      totalSer20Load += loadResult.second;
     }
   }
 
@@ -203,13 +203,13 @@ void test( std::string const & name,
   double averageBoostSave = std::chrono::duration_cast<std::chrono::milliseconds>(totalBoostSave).count() / static_cast<double>( numAverages );
   double averageBoostLoad = std::chrono::duration_cast<std::chrono::milliseconds>(totalBoostLoad).count() / static_cast<double>( numAverages );
 
-  double averageCerealSave = std::chrono::duration_cast<std::chrono::milliseconds>(totalCerealSave).count() / static_cast<double>( numAverages );
-  double averageCerealLoad = std::chrono::duration_cast<std::chrono::milliseconds>(totalCerealLoad).count() / static_cast<double>( numAverages );
+  double averageSer20Save = std::chrono::duration_cast<std::chrono::milliseconds>(totalSer20Save).count() / static_cast<double>( numAverages );
+  double averageSer20Load = std::chrono::duration_cast<std::chrono::milliseconds>(totalSer20Load).count() / static_cast<double>( numAverages );
 
   // Percentages relative to boost
-  double cerealSaveP = averageCerealSave / averageBoostSave;
-  double cerealLoadP = averageCerealLoad / averageBoostLoad;
-  double cerealSizeP = cerealSize / static_cast<double>( boostSize );
+  double ser20SaveP = averageSer20Save / averageBoostSave;
+  double ser20LoadP = averageSer20Load / averageBoostLoad;
+  double ser20SizeP = ser20Size / static_cast<double>( boostSize );
 
   std::cout << "  Boost results:" << std::endl;
   std::cout << boost::format("\tsave | time: %06.4fms (%1.2f) size: %20.8fkb (%1.8f) total: %6.1fms")
@@ -219,12 +219,12 @@ void test( std::string const & name,
     % averageBoostLoad % 1.0 % static_cast<double>( std::chrono::duration_cast<std::chrono::milliseconds>(totalBoostLoad).count() );
   std::cout << std::endl;
 
-  std::cout << "  Cereal results:" << std::endl;
+  std::cout << "  Ser20 results:" << std::endl;
   std::cout << boost::format("\tsave | time: %06.4fms (%1.2f) size: %20.8fkb (%1.8f) total: %6.1fms")
-    % averageCerealSave % cerealSaveP % (cerealSize / 1024.0) % cerealSizeP % static_cast<double>( std::chrono::duration_cast<std::chrono::milliseconds>(totalCerealSave).count() );
+    % averageSer20Save % ser20SaveP % (ser20Size / 1024.0) % ser20SizeP % static_cast<double>( std::chrono::duration_cast<std::chrono::milliseconds>(totalSer20Save).count() );
   std::cout << std::endl;
   std::cout << boost::format("\tload | time: %06.4fms (%1.2f) total: %6.1fms")
-    % averageCerealLoad % cerealLoadP % static_cast<double>( std::chrono::duration_cast<std::chrono::milliseconds>(totalCerealLoad).count() );
+    % averageSer20Load % ser20LoadP % static_cast<double>( std::chrono::duration_cast<std::chrono::milliseconds>(totalSer20Load).count() );
   std::cout << std::endl;
 }
 
@@ -281,7 +281,7 @@ std::string random_binary_string(std::mt19937 & gen)
   return s;
 }
 
-struct PoDStructCereal
+struct PoDStructSer20
 {
   int32_t a;
   int64_t b;
@@ -309,9 +309,9 @@ struct PoDStructBoost
   }
 };
 
-struct PoDChildCereal : virtual PoDStructCereal
+struct PoDChildSer20 : virtual PoDStructSer20
 {
-  PoDChildCereal() : v(1024)
+  PoDChildSer20() : v(1024)
   { }
 
   std::vector<float> v;
@@ -319,7 +319,7 @@ struct PoDChildCereal : virtual PoDStructCereal
   template <class Archive>
   void serialize( Archive & ar )
   {
-    ar( cereal::virtual_base_class<PoDStructCereal>(this), v );
+    ar( ser20::virtual_base_class<PoDStructSer20>(this), v );
   }
 };
 
@@ -387,7 +387,7 @@ int main()
     std::ostringstream name;
     name << "Vector(PoDStruct) size " << s;
 
-    std::vector<PoDStructCereal> dataC(s);
+    std::vector<PoDStructSer20> dataC(s);
     std::vector<PoDStructBoost> dataB(s);
     test<binary>( name.str(), dataC, dataB );
   };
@@ -404,7 +404,7 @@ int main()
     std::ostringstream name;
     name << "Vector(PoDChild) size " << s;
 
-    std::vector<PoDChildCereal> dataC(s);
+    std::vector<PoDChildSer20> dataC(s);
     std::vector<PoDChildBoost> dataB(s);
     test<binary>( name.str(), dataC, dataB );
   };
@@ -451,11 +451,11 @@ int main()
     std::ostringstream name;
     name << "Map(PoDStruct) size " <<s;
 
-    std::map<std::string, PoDStructCereal> mC;
+    std::map<std::string, PoDStructSer20> mC;
     std::map<std::string, PoDStructBoost> mB;
     for(size_t i=0; i<s; ++i)
     {
-      mC[std::to_string( i )] = PoDStructCereal();
+      mC[std::to_string( i )] = PoDStructSer20();
       mB[std::to_string( i )] = PoDStructBoost();
     }
     test<binary>(name.str(), mC, mB);

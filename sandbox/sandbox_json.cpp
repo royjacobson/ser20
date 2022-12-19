@@ -25,18 +25,18 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <cereal/cereal.hpp>
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/json.hpp>
+#include <ser20/ser20.hpp>
+#include <ser20/archives/binary.hpp>
+#include <ser20/archives/json.hpp>
 
-#include <cereal/types/string.hpp>
-#include <cereal/types/utility.hpp>
-#include <cereal/types/memory.hpp>
-#include <cereal/types/complex.hpp>
-#include <cereal/types/base_class.hpp>
-#include <cereal/types/array.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/map.hpp>
+#include <ser20/types/string.hpp>
+#include <ser20/types/utility.hpp>
+#include <ser20/types/memory.hpp>
+#include <ser20/types/complex.hpp>
+#include <ser20/types/base_class.hpp>
+#include <ser20/types/array.hpp>
+#include <ser20/types/vector.hpp>
+#include <ser20/types/map.hpp>
 
 #include <sstream>
 #include <fstream>
@@ -52,11 +52,11 @@ struct Test1
   int a;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template<class Archive>
     void serialize(Archive & ar)
     {
-      ar(CEREAL_NVP(a));
+      ar(SER20_NVP(a));
     }
 };
 
@@ -69,7 +69,7 @@ class Test2
     int a;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
 
     template<class Archive>
       void save(Archive & ar) const
@@ -93,7 +93,7 @@ struct Test3
 template<class Archive>
 void serialize(Archive & ar, Test3 & t)
 {
-  ar(CEREAL_NVP(t.a));
+  ar(SER20_NVP(t.a));
 }
 
 namespace test4
@@ -107,13 +107,13 @@ namespace test4
   template<class Archive>
   void save(Archive & ar, Test4 const & t)
   {
-    ar(CEREAL_NVP(t.a));
+    ar(SER20_NVP(t.a));
   }
 
   template<class Archive>
   void load(Archive & ar, Test4 & t)
   {
-    ar(CEREAL_NVP(t.a));
+    ar(SER20_NVP(t.a));
   }
 }
 
@@ -125,7 +125,7 @@ class Private
   private:
     char a;
 
-    friend class cereal::access;
+    friend class ser20::access;
 
     template<class Archive>
       void serialize(Archive & ar)
@@ -147,13 +147,13 @@ struct Everything
   template<class Archive>
   void serialize(Archive & ar)
   {
-    ar(CEREAL_NVP(x));
-    ar(CEREAL_NVP(y));
-    ar(CEREAL_NVP(t1));
-    ar(CEREAL_NVP(t2));
-    ar(CEREAL_NVP(t3));
-    ar(CEREAL_NVP(t4));
-    ar(CEREAL_NVP(s));
+    ar(SER20_NVP(x));
+    ar(SER20_NVP(y));
+    ar(SER20_NVP(t1));
+    ar(SER20_NVP(t2));
+    ar(SER20_NVP(t3));
+    ar(SER20_NVP(t4));
+    ar(SER20_NVP(s));
   }
 
   bool operator==(Everything const & o)
@@ -188,11 +188,11 @@ struct SubFixture
     template<class Archive>
       void serialize(Archive & ar)
       {
-        ar( CEREAL_NVP(a),
+        ar( SER20_NVP(a),
             b,
             c,
-            CEREAL_NVP(d),
-            CEREAL_NVP(s) );
+            SER20_NVP(d),
+            SER20_NVP(s) );
       }
     void change()
     {
@@ -221,7 +221,7 @@ struct Fixture
   void save(Archive & ar) const
   {
     ar( f1,
-        CEREAL_NVP(f2),
+        SER20_NVP(f2),
         f3 );
     ar.saveBinaryValue( array, sizeof(int)*4, "cool array man" );
   }
@@ -230,7 +230,7 @@ struct Fixture
   void load(Archive & ar)
   {
     ar( f1,
-        CEREAL_NVP(f2),
+        SER20_NVP(f2),
         f3 );
     ar.loadBinaryValue( array, sizeof(int)*4 );
   }
@@ -253,8 +253,8 @@ struct AAA
   template<class Archive>
     void serialize(Archive & ar)
     {
-      ar( CEREAL_NVP(one), CEREAL_NVP(two) );
-      //ar( CEREAL_NVP(three) );
+      ar( SER20_NVP(one), SER20_NVP(two) );
+      //ar( SER20_NVP(three) );
     }
 };
 
@@ -278,12 +278,12 @@ class Stuff
   private:
     std::map<std::string, std::vector<std::complex<float>>> data;
 
-    friend class cereal::access;
+    friend class ser20::access;
 
     template <class Archive>
     void serialize( Archive & ar )
     {
-      ar( CEREAL_NVP(data) );
+      ar( SER20_NVP(data) );
     }
 };
 
@@ -304,10 +304,10 @@ struct OOJson
   template <class Archive>
   void serialize( Archive & ar )
   {
-    ar( CEREAL_NVP(c) );
-    ar( CEREAL_NVP(a) );
+    ar( SER20_NVP(c) );
+    ar( SER20_NVP(a) );
     ar( b );
-    ar( CEREAL_NVP(d) );
+    ar( SER20_NVP(d) );
   }
 };
 
@@ -318,14 +318,14 @@ int main()
 
   {
     std::ofstream os("file.json");
-    cereal::JSONOutputArchive oar( os );
+    ser20::JSONOutputArchive oar( os );
 
     //auto f = std::make_shared<Fixture>();
     //auto f2 = f;
     //oar( f );
     //oar( f2 );
     Stuff s; s.fillData();
-    oar( cereal::make_nvp("best data ever", s) );
+    oar( ser20::make_nvp("best data ever", s) );
   }
 
   {
@@ -336,10 +336,10 @@ int main()
 
   // playground
   {
-    cereal::JSONOutputArchive archive( std::cout );
+    ser20::JSONOutputArchive archive( std::cout );
     bool arr[] = {true, false};
     std::vector<int> vec = {1, 2, 3, 4, 5};
-    archive( CEREAL_NVP(vec),
+    archive( SER20_NVP(vec),
         arr );
     auto f = std::make_shared<Fixture>();
     auto f2 = f;
@@ -350,67 +350,67 @@ int main()
   // test out of order
   std::stringstream oos;
   {
-    cereal::JSONOutputArchive ar(oos);
-    cereal::JSONOutputArchive ar2(std::cout,
-        cereal::JSONOutputArchive::Options(2, cereal::JSONOutputArchive::Options::IndentChar::space, 2) );
+    ser20::JSONOutputArchive ar(oos);
+    ser20::JSONOutputArchive ar2(std::cout,
+        ser20::JSONOutputArchive::Options(2, ser20::JSONOutputArchive::Options::IndentChar::space, 2) );
 
-    ar( cereal::make_nvp( "1", 1 ),
-        cereal::make_nvp( "2", 2 ),
+    ar( ser20::make_nvp( "1", 1 ),
+        ser20::make_nvp( "2", 2 ),
         3,
         0, // unused
-        cereal::make_nvp( "4", 4 ),
-        cereal::make_nvp( "5", 5 ) );
+        ser20::make_nvp( "4", 4 ),
+        ser20::make_nvp( "5", 5 ) );
 
     int x = 33;
     ar.saveBinaryValue( &x, sizeof(int), "bla" );
 
-    ar2( cereal::make_nvp( "1", 1 ),
-         cereal::make_nvp( "2", 2 ),
+    ar2( ser20::make_nvp( "1", 1 ),
+         ser20::make_nvp( "2", 2 ),
          3,
          0, // unused
-         cereal::make_nvp( "4", 4 ),
-         cereal::make_nvp( "5", 5 ) );
+         ser20::make_nvp( "4", 4 ),
+         ser20::make_nvp( "5", 5 ) );
     ar2.saveBinaryValue( &x, sizeof(int), "bla" );
 
     OOJson oo( 1, 2, true, 4.2 );
-    ar( CEREAL_NVP(oo) );
-    ar2( CEREAL_NVP(oo) );
+    ar( SER20_NVP(oo) );
+    ar2( SER20_NVP(oo) );
 
     // boost stuff
-    ar & cereal::make_nvp("usingop&", oo ) & 6;
+    ar & ser20::make_nvp("usingop&", oo ) & 6;
     ar << 5 << 4 << 3;
 
-    ar2 & cereal::make_nvp("usingop&", oo ) & 6;
+    ar2 & ser20::make_nvp("usingop&", oo ) & 6;
     ar2 << 5 << 4 << 3;
 
     long double ld = std::numeric_limits<long double>::max();
     long long ll = std::numeric_limits<long long>::max();
     unsigned long long ull = std::numeric_limits<unsigned long long>::max();
 
-    ar( CEREAL_NVP(ld),
-        CEREAL_NVP(ll),
-        CEREAL_NVP(ull) );
+    ar( SER20_NVP(ld),
+        SER20_NVP(ll),
+        SER20_NVP(ull) );
 
-    ar2( CEREAL_NVP(ld),
-         CEREAL_NVP(ll),
-         CEREAL_NVP(ull) );
+    ar2( SER20_NVP(ld),
+         SER20_NVP(ll),
+         SER20_NVP(ull) );
   }
 
   {
-    cereal::JSONInputArchive ar(oos);
+    ser20::JSONInputArchive ar(oos);
     int i1, i2, i3, i4, i5, x;
 
     ar( i1 );
-    ar( cereal::make_nvp( "2", i2 ), i3 );
+    ar( ser20::make_nvp( "2", i2 ), i3 );
 
-    ar( cereal::make_nvp( "4", i4 ),
+    ar( ser20::make_nvp( "4", i4 ),
         i5 );
 
     ar.loadBinaryValue( &x, sizeof(int) );
 
     OOJson ii;
-    ar( cereal::make_nvp("oo", ii) );
-    ar( cereal::make_nvp( "2", i2 ) );
+    ar( ser20::make_nvp("oo", ii) );
+    ar( ser20::make_nvp( "2", i2 ) );
 
     std::cout << i1 << " " << i2 << " " << i3 << " " << i4 << " " << i5 << std::endl;
     std::cout << x << std::endl;
@@ -420,7 +420,7 @@ int main()
     std::cout << std::endl;
 
     OOJson oo;
-    ar >> cereal::make_nvp("usingop&", oo );
+    ar >> ser20::make_nvp("usingop&", oo );
     std::cout << oo.a << " " << oo.b << " " << oo.c.first << " " << oo.c.second << " ";
     for( auto z : oo.d )
       std::cout << z << " ";
@@ -433,9 +433,9 @@ int main()
     long long ll;
     unsigned long long ull;
 
-    ar( CEREAL_NVP(ld),
-        CEREAL_NVP(ll),
-        CEREAL_NVP(ull) );
+    ar( SER20_NVP(ld),
+        SER20_NVP(ll),
+        SER20_NVP(ull) );
 
     std::cout << (ld  == std::numeric_limits<long double>::max()) << std::endl;
     std::cout << (ll  == std::numeric_limits<long long>::max()) << std::endl;

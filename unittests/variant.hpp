@@ -25,11 +25,11 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef CEREAL_TEST_CPP17_VARIANT_H_
-#define CEREAL_TEST_CPP17_VARIANT_H_
+#ifndef SER20_TEST_CPP17_VARIANT_H_
+#define SER20_TEST_CPP17_VARIANT_H_
 #include "common.hpp"
 
-#include <cereal/types/variant.hpp>
+#include <ser20/types/variant.hpp>
 
 template <class IArchive, class OArchive> inline
 void test_std_variant()
@@ -68,4 +68,4 @@ void test_std_variant()
   CHECK_EQ( std::get<std::string>(i_bv3), std::get<std::string>(o_bv3) );
 }
 
-#endif // CEREAL_TEST_CPP17_VARIANT_H_
+#endif // SER20_TEST_CPP17_VARIANT_H_

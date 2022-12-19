@@ -24,35 +24,35 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_COMMON_H_
-#define CEREAL_TEST_COMMON_H_
+#ifndef SER20_TEST_COMMON_H_
+#define SER20_TEST_COMMON_H_
 
-#include <cereal/types/memory.hpp>
-#include <cereal/types/array.hpp>
-#include <cereal/types/atomic.hpp>
-#include <cereal/types/valarray.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/deque.hpp>
-#include <cereal/types/forward_list.hpp>
-#include <cereal/types/list.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/map.hpp>
-#include <cereal/types/queue.hpp>
-#include <cereal/types/set.hpp>
-#include <cereal/types/stack.hpp>
-#include <cereal/types/unordered_map.hpp>
-#include <cereal/types/unordered_set.hpp>
-#include <cereal/types/utility.hpp>
-#include <cereal/types/tuple.hpp>
-#include <cereal/types/bitset.hpp>
-#include <cereal/types/complex.hpp>
-#include <cereal/types/chrono.hpp>
-#include <cereal/types/polymorphic.hpp>
+#include <ser20/types/memory.hpp>
+#include <ser20/types/array.hpp>
+#include <ser20/types/atomic.hpp>
+#include <ser20/types/valarray.hpp>
+#include <ser20/types/vector.hpp>
+#include <ser20/types/deque.hpp>
+#include <ser20/types/forward_list.hpp>
+#include <ser20/types/list.hpp>
+#include <ser20/types/string.hpp>
+#include <ser20/types/map.hpp>
+#include <ser20/types/queue.hpp>
+#include <ser20/types/set.hpp>
+#include <ser20/types/stack.hpp>
+#include <ser20/types/unordered_map.hpp>
+#include <ser20/types/unordered_set.hpp>
+#include <ser20/types/utility.hpp>
+#include <ser20/types/tuple.hpp>
+#include <ser20/types/bitset.hpp>
+#include <ser20/types/complex.hpp>
+#include <ser20/types/chrono.hpp>
+#include <ser20/types/polymorphic.hpp>
 
-#include <cereal/archives/binary.hpp>
-#include <cereal/archives/portable_binary.hpp>
-#include <cereal/archives/xml.hpp>
-#include <cereal/archives/json.hpp>
+#include <ser20/archives/binary.hpp>
+#include <ser20/archives/portable_binary.hpp>
+#include <ser20/archives/xml.hpp>
+#include <ser20/archives/json.hpp>
 #include <limits>
 #include <random>
 
@@ -62,8 +62,8 @@
     #define DOCTEST_THREAD_LOCAL
     #define DOCTEST_NORETURN
     #pragma GCC diagnostic ignored "-Wreturn-type"
-    static bool cereal_doctest_debugger(){ return false; }
-    #define DOCTEST_IS_DEBUGGER_ACTIVE cereal_doctest_debugger
+    static bool ser20_doctest_debugger(){ return false; }
+    #define DOCTEST_IS_DEBUGGER_ACTIVE ser20_doctest_debugger
   #endif // GNU version check
 #endif // GCC but not clang
 
@@ -256,4 +256,4 @@ struct StructHash {
     }
 };
 
-#endif // CEREAL_TEST_COMMON_H_
+#endif // SER20_TEST_COMMON_H_

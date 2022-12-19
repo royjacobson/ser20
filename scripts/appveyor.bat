@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 if not defined APPVEYOR (
     @echo This script is meant to be used with AppVeyor CI. This can be used as reference.
-    @echo I sincerely recommend not using it for building/testing cereal locally.
+    @echo I sincerely recommend not using it for building/testing ser20 locally.
     exit /b 0
 )
 
@@ -54,7 +54,7 @@ cd build
 
 if "%~1" == "test" (
     @rem overloading the batch script; Run tests if the first argument is `test` (without quotes).
-    @rem   Cereal uses Boost Unit test framework. Rather than modifying the code to load boost test
+    @rem   Ser20 uses Boost Unit test framework. Rather than modifying the code to load boost test
     @rem dll from its location OR copying the boost dlls to the directory of every test being run,
     @rem we use another option Windows leaves us - modify the PATH.
     for %%i in (ctest.exe) do set CTEST_EXE=%%~$PATH:i

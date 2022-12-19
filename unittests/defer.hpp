@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_DEFER_H_
-#define CEREAL_TEST_DEFER_H_
+#ifndef SER20_TEST_DEFER_H_
+#define SER20_TEST_DEFER_H_
 #include "common.hpp"
 
 struct DeferNode;
@@ -75,11 +75,11 @@ struct DeferNode
   void serialize( Archive & ar )
   {
     ar( id, w,
-        cereal::defer( iser ),
-        cereal::defer( ispl ),
-        cereal::defer( eser ),
-        cereal::defer( espl ),
-        cereal::defer( relations ),
+        ser20::defer( iser ),
+        ser20::defer( ispl ),
+        ser20::defer( eser ),
+        ser20::defer( espl ),
+        ser20::defer( relations ),
         z );
   }
 
@@ -190,4 +190,4 @@ void test_defer()
   }
 }
 
-#endif // CEREAL_TEST_DEFER_H_
+#endif // SER20_TEST_DEFER_H_

@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("structs");
 
 TEST_CASE("binary_structs")
 {
-  test_structs<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_structs<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_structs")
 {
-  test_structs<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_structs<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_structs")
 {
-  test_structs<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_structs<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_structs")
 {
-  test_structs<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_structs<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

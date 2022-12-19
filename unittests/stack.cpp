@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("stack");
 
 TEST_CASE("binary_stack")
 {
-  test_stack<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_stack<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_stack")
 {
-  test_stack<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_stack<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_stack")
 {
-  test_stack<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_stack<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_stack")
 {
-  test_stack<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_stack<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

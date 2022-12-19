@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("unordered_multimap");
 
 TEST_CASE("binary_unordered_multimap")
 {
-  test_unordered_multimap<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_unordered_multimap<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_unordered_multimap")
 {
-  test_unordered_multimap<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_unordered_multimap<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_unordered_multimap")
 {
-  test_unordered_multimap<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_unordered_multimap<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_unordered_multimap")
 {
-  test_unordered_multimap<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_unordered_multimap<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

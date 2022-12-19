@@ -31,12 +31,12 @@ TEST_SUITE_BEGIN("unordered_loads");
 
 TEST_CASE("xml_unordered_loads")
 {
-  test_unordered_loads<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_unordered_loads<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_unordered_loads")
 {
-  test_unordered_loads<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_unordered_loads<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

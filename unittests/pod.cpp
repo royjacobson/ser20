@@ -31,32 +31,32 @@ TEST_SUITE_BEGIN("pod");
 
 TEST_CASE("binary_pod")
 {
-  test_pod<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_pod<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_pod")
 {
-  test_pod<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_pod<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_pod")
 {
-  test_pod<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_pod<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_pod")
 {
-  test_pod<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_pod<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_CASE("xml_pod_serialization")
 {
-  test_pod_serialization<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_pod_serialization<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_pod_serialization")
 {
-  test_pod_serialization<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_pod_serialization<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

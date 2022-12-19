@@ -32,22 +32,22 @@ TEST_SUITE_BEGIN("std_optional");
 
 TEST_CASE("binary_std_optional")
 {
-  test_std_optional<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_std_optional<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_std_optional")
 {
-  test_std_optional<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_std_optional<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_std_optional")
 {
-  test_std_optional<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_std_optional<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_std_optional")
 {
-  test_std_optional<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_std_optional<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

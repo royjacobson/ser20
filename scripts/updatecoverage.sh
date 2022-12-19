@@ -2,7 +2,7 @@
 
 # Updates the coverage documentation, and copies it into the appropriate place
 # in the gh-pages branch.
-#   $1 from CMAKE will contain the root directory of cereal
+#   $1 from CMAKE will contain the root directory of ser20
 
 # this requires lcov 1.10 or newer
 
@@ -21,7 +21,7 @@ for f in $COVERAGE_TESTS
 tempdir=`mktemp -d`
 
 lcov --capture --directory $1 --output-file coverage.info --no-external
-lcov --remove coverage.info '*/external/*' '*/cereal/details/util.hpp' 'sandbox/*' '*/unittests/*' -o coverage.info
+lcov --remove coverage.info '*/external/*' '*/ser20/details/util.hpp' 'sandbox/*' '*/unittests/*' -o coverage.info
 genhtml --demangle-cpp coverage.info --output-directory ${tempdir}
 
 # copy over to gh pages

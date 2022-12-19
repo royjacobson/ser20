@@ -48,7 +48,7 @@ portability64
 portability32
 file.json
 out.xml
-cereal_version.out
+ser20_version.out
 xml_ordering.out
 build
 /out/

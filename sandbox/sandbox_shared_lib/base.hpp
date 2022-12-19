@@ -1,9 +1,9 @@
 #pragma once
 
 #include <memory>
-#include <cereal/cereal.hpp>
-#include <cereal/archives/xml.hpp>
-#include <cereal/types/polymorphic.hpp>
+#include <ser20/ser20.hpp>
+#include <ser20/archives/xml.hpp>
+#include <ser20/types/polymorphic.hpp>
 
 #if defined (_WINDLL)
 #define DECLSPECIFIER __declspec(dllexport)
@@ -27,17 +27,17 @@ class VersionTest
 class Base
 {
   public:
-    friend class cereal::access;
+    friend class ser20::access;
 
     template < class Archive >
     void serialize(Archive &, std::uint32_t const) {}
     virtual ~Base() {}
 };
 
-extern template DECLSPECIFIER void Base::serialize<cereal::XMLInputArchive>
-( cereal::XMLInputArchive & ar, std::uint32_t const version );
+extern template DECLSPECIFIER void Base::serialize<ser20::XMLInputArchive>
+( ser20::XMLInputArchive & ar, std::uint32_t const version );
 
-extern template DECLSPECIFIER void Base::serialize<cereal::XMLOutputArchive>
-( cereal::XMLOutputArchive & ar, std::uint32_t const version );
+extern template DECLSPECIFIER void Base::serialize<ser20::XMLOutputArchive>
+( ser20::XMLOutputArchive & ar, std::uint32_t const version );
 
-CEREAL_CLASS_VERSION(VersionTest, 1)
+SER20_CLASS_VERSION(VersionTest, 1)

@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_UNORDERED_LOADS_H_
-#define CEREAL_TEST_UNORDERED_LOADS_H_
+#ifndef SER20_TEST_UNORDERED_LOADS_H_
+#define SER20_TEST_UNORDERED_LOADS_H_
 #include "common.hpp"
 
 struct unordered_naming
@@ -38,19 +38,19 @@ struct unordered_naming
   template <class Archive>
   void save( Archive & ar ) const
   {
-    ar( CEREAL_NVP(x),
-        CEREAL_NVP(z),
-        CEREAL_NVP(y),
-        CEREAL_NVP(xx) );
+    ar( SER20_NVP(x),
+        SER20_NVP(z),
+        SER20_NVP(y),
+        SER20_NVP(xx) );
   }
 
   template <class Archive>
   void load( Archive & ar )
   {
     ar( x,
-        CEREAL_NVP(y),
-        CEREAL_NVP(z),
-        CEREAL_NVP(xx) );
+        SER20_NVP(y),
+        SER20_NVP(z),
+        SER20_NVP(xx) );
   }
 
   bool operator==( unordered_naming const & other ) const
@@ -104,13 +104,13 @@ void test_unordered_loads()
     {
       OArchive oar(os);
 
-      oar( cereal::make_nvp( name1, o_int1 ),
-           cereal::make_nvp( name2, o_double2 ),
-           cereal::make_nvp( name3, o_vecbool3 ),
-           cereal::make_nvp( name4, o_int4 ),
-           cereal::make_nvp( name5, o_int5 ),
-           cereal::make_nvp( name6, o_int6 ),
-           cereal::make_nvp( name7, o_un7 ) );
+      oar( ser20::make_nvp( name1, o_int1 ),
+           ser20::make_nvp( name2, o_double2 ),
+           ser20::make_nvp( name3, o_vecbool3 ),
+           ser20::make_nvp( name4, o_int4 ),
+           ser20::make_nvp( name5, o_int5 ),
+           ser20::make_nvp( name6, o_int6 ),
+           ser20::make_nvp( name7, o_un7 ) );
     }
 
     decltype(o_int1) i_int1;
@@ -125,12 +125,12 @@ void test_unordered_loads()
     {
       IArchive iar(is);
 
-      iar( cereal::make_nvp( name7, i_un7 ),
-           cereal::make_nvp( name2, i_double2 ),
-           cereal::make_nvp( name4, i_int4 ),
-           cereal::make_nvp( name3, i_vecbool3 ),
-           cereal::make_nvp( name1, i_int1 ),
-           cereal::make_nvp( name5, i_int5 ),
+      iar( ser20::make_nvp( name7, i_un7 ),
+           ser20::make_nvp( name2, i_double2 ),
+           ser20::make_nvp( name4, i_int4 ),
+           ser20::make_nvp( name3, i_vecbool3 ),
+           ser20::make_nvp( name1, i_int1 ),
+           ser20::make_nvp( name5, i_int5 ),
            i_int6 );
     }
 
@@ -146,4 +146,4 @@ void test_unordered_loads()
   }
 }
 
-#endif // CEREAL_TEST_UNORDERED_LOADS_H_
+#endif // SER20_TEST_UNORDERED_LOADS_H_

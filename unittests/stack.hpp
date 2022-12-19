@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_STACK_H_
-#define CEREAL_TEST_STACK_H_
+#ifndef SER20_TEST_STACK_H_
+#define SER20_TEST_STACK_H_
 #include "common.hpp"
 
 template <class IArchive, class OArchive> inline
@@ -84,17 +84,17 @@ void test_stack()
       iar(i_esplstack);
     }
 
-    auto & i_podstack_c  = cereal::stack_detail::container(i_podstack);
-    auto & i_iserstack_c = cereal::stack_detail::container(i_iserstack);
-    auto & i_isplstack_c = cereal::stack_detail::container(i_isplstack);
-    auto & i_eserstack_c = cereal::stack_detail::container(i_eserstack);
-    auto & i_esplstack_c = cereal::stack_detail::container(i_esplstack);
+    auto & i_podstack_c  = ser20::stack_detail::container(i_podstack);
+    auto & i_iserstack_c = ser20::stack_detail::container(i_iserstack);
+    auto & i_isplstack_c = ser20::stack_detail::container(i_isplstack);
+    auto & i_eserstack_c = ser20::stack_detail::container(i_eserstack);
+    auto & i_esplstack_c = ser20::stack_detail::container(i_esplstack);
 
-    auto & o_podstack_c  = cereal::stack_detail::container(o_podstack);
-    auto & o_iserstack_c = cereal::stack_detail::container(o_iserstack);
-    auto & o_isplstack_c = cereal::stack_detail::container(o_isplstack);
-    auto & o_eserstack_c = cereal::stack_detail::container(o_eserstack);
-    auto & o_esplstack_c = cereal::stack_detail::container(o_esplstack);
+    auto & o_podstack_c  = ser20::stack_detail::container(o_podstack);
+    auto & o_iserstack_c = ser20::stack_detail::container(o_iserstack);
+    auto & o_isplstack_c = ser20::stack_detail::container(o_isplstack);
+    auto & o_eserstack_c = ser20::stack_detail::container(o_eserstack);
+    auto & o_esplstack_c = ser20::stack_detail::container(o_esplstack);
 
     check_collection(i_podstack_c,  o_podstack_c );
     check_collection(i_iserstack_c, o_iserstack_c);
@@ -104,4 +104,4 @@ void test_stack()
   }
 }
 
-#endif // CEREAL_TEST_STACK_H_
+#endif // SER20_TEST_STACK_H_

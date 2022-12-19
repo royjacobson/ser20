@@ -24,11 +24,11 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_CPP17_OPTIONAL_H_
-#define CEREAL_TEST_CPP17_OPTIONAL_H_
+#ifndef SER20_TEST_CPP17_OPTIONAL_H_
+#define SER20_TEST_CPP17_OPTIONAL_H_
 #include "common.hpp"
 
-#include <cereal/types/optional.hpp>
+#include <ser20/types/optional.hpp>
 
 template <class IArchive, class OArchive> inline
 void test_std_optional()
@@ -87,4 +87,4 @@ void test_std_optional()
   CHECK_EQ( **i_o7, **o_o7 );
 }
 
-#endif // CEREAL_TEST_CPP17_OPTIONAL_H_
+#endif // SER20_TEST_CPP17_OPTIONAL_H_

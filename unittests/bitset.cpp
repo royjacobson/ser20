@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("bitset");
 
 TEST_CASE("binary_bitset")
 {
-  test_bitset<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_bitset<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_bitset")
 {
-  test_bitset<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_bitset<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_bitset")
 {
-  test_bitset<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_bitset<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_bitset")
 {
-  test_bitset<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_bitset<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

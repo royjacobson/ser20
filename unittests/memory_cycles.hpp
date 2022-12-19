@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_MEMORY_CYCLES_H_
-#define CEREAL_TEST_MEMORY_CYCLES_H_
+#ifndef SER20_TEST_MEMORY_CYCLES_H_
+#define SER20_TEST_MEMORY_CYCLES_H_
 #include "common.hpp"
 
 struct MemoryCycle
@@ -82,7 +82,7 @@ class MemoryCycleLoadAndConstruct
     }
 
     template <class Archive>
-    static void load_and_construct( Archive & ar, cereal::construct<MemoryCycleLoadAndConstruct> & construct )
+    static void load_and_construct( Archive & ar, ser20::construct<MemoryCycleLoadAndConstruct> & construct )
     {
       int val;
       std::weak_ptr<MemoryCycleLoadAndConstruct> p;
@@ -139,4 +139,4 @@ void test_memory_cycles()
     CHECK_EQ( i_ptr2.get(), i_ptr2->ptr.lock().get() );
   }
 }
-#endif // CEREAL_TEST_MEMORY_CYCLES_H_
+#endif // SER20_TEST_MEMORY_CYCLES_H_

@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_DEQUE_H_
-#define CEREAL_TEST_DEQUE_H_
+#ifndef SER20_TEST_DEQUE_H_
+#define SER20_TEST_DEQUE_H_
 #include "common.hpp"
 
 template <class IArchive, class OArchive>
@@ -98,4 +98,4 @@ void test_deque()
   }
 }
 
-#endif // CEREAL_TEST_DEQUE_H_
+#endif // SER20_TEST_DEQUE_H_

@@ -1,86 +1,75 @@
-cereal - A C++11 library for serialization
+Ser20 - A C++20 library for serialization
 ==========================================
 
-<img src="https://uscilab.github.io/cereal/assets/img/cerealboxside.png" align="right"/><p>cereal is a header-only C++11 serialization library.  cereal takes arbitrary data types and reversibly turns them into different representations, such as compact binary encodings, XML, or JSON.  cereal was designed to be fast, light-weight, and easy to extend - it has no external dependencies and can be easily bundled with other code or used standalone.</p>
+Ser20 is a C++20 fork of cereal, a C++11 serialization library. It is completely compatible
+except for a namespace change. Thanks to modern meta-programming, Ser20 is 15% smaller and 
+can compile up to 25% faster. Ser20 also has some other runtime optimizations, and is optimized for debug experience and debug symbols size.
 
-### cereal has great documentation
+Ser20 requires compiler support for C++20 concepts. Clang 13 and GCC10 should be modern enough,
+but CI testing is not set up very hermetically yet.
 
-Looking for more information on how cereal works and its documentation?  Visit [cereal's web page](https://USCiLab.github.io/cereal) to get the latest information.
+### Using Ser20
 
-### cereal is easy to use
+#### Installation
 
-Installation and use of of cereal is fully documented on the [main web page](https://USCiLab.github.io/cereal), but this is a quick and dirty version:
+The best way to use Ser20 is with CMake. Ser20 is not header-only, which means that a compilation step is necessary to use it.
+The simplest way to do that is to use Ser20 as a subproject in your CMake project.
 
-* Download cereal and place the headers somewhere your code can see them
-* Write serialization functions for your custom types or use the built in support for the standard library cereal provides
-* Use the serialization archives to load and save data
+#### Usage
+
+Using Ser20 is pretty simple. Except for a new namespace, it is completely compatible with Ser20
+and therefor pretty compatible with boost::serialize as well.
+
+This is a simple usage example:
 
 ```cpp
-#include <cereal/types/unordered_map.hpp>
-#include <cereal/types/memory.hpp>
-#include <cereal/archives/binary.hpp>
+#include <ser20/types/unordered_map.hpp>
+#include <ser20/types/memory.hpp>
+#include <ser20/archives/binary.hpp>
 #include <fstream>
     
-struct MyRecord
-{
+struct MyRecord {
   uint8_t x, y;
   float z;
-  
-  template <class Archive>
-  void serialize( Archive & ar )
-  {
-    ar( x, y, z );
-  }
+
+  template <class Archive> void serialize(Archive& ar) { ar(x, y, z); }
 };
-    
-struct SomeData
-{
+
+struct SomeData {
   int32_t id;
   std::shared_ptr<std::unordered_map<uint32_t, MyRecord>> data;
-  
-  template <class Archive>
-  void save( Archive & ar ) const
-  {
-    ar( data );
-  }
-      
-  template <class Archive>
-  void load( Archive & ar )
-  {
+
+  template <class Archive> void save(Archive& ar) const { ar(data); }
+
+  template <class Archive> void load(Archive& ar) {
     static int32_t idGen = 0;
     id = idGen++;
-    ar( data );
+    ar(data);
   }
 };
 
-int main()
-{
-  std::ofstream os("out.cereal", std::ios::binary);
-  cereal::BinaryOutputArchive archive( os );
+int main() {
+  std::ofstream os("out.bin", std::ios::binary);
+  Ser20::BinaryOutputArchive archive(os);
 
   SomeData myData;
-  archive( myData );
+  archive(myData);
 
   return 0;
 }
-```    
+```
 
-### cereal has a mailing list
+## Ser20 has a permissive license
 
-Either get in touch over <a href="mailto:cerealcpp@googlegroups.com">email</a> or [on the web](https://groups.google.com/forum/#!forum/cerealcpp).
+Ser20 is licensed under the [BSD license](http://opensource.org/licenses/BSD-3-Clause).
 
+<!---
+## Ser20 build status
 
+* [![Linux build status](https://github.com/USCiLab/Ser20/actions/workflows/ci.yml/badge.svg)](https://github.com/USCiLab/Ser20/actions/workflows/ci.yml)
+* [![Mac build status](https://github.com/USCiLab/Ser20/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/USCiLab/Ser20/actions/workflows/ci-macos.yml)
+* [![Windows build status](https://ci.appveyor.com/api/projects/status/91aou6smj36or0vb/branch/master?svg=true)](https://ci.appveyor.com/project/AzothAmmo/Ser20/branch/master)
 
-## cereal has a permissive license
-
-cereal is licensed under the [BSD license](http://opensource.org/licenses/BSD-3-Clause).
-
-## cereal build status
-
-* [![Linux build status](https://github.com/USCiLab/cereal/actions/workflows/ci.yml/badge.svg)](https://github.com/USCiLab/cereal/actions/workflows/ci.yml)
-* [![Mac build status](https://github.com/USCiLab/cereal/actions/workflows/ci-macos.yml/badge.svg)](https://github.com/USCiLab/cereal/actions/workflows/ci-macos.yml)
-* [![Windows build status](https://ci.appveyor.com/api/projects/status/91aou6smj36or0vb/branch/master?svg=true)](https://ci.appveyor.com/project/AzothAmmo/cereal/branch/master)
+--->
 
 ---
-
-Were you looking for the Haskell cereal?  Go <a href="https://github.com/GaloisInc/cereal">here</a>.

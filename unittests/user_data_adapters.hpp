@@ -24,12 +24,12 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_USER_DATA_ADAPTERS_H_
-#define CEREAL_TEST_USER_DATA_ADAPTERS_H_
+#ifndef SER20_TEST_USER_DATA_ADAPTERS_H_
+#define SER20_TEST_USER_DATA_ADAPTERS_H_
 
 #include "common.hpp"
-#define CEREAL_FUTURE_EXPERIMENTAL
-#include <cereal/archives/adapters.hpp>
+#define SER20_FUTURE_EXPERIMENTAL
+#include <ser20/archives/adapters.hpp>
 
 struct SomeStruct {};
 
@@ -65,11 +65,11 @@ struct UserStruct
   }
 
   template <class Archive>
-  static void load_and_construct( Archive & ar, cereal::construct<UserStruct> & construct )
+  static void load_and_construct( Archive & ar, ser20::construct<UserStruct> & construct )
   {
     std::int32_t ii;
     ar( ii );
-    auto & data = cereal::get_user_data<UserData>( ar );
+    auto & data = ser20::get_user_data<UserData>( ar );
     construct( ii, data.p, data.ref.get() );
   }
 };
@@ -99,7 +99,7 @@ void test_user_data_adapters()
     std::istringstream is(os.str());
     {
       UserData ud(&ss, ss);
-      cereal::UserDataAdapter<UserData, IArchive> iar(ud, is);
+      ser20::UserDataAdapter<UserData, IArchive> iar(ud, is);
 
       iar(i_ptr);
     }
@@ -112,9 +112,9 @@ void test_user_data_adapters()
     {
       IArchive iar(bad_is);
 
-      CHECK_THROWS_AS( iar(i_ptr), ::cereal::Exception );
+      CHECK_THROWS_AS( iar(i_ptr), ::ser20::Exception );
     }
   }
 }
 
-#endif // CEREAL_TEST_USER_DATA_ADAPTERS_H_
+#endif // SER20_TEST_USER_DATA_ADAPTERS_H_

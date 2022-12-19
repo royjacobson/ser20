@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("forward_list");
 
 TEST_CASE("binary_forward_list")
 {
-  test_forward_list<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_forward_list<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_forward_list")
 {
-  test_forward_list<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_forward_list<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_forward_list")
 {
-  test_forward_list<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_forward_list<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_forward_list")
 {
-  test_forward_list<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_forward_list<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

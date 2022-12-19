@@ -9,7 +9,7 @@ notice, this list of conditions and the following disclaimer.
 * Redistributions in binary form must reproduce the above copyright
 notice, this list of conditions and the following disclaimer in the
 documentation and/or other materials provided with the distribution.
-* Neither the name of cereal nor the
+* Neither the name of ser20 nor the
 names of its contributors may be used to endorse or promote products
 derived from this software without specific prior written permission.
 
@@ -24,8 +24,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_VALARRAY_H_
-#define CEREAL_TEST_VALARRAY_H_
+#ifndef SER20_TEST_VALARRAY_H_
+#define SER20_TEST_VALARRAY_H_
 #include "common.hpp"
 
 template <class IArchive, class OArchive> inline
@@ -98,4 +98,4 @@ void test_valarray()
   }
 }
 
-#endif // CEREAL_TEST_VALARRAY_H_
+#endif // SER20_TEST_VALARRAY_H_

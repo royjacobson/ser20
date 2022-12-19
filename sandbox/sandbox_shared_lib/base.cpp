@@ -1,9 +1,9 @@
-#ifndef CEREAL_DLL_USE
-#define CEREAL_DLL_MAKE
+#ifndef SER20_DLL_USE
+#define SER20_DLL_MAKE
 #endif
 #include "base.hpp"
 
-template void Base::serialize<cereal::XMLOutputArchive>
-    ( cereal::XMLOutputArchive & ar, std::uint32_t const version );
-template void Base::serialize<cereal::XMLInputArchive>
-    ( cereal::XMLInputArchive & ar, std::uint32_t const version );
+template void Base::serialize<ser20::XMLOutputArchive>
+    ( ser20::XMLOutputArchive & ar, std::uint32_t const version );
+template void Base::serialize<ser20::XMLInputArchive>
+    ( ser20::XMLInputArchive & ar, std::uint32_t const version );

@@ -24,11 +24,11 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_VERSIONING_H_
-#define CEREAL_TEST_VERSIONING_H_
+#ifndef SER20_TEST_VERSIONING_H_
+#define SER20_TEST_VERSIONING_H_
 #include "common.hpp"
 
-#if CEREAL_THREAD_SAFE
+#if SER20_THREAD_SAFE
 #include <future>
 #endif
 
@@ -44,7 +44,7 @@ namespace Nested
   };
 }
 
-CEREAL_CLASS_VERSION( Nested::NestedClass, 1 )
+SER20_CLASS_VERSION( Nested::NestedClass, 1 )
 
 class VersionStructMS
 {
@@ -53,7 +53,7 @@ class VersionStructMS
     std::uint32_t v;
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template <class Archive>
     void serialize( Archive & ar, std::uint32_t const version )
     {
@@ -112,9 +112,9 @@ void load( Archive & ar, VersionStructNMSP & vnms, const std::uint32_t version )
   vnms.v = version;
 }
 
-CEREAL_CLASS_VERSION( VersionStructMSP, 33 )
-CEREAL_CLASS_VERSION( VersionStructNMS, 66 )
-CEREAL_CLASS_VERSION( VersionStructNMSP, 99 )
+SER20_CLASS_VERSION( VersionStructMSP, 33 )
+SER20_CLASS_VERSION( VersionStructNMS, 66 )
+SER20_CLASS_VERSION( VersionStructNMSP, 99 )
 
 template <class IArchive, class OArchive> inline
 void test_versioning()
@@ -122,7 +122,7 @@ void test_versioning()
   std::random_device rd;
   std::mt19937 gen(rd());
 
-  #if CEREAL_THREAD_SAFE
+  #if SER20_THREAD_SAFE
   #include <future>
   static std::mutex testMutex;
   #endif
@@ -173,7 +173,7 @@ void test_versioning()
       iar( i_NMSP2 );
     }
 
-    #if CEREAL_THREAD_SAFE
+    #if SER20_THREAD_SAFE
     std::lock_guard<std::mutex> lock( testMutex );
     #endif
 
@@ -197,7 +197,7 @@ void test_versioning()
     }
 }
 
-#if CEREAL_THREAD_SAFE
+#if SER20_THREAD_SAFE
 template <class IArchive, class OArchive> inline
 void test_versioning_threading()
 {
@@ -212,6 +212,6 @@ void test_versioning_threading()
   for( auto & future : pool )
     CHECK_UNARY( future.get() );
 }
-#endif // CEREAL_THREAD_SAFE
+#endif // SER20_THREAD_SAFE
 
-#endif // CEREAL_TEST_VERSIONING_H_
+#endif // SER20_TEST_VERSIONING_H_

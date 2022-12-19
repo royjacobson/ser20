@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("unordered_set");
 
 TEST_CASE("binary_unordered_set")
 {
-  test_unordered_set<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_unordered_set<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_unordered_set")
 {
-  test_unordered_set<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_unordered_set<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_unordered_set")
 {
-  test_unordered_set<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_unordered_set<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_unordered_set")
 {
-  test_unordered_set<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_unordered_set<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 TEST_SUITE_END();

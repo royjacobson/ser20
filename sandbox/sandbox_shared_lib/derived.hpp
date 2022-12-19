@@ -6,17 +6,17 @@ class Derived : public Base
     virtual ~Derived() {}
 
   private:
-    friend class cereal::access;
+    friend class ser20::access;
     template <class Archive>
     void serialize(Archive & ar, std::uint32_t const)
     {
-      ar(cereal::base_class<Base>(this));
+      ar(ser20::base_class<Base>(this));
     }
 };
 
-extern template DECLSPECIFIER void Derived::serialize<cereal::XMLOutputArchive>
-    ( cereal::XMLOutputArchive & ar, std::uint32_t const version );
-extern template DECLSPECIFIER void Derived::serialize<cereal::XMLInputArchive>
-    ( cereal::XMLInputArchive & ar, std::uint32_t const version );
+extern template DECLSPECIFIER void Derived::serialize<ser20::XMLOutputArchive>
+    ( ser20::XMLOutputArchive & ar, std::uint32_t const version );
+extern template DECLSPECIFIER void Derived::serialize<ser20::XMLInputArchive>
+    ( ser20::XMLInputArchive & ar, std::uint32_t const version );
 
-CEREAL_REGISTER_TYPE(Derived)
+SER20_REGISTER_TYPE(Derived)

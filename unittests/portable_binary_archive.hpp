@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_PORTABLE_BINARY_ARCHIVE_H_
-#define CEREAL_TEST_PORTABLE_BINARY_ARCHIVE_H_
+#ifndef SER20_TEST_PORTABLE_BINARY_ARCHIVE_H_
+#define SER20_TEST_PORTABLE_BINARY_ARCHIVE_H_
 #include "common.hpp"
 
 #include <cmath>
@@ -35,11 +35,11 @@ namespace mynamespace { struct MyCustomClass {}; }
 template <class T>
 inline void swapBytes( T & t )
 {
-  cereal::portable_binary_detail::swap_bytes<sizeof(T)>( reinterpret_cast<std::uint8_t*>(&t) );
+  ser20::portable_binary_detail::swap_bytes<sizeof(T)>( reinterpret_cast<std::uint8_t*>(&t) );
 }
 
 // swaps all output data
-#define CEREAL_TEST_SWAP_OUTPUT \
+#define SER20_TEST_SWAP_OUTPUT \
     swapBytes(o_bool);          \
     swapBytes(o_uint8);         \
     swapBytes(o_int8);          \
@@ -52,7 +52,7 @@ inline void swapBytes( T & t )
     swapBytes(o_float);         \
     swapBytes(o_double);
 
-#define CEREAL_TEST_CHECK_EQUAL                 \
+#define SER20_TEST_CHECK_EQUAL                 \
     CHECK_EQ(i_bool   , o_bool);                \
     CHECK_EQ(i_uint8  , o_uint8);               \
     CHECK_EQ(i_int8   , o_int8);                \
@@ -106,7 +106,7 @@ void test_endian_serialization( typename IArchive::Options const & iOptions, typ
       oar(o_double);
       // We can't test vector directly here since we are artificially interfering with the endianness,
       // which can result in the size being incorrect
-      oar(cereal::binary_data( o_vector.data(), static_cast<std::size_t>( o_vector.size() * sizeof(int32_t) ) ));
+      oar(ser20::binary_data( o_vector.data(), static_cast<std::size_t>( o_vector.size() * sizeof(int32_t) ) ));
     }
 
     bool     i_bool   = false;
@@ -136,21 +136,21 @@ void test_endian_serialization( typename IArchive::Options const & iOptions, typ
       iar(i_int64);
       iar(i_float);
       iar(i_double);
-      iar(cereal::binary_data( i_vector.data(), static_cast<std::size_t>( i_vector.size() * sizeof(int32_t) ) ));
+      iar(ser20::binary_data( i_vector.data(), static_cast<std::size_t>( i_vector.size() * sizeof(int32_t) ) ));
     }
 
     // Convert to big endian if we expect to read big and didn't start big
-    if( cereal::portable_binary_detail::is_little_endian() ^ inputLittleEndian ) // Convert to little endian if
+    if( ser20::portable_binary_detail::is_little_endian() ^ inputLittleEndian ) // Convert to little endian if
     {
-      CEREAL_TEST_SWAP_OUTPUT
+      SER20_TEST_SWAP_OUTPUT
       for( auto & val : o_vector )
         swapBytes(val);
     }
 
-    CEREAL_TEST_CHECK_EQUAL
+    SER20_TEST_CHECK_EQUAL
 
     check_collection(i_vector, o_vector);
   }
 }
 
-#endif // CEREAL_TEST_PORTABLE_BINARY_ARCHIVE_H_
+#endif // SER20_TEST_PORTABLE_BINARY_ARCHIVE_H_

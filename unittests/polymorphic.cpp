@@ -31,44 +31,44 @@ TEST_SUITE_BEGIN("polymorphic");
 
 TEST_CASE("binary_polymorphic")
 {
-  test_polymorphic<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_polymorphic<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_polymorphic")
 {
-  test_polymorphic<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_polymorphic<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_polymorphic")
 {
-  test_polymorphic<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_polymorphic<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_polymorphic")
 {
-  test_polymorphic<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_polymorphic<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
-#if CEREAL_THREAD_SAFE
+#if SER20_THREAD_SAFE
 TEST_CASE("binary_polymorphic_threading")
 {
-  test_polymorphic_threading<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_polymorphic_threading<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_polymorphic_threading")
 {
-  test_polymorphic_threading<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_polymorphic_threading<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_polymorphic_threading")
 {
-  test_polymorphic_threading<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_polymorphic_threading<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_polymorphic_threading")
 {
-  test_polymorphic_threading<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_polymorphic_threading<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
-#endif // CEREAL_THREAD_SAFE
+#endif // SER20_THREAD_SAFE
 
 TEST_SUITE_END();

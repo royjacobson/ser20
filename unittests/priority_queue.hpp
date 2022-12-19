@@ -24,8 +24,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_PRIORITY_QUEUE_H_
-#define CEREAL_TEST_PRIORITY_QUEUE_H_
+#ifndef SER20_TEST_PRIORITY_QUEUE_H_
+#define SER20_TEST_PRIORITY_QUEUE_H_
 #include "common.hpp"
 
 template <class IArchive, class OArchive> inline
@@ -84,17 +84,17 @@ void test_priority_queue()
       iar(i_esplpriority_queue);
     }
 
-    auto & i_podpriority_queue_c  = cereal::queue_detail::container(i_podpriority_queue);
-    auto & i_iserpriority_queue_c = cereal::queue_detail::container(i_iserpriority_queue);
-    auto & i_isplpriority_queue_c = cereal::queue_detail::container(i_isplpriority_queue);
-    auto & i_eserpriority_queue_c = cereal::queue_detail::container(i_eserpriority_queue);
-    auto & i_esplpriority_queue_c = cereal::queue_detail::container(i_esplpriority_queue);
+    auto & i_podpriority_queue_c  = ser20::queue_detail::container(i_podpriority_queue);
+    auto & i_iserpriority_queue_c = ser20::queue_detail::container(i_iserpriority_queue);
+    auto & i_isplpriority_queue_c = ser20::queue_detail::container(i_isplpriority_queue);
+    auto & i_eserpriority_queue_c = ser20::queue_detail::container(i_eserpriority_queue);
+    auto & i_esplpriority_queue_c = ser20::queue_detail::container(i_esplpriority_queue);
 
-    auto & o_podpriority_queue_c  = cereal::queue_detail::container(o_podpriority_queue);
-    auto & o_iserpriority_queue_c = cereal::queue_detail::container(o_iserpriority_queue);
-    auto & o_isplpriority_queue_c = cereal::queue_detail::container(o_isplpriority_queue);
-    auto & o_eserpriority_queue_c = cereal::queue_detail::container(o_eserpriority_queue);
-    auto & o_esplpriority_queue_c = cereal::queue_detail::container(o_esplpriority_queue);
+    auto & o_podpriority_queue_c  = ser20::queue_detail::container(o_podpriority_queue);
+    auto & o_iserpriority_queue_c = ser20::queue_detail::container(o_iserpriority_queue);
+    auto & o_isplpriority_queue_c = ser20::queue_detail::container(o_isplpriority_queue);
+    auto & o_eserpriority_queue_c = ser20::queue_detail::container(o_eserpriority_queue);
+    auto & o_esplpriority_queue_c = ser20::queue_detail::container(o_esplpriority_queue);
 
     check_collection(i_podpriority_queue_c,  o_podpriority_queue_c);
     check_collection(i_iserpriority_queue_c, o_iserpriority_queue_c);
@@ -104,4 +104,4 @@ void test_priority_queue()
   }
 }
 
-#endif // CEREAL_TEST_PRIORITY_QUEUE_H_
+#endif // SER20_TEST_PRIORITY_QUEUE_H_

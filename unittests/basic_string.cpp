@@ -31,22 +31,22 @@ TEST_SUITE_BEGIN("basic_string");
 
 TEST_CASE("binary_string")
 {
-  test_string_all<cereal::BinaryInputArchive, cereal::BinaryOutputArchive>();
+  test_string_all<ser20::BinaryInputArchive, ser20::BinaryOutputArchive>();
 }
 
 TEST_CASE("portable_binary_string")
 {
-  test_string_all<cereal::PortableBinaryInputArchive, cereal::PortableBinaryOutputArchive>();
+  test_string_all<ser20::PortableBinaryInputArchive, ser20::PortableBinaryOutputArchive>();
 }
 
 TEST_CASE("xml_string_basic")
 {
-  test_string_basic<cereal::XMLInputArchive, cereal::XMLOutputArchive>();
+  test_string_basic<ser20::XMLInputArchive, ser20::XMLOutputArchive>();
 }
 
 TEST_CASE("json_string_basic")
 {
-  test_string_basic<cereal::JSONInputArchive, cereal::JSONOutputArchive>();
+  test_string_basic<ser20::JSONInputArchive, ser20::JSONOutputArchive>();
 }
 
 template <class IArchive, class OArchive, class Out, class In = Out>
@@ -88,7 +88,7 @@ TEST_CASE("xml_string_issue109")
   {
     std::basic_string<char> o_string = strings[i];
 
-    test_ws_in_out<cereal::XMLInputArchive, cereal::XMLOutputArchive>( o_string );
+    test_ws_in_out<ser20::XMLInputArchive, ser20::XMLOutputArchive>( o_string );
   }
 }
 
@@ -110,17 +110,17 @@ TEST_CASE("xml_char_issue109")
 
   for( size_t i=0; i<( sizeof( chars ) / sizeof( chars[0] ) ); ++i )
   {
-    test_ws_in_out<cereal::XMLInputArchive, cereal::XMLOutputArchive>( chars[i] );
+    test_ws_in_out<ser20::XMLInputArchive, ser20::XMLOutputArchive>( chars[i] );
   }
 
   for( size_t i=0; i<( sizeof( chars ) / sizeof( chars[0] ) ); ++i )
   {
-    test_ws_in_out<cereal::XMLInputArchive, cereal::XMLOutputArchive>( int8_t( chars[i] ) );
+    test_ws_in_out<ser20::XMLInputArchive, ser20::XMLOutputArchive>( int8_t( chars[i] ) );
   }
 
   for( size_t i=0; i<( sizeof( chars ) / sizeof( chars[0] ) ); ++i )
   {
-    test_ws_in_out<cereal::XMLInputArchive, cereal::XMLOutputArchive>( char( chars[i] ) );
+    test_ws_in_out<ser20::XMLInputArchive, ser20::XMLOutputArchive>( char( chars[i] ) );
   }
 }
 
@@ -165,7 +165,7 @@ TEST_CASE("xml_string_issue_consecutive_calls")
         " some text ",
     };
 
-    test_ws_in_out_array<cereal::XMLInputArchive, cereal::XMLOutputArchive>(strings);
+    test_ws_in_out_array<ser20::XMLInputArchive, ser20::XMLOutputArchive>(strings);
 }
 
 TEST_SUITE_END();

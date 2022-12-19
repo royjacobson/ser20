@@ -24,8 +24,8 @@
   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef CEREAL_TEST_STRUCTS_MINIMAL_H_
-#define CEREAL_TEST_STRUCTS_MINIMAL_H_
+#ifndef SER20_TEST_STRUCTS_MINIMAL_H_
+#define SER20_TEST_STRUCTS_MINIMAL_H_
 #include "common.hpp"
 
 class MemberMinimal {
@@ -34,7 +34,7 @@ public:
   MemberMinimal(std::string const& str) : x(str) {}
 
 protected:
-  friend class cereal::access;
+  friend class ser20::access;
 
   template <class Archive> std::string save_minimal(Archive const&) const {
     return x;
@@ -55,7 +55,7 @@ public:
   MemberMinimalVersioned(double d) : x(d) {}
 
 protected:
-  friend class cereal::access;
+  friend class ser20::access;
 
   template <class Archive>
   double save_minimal(Archive const&, const std::uint32_t) const {
@@ -131,8 +131,8 @@ struct Issue79Struct {
 template <class Archive>
 inline std::string
 save_minimal(Archive const&, Issue79Struct const& val) requires(
-    !(std::is_same_v<Archive, cereal::BinaryOutputArchive> ||
-      std::is_same_v<Archive, cereal::PortableBinaryOutputArchive>)) {
+    !(std::is_same_v<Archive, ser20::BinaryOutputArchive> ||
+      std::is_same_v<Archive, ser20::PortableBinaryOutputArchive>)) {
   return std::to_string(val.x);
 }
 
@@ -140,17 +140,17 @@ template <class Archive>
 inline void load_minimal(
     Archive const&, Issue79Struct& val,
     std::string const&
-        str) requires(!(std::is_same_v<Archive, cereal::BinaryInputArchive> ||
+        str) requires(!(std::is_same_v<Archive, ser20::BinaryInputArchive> ||
                         std::is_same_v<Archive,
-                                       cereal::PortableBinaryInputArchive>)) {
+                                       ser20::PortableBinaryInputArchive>)) {
   val.x = std::stoi(str);
 }
 
 template <class Archive>
 inline std::int32_t
 save_minimal(Archive const&, Issue79Struct const& val) requires(
-    std::is_same_v<Archive, cereal::BinaryOutputArchive> ||
-    std::is_same_v<Archive, cereal::PortableBinaryOutputArchive>) {
+    std::is_same_v<Archive, ser20::BinaryOutputArchive> ||
+    std::is_same_v<Archive, ser20::PortableBinaryOutputArchive>) {
   return val.x;
 }
 
@@ -158,9 +158,9 @@ template <class Archive>
 inline void load_minimal(
     Archive const&, Issue79Struct& val,
     std::int32_t const&
-        xx) requires(std::is_same_v<Archive, cereal::BinaryInputArchive> ||
+        xx) requires(std::is_same_v<Archive, ser20::BinaryInputArchive> ||
                      std::is_same_v<Archive,
-                                    cereal::PortableBinaryInputArchive>) {
+                                    ser20::PortableBinaryInputArchive>) {
   val.x = xx;
 }
 
@@ -171,29 +171,29 @@ struct Issue79StructInternal {
 
   template <class Archive>
   inline std::string save_minimal(Archive const&) const requires(
-      !(std::is_same_v<Archive, cereal::BinaryOutputArchive> ||
-        std::is_same_v<Archive, cereal::PortableBinaryOutputArchive>)) {
+      !(std::is_same_v<Archive, ser20::BinaryOutputArchive> ||
+        std::is_same_v<Archive, ser20::PortableBinaryOutputArchive>)) {
     return std::to_string(x);
   }
 
   template <class Archive>
   inline void load_minimal(Archive const&, std::string const& str) requires(
-      !(std::is_same_v<Archive, cereal::BinaryInputArchive> ||
-        std::is_same_v<Archive, cereal::PortableBinaryInputArchive>)) {
+      !(std::is_same_v<Archive, ser20::BinaryInputArchive> ||
+        std::is_same_v<Archive, ser20::PortableBinaryInputArchive>)) {
     x = std::stoi(str);
   }
 
   template <class Archive>
   inline std::int32_t save_minimal(Archive const&) const
-      requires(std::is_same_v<Archive, cereal::BinaryOutputArchive> ||
-               std::is_same_v<Archive, cereal::PortableBinaryOutputArchive>) {
+      requires(std::is_same_v<Archive, ser20::BinaryOutputArchive> ||
+               std::is_same_v<Archive, ser20::PortableBinaryOutputArchive>) {
     return x;
   }
 
   template <class Archive>
   inline void load_minimal(Archive const&, std::int32_t const& xx) requires(
-      std::is_same_v<Archive, cereal::BinaryInputArchive> ||
-      std::is_same_v<Archive, cereal::PortableBinaryInputArchive>) {
+      std::is_same_v<Archive, ser20::BinaryInputArchive> ||
+      std::is_same_v<Archive, ser20::PortableBinaryInputArchive>) {
     x = xx;
   }
 };
@@ -243,4 +243,4 @@ template <class IArchive, class OArchive> inline void test_structs_minimal() {
   }
 }
 
-#endif // CEREAL_TEST_STRUCTS_MINIMAL_H_
+#endif // SER20_TEST_STRUCTS_MINIMAL_H_
