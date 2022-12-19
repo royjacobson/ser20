@@ -8,15 +8,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - CMAKE_OPTIONS: '-DWITH_WERROR=OFF -DSKIP_PORTABILITY_TEST=ON -DSKIP_PERFORMANCE_COMPARISON=ON'
+          - CMAKE_OPTIONS: '-DWITH_WERROR=ON'
             COMPILER: 'clang++'
-            XCODE_VERSION: 11
-            NAME: macos-latest-clang-xcode11
-
-          - CMAKE_OPTIONS: '-DWITH_WERROR=OFF -DSKIP_PORTABILITY_TEST=ON -DSKIP_PERFORMANCE_COMPARISON=ON'
-            COMPILER: 'clang++'
-            XCODE_VERSION: 12
-            NAME: macos-latest-clang-xcode12
+            XCODE_VERSION: 14
+            NAME: macos-latest-clang-xcode14
     name: ${{ matrix.name }}
 
     steps:
