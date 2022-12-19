@@ -834,7 +834,7 @@ private:
   //! Unwinds to process all data
   template <class... Args>
   SER20_HIDE_FUNCTION inline void process(Args&&... args) {
-    (process(std::forward<Args>(args)), ...);
+    (this->process(std::forward<Args>(args)), ...);
   }
 
   //! Serialization of a virtual_base_class wrapper
