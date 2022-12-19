@@ -363,8 +363,11 @@ public:
   /*! This will cause any data wrapped in DeferredData to be immediately
       serialized */
   void serializeDeferments() {
-    for (auto& deferment : itsDeferments)
-      deferment(*SELF);
+    // Don't use for each loop in case there is a recursive deferring
+    // and the vector is reallocated.
+    for (size_t i = 0; i < itsDeferments.size(); i++) {
+      itsDeferments[i](*SELF);
+    }
   }
 
   /*! @name Boost Transition Layer
@@ -730,8 +733,11 @@ public:
   /*! This will cause any data wrapped in DeferredData to be immediately
       serialized */
   void serializeDeferments() {
-    for (auto& deferment : itsDeferments)
-      deferment(*SELF);
+    // Don't use for each loop in case there is a recursive deferring
+    // and the vector is reallocated.
+    for (size_t i = 0; i < itsDeferments.size(); i++) {
+      itsDeferments[i](*SELF);
+    }
   }
 
   /*! @name Boost Transition Layer

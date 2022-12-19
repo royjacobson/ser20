@@ -35,23 +35,6 @@
 
 namespace cereal {
 namespace common_detail {
-//! Serialization for arrays if BinaryData is supported and we are arithmetic
-/*! @internal */
-template <class Archive, class T>
-inline void serializeArray(Archive& ar, T& array,
-                           std::true_type /* binary_supported */) {
-  ar(binary_data(array, sizeof(array)));
-}
-
-//! Serialization for arrays if BinaryData is not supported or we are not
-//! arithmetic
-/*! @internal */
-template <class Archive, class T>
-inline void serializeArray(Archive& ar, T& array,
-                           std::false_type /* binary_supported */) {
-  for (auto& i : array)
-    ar(i);
-}
 
 namespace detail {
 //! Gets the underlying type of an enum
@@ -65,7 +48,7 @@ struct enum_underlying_type : std::false_type {};
 template <class T> struct enum_underlying_type<T, true> {
   using type CEREAL_NODEBUG = std::underlying_type_t<T>;
 };
-} // namespace
+} // namespace detail
 
 //! Checks if a type is an enum
 /*! This is needed over simply calling std::is_enum because the type
@@ -90,8 +73,9 @@ public:
 //! Saving for enum types
 template <class Archive, class T>
 inline typename common_detail::is_enum<T>::base_type
-CEREAL_SAVE_MINIMAL_FUNCTION_NAME(Archive const&, T const& t) requires(
-    common_detail::is_enum<T>::value) {
+CEREAL_SAVE_MINIMAL_FUNCTION_NAME(Archive const&, T const& t)
+  requires(common_detail::is_enum<T>::value)
+{
   return static_cast<typename common_detail::is_enum<T>::base_type>(t);
 }
 
@@ -99,8 +83,9 @@ CEREAL_SAVE_MINIMAL_FUNCTION_NAME(Archive const&, T const& t) requires(
 template <class Archive, class T>
 void CEREAL_LOAD_MINIMAL_FUNCTION_NAME(
     Archive const&, T&& t,
-    typename common_detail::is_enum<T>::base_type const&
-        value) requires(common_detail::is_enum<T>::value) {
+    typename common_detail::is_enum<T>::base_type const& value)
+  requires(common_detail::is_enum<T>::value)
+{
   t = reinterpret_cast<typename common_detail::is_enum<T>::type const&>(value);
 }
 
@@ -116,14 +101,20 @@ inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive&, T*&) {
 
 //! Serialization for C style arrays
 template <class Archive, class T>
-inline void
-CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar,
-                               T& array) requires(std::is_array_v<T>) {
-  common_detail::serializeArray(
-      ar, array, std::integral_constant < bool,
-      traits::is_output_serializable_v<BinaryData<T>, Archive>&&
-              std::is_arithmetic_v < std::remove_all_extents_t < T >>>
-          ());
+inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive& ar, T& array)
+  requires(std::is_array_v<T>)
+{
+  constexpr bool supportsBinaryData =
+      std::is_arithmetic_v<std::remove_all_extents_t<T>> &&
+      (traits::is_output_serializable_v<BinaryData<T>, Archive> ||
+       traits::is_input_serializable_v<BinaryData<T>, Archive>);
+
+  if constexpr (supportsBinaryData) {
+    ar(binary_data(array, sizeof(array)));
+  } else {
+    for (auto& i : array)
+      ar(i);
+  }
 }
 } // namespace cereal
 

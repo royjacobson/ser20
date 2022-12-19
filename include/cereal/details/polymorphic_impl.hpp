@@ -151,7 +151,7 @@ struct PolymorphicCasters {
   //! exists, and returns it if so
   /*! Uses the type index from the base and derived class to find the matching
       registered caster. If no matching caster exists, the bool in the pair will
-     be false and the vector reference should not be used. */
+      be false and the vector reference should not be used. */
   // TODO: Put it in a source file.
   inline static std::pair<bool, std::vector<PolymorphicCaster const*> const&>
   lookup_if_exists(std::type_index const& baseIndex,
