@@ -6,7 +6,6 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(CEREAL_MASTER_PROJECT ON)
 endif()
 
-
 if(APPLE)
     option(SKIP_PORTABILITY_TEST "Skip portability (32 bit) tests" ON)
 endif()
@@ -19,10 +18,11 @@ option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison
 if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD STREQUAL "98")
     set(CMAKE_CXX_STANDARD 20)
 endif()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CEREAL_SOURCES "src/cereal.cpp")
-add_library(cereal STATIC ${CEREAL_SOURCES})
+set(CEREAL_SOURCES "src/cereal.cpp" "src/polymorphic_impl.cpp")
+add_library(cereal ${CEREAL_SOURCES})
 add_library(cereal::cereal ALIAS cereal)
 
 target_include_directories(cereal SYSTEM PUBLIC
@@ -30,17 +30,18 @@ target_include_directories(cereal SYSTEM PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-
 if(MSVC)
     target_compile_options(cereal PRIVATE /bigobj /W3 /WX)
 else()
     target_compile_options(cereal PRIVATE -Wall -Wextra -pedantic -Wshadow -Wold-style-cast)
     option(WITH_WERROR "Compile with '-Werror' C++ compiler flag" ON)
+
     if(WITH_WERROR)
         target_compile_options(cereal PRIVATE -Werror)
     endif()
 
     option(CLANG_USE_LIBCPP "Use libc++ for clang compilation" OFF)
+
     if(APPLE OR CLANG_USE_LIBCPP)
         message(STATUS "Use libc++")
         target_compile_options(cereal PUBLIC -stdlib=libc++)
@@ -48,10 +49,11 @@ else()
     endif()
 endif()
 
-
 set(CEREAL_THREAD_LIBS)
+
 if(UNIX)
     option(THREAD_SAFE "Use mutexes to ensure thread safety" OFF)
+
     if(THREAD_SAFE)
         message(STATUS "Use mutexes")
         target_compile_definitions(cereal PUBLIC CEREAL_THREAD_SAFE=1)
@@ -63,8 +65,8 @@ list(APPEND CEREAL_THREAD_LIBS cereal::cereal)
 
 target_compile_features(cereal INTERFACE cxx_std_20)
 
-
 option(CEREAL_INSTALL "Generate the install target" ${CEREAL_MASTER_PROJECT})
+
 if(CEREAL_INSTALL)
     include(GNUInstallDirs)
     include(CMakePackageConfigHelpers)
@@ -99,17 +101,14 @@ if(NOT SKIP_PERFORMANCE_COMPARISON)
     find_package(Boost REQUIRED COMPONENTS serialization)
 endif()
 
-
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(unittests)
 endif()
 
-
 if(BUILD_SANDBOX)
     add_subdirectory(sandbox)
 endif()
-
 
 if(BUILD_DOC)
     add_subdirectory(doc)

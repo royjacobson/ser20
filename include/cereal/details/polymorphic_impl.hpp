@@ -104,12 +104,12 @@ namespace detail {
    pointer, allowing a templated derived version of it to define strongly typed
    functions that cast between registered base and derived types. */
 struct PolymorphicCaster {
-  PolymorphicCaster() = default;
-  PolymorphicCaster(const PolymorphicCaster&) = default;
-  PolymorphicCaster& operator=(const PolymorphicCaster&) = default;
-  PolymorphicCaster(PolymorphicCaster&&) noexcept {}
-  PolymorphicCaster& operator=(PolymorphicCaster&&) noexcept { return *this; }
-  virtual ~PolymorphicCaster() noexcept = default;
+  PolymorphicCaster();
+  PolymorphicCaster(const PolymorphicCaster&);
+  PolymorphicCaster& operator=(const PolymorphicCaster&);
+  PolymorphicCaster(PolymorphicCaster&&) noexcept;
+  PolymorphicCaster& operator=(PolymorphicCaster&&) noexcept;
+  virtual ~PolymorphicCaster() noexcept;
 
   //! Downcasts to the proper derived type
   virtual void const* downcast(void const* const ptr) const = 0;
@@ -152,60 +152,29 @@ struct PolymorphicCasters {
   /*! Uses the type index from the base and derived class to find the matching
       registered caster. If no matching caster exists, the bool in the pair will
       be false and the vector reference should not be used. */
-  // TODO: Put it in a source file.
-  inline static std::pair<bool, std::vector<PolymorphicCaster const*> const&>
+  static std::pair<bool, std::vector<PolymorphicCaster const*> const&>
   lookup_if_exists(std::type_index const& baseIndex,
-                   std::type_index const& derivedIndex) {
-    // First phase of lookup - match base type index
-    auto const& baseMap = StaticObject<PolymorphicCasters>::getInstance().map;
-    auto baseIter = baseMap.find(baseIndex);
-    if (baseIter == baseMap.end())
-      return {false, {}};
-
-    // Second phase - find a match from base to derived
-    auto const& derivedMap = baseIter->second;
-    auto derivedIter = derivedMap.find(derivedIndex);
-    if (derivedIter == derivedMap.end())
-      return {false, {}};
-
-    return {true, derivedIter->second};
-  }
+                   std::type_index const& derivedIndex);
 
   //! Gets the mapping object that can perform the upcast or downcast
   /*! Uses the type index from the base and derived class to find the matching
-      registered caster. If no matching caster exists, calls the exception
-     function.
+      registered caster. If no matching caster exists, returns null_ptr.
 
       The returned PolymorphicCaster is capable of upcasting or downcasting
-     between the two types. */
-  template <class F>
-  inline static std::vector<PolymorphicCaster const*> const&
-  lookup(std::type_index const& baseIndex, std::type_index const& derivedIndex,
-         F&& exceptionFunc) {
-    // First phase of lookup - match base type index
-    auto const& baseMap = StaticObject<PolymorphicCasters>::getInstance().map;
-    auto baseIter = baseMap.find(baseIndex);
-    if (baseIter == baseMap.end())
-      exceptionFunc();
-
-    // Second phase - find a match from base to derived
-    auto const& derivedMap = baseIter->second;
-    auto derivedIter = derivedMap.find(derivedIndex);
-    if (derivedIter == derivedMap.end())
-      exceptionFunc();
-
-    return derivedIter->second;
-  }
+      between the two types. */
+  static const std::vector<PolymorphicCaster const*>*
+  lookup(const std::type_index& baseIndex, const std::type_index& derivedIndex);
 
   //! Performs a downcast to the derived type using a registered mapping
   template <class Derived>
   inline static const Derived* downcast(const void* dptr,
                                         std::type_info const& baseInfo) {
-    auto const& mapping = lookup(baseInfo, typeid(Derived), [&]() {
-      UNREGISTERED_POLYMORPHIC_CAST_EXCEPTION(save)
-    });
+    const auto* mapping = lookup(baseInfo, typeid(Derived));
 
-    for (auto const* dmap : mapping)
+    if (!mapping)
+      UNREGISTERED_POLYMORPHIC_CAST_EXCEPTION(save);
+
+    for (auto const* dmap : *mapping)
       dptr = dmap->downcast(dptr);
 
     return static_cast<Derived const*>(dptr);
@@ -219,12 +188,13 @@ struct PolymorphicCasters {
   template <class Derived>
   inline static void* upcast(Derived* const dptr,
                              std::type_info const& baseInfo) {
-    auto const& mapping = lookup(baseInfo, typeid(Derived), [&]() {
-      UNREGISTERED_POLYMORPHIC_CAST_EXCEPTION(load)
-    });
+    const auto* mapping = lookup(baseInfo, typeid(Derived));
+
+    if (!mapping)
+      UNREGISTERED_POLYMORPHIC_CAST_EXCEPTION(load);
 
     void* uptr = dptr;
-    for (auto mIter = mapping.rbegin(), mEnd = mapping.rend(); mIter != mEnd;
+    for (auto mIter = mapping->rbegin(), mEnd = mapping->rend(); mIter != mEnd;
          ++mIter)
       uptr = (*mIter)->upcast(uptr);
 
@@ -235,12 +205,13 @@ struct PolymorphicCasters {
   template <class Derived>
   inline static std::shared_ptr<void>
   upcast(std::shared_ptr<Derived> const& dptr, std::type_info const& baseInfo) {
-    auto const& mapping = lookup(baseInfo, typeid(Derived), [&]() {
-      UNREGISTERED_POLYMORPHIC_CAST_EXCEPTION(load)
-    });
+    const auto* mapping = lookup(baseInfo, typeid(Derived));
+
+    if (!mapping)
+      UNREGISTERED_POLYMORPHIC_CAST_EXCEPTION(load);
 
     std::shared_ptr<void> uptr = dptr;
-    for (auto mIter = mapping.rbegin(), mEnd = mapping.rend(); mIter != mEnd;
+    for (auto mIter = mapping->rbegin(), mEnd = mapping->rend(); mIter != mEnd;
          ++mIter)
       uptr = (*mIter)->upcast(uptr);
 
@@ -250,7 +221,9 @@ struct PolymorphicCasters {
 #undef UNREGISTERED_POLYMORPHIC_CAST_EXCEPTION
 };
 
-#define CEREAL_EMPLACE_MAP(map, key, value) map.emplace(key, value);
+void register_virtual_caster(const std::type_index baseKey,
+                             const std::type_index derivedKey,
+                             PolymorphicCaster* caster);
 
 //! Strongly typed derivation of PolymorphicCaster
 template <class Base, class Derived>
@@ -262,161 +235,8 @@ struct PolymorphicVirtualCaster : PolymorphicCaster {
   PolymorphicVirtualCaster() {
     const auto baseKey = std::type_index(typeid(Base));
     const auto derivedKey = std::type_index(typeid(Derived));
-
-    // First insert the relation Base->Derived
-    const auto lock = StaticObject<PolymorphicCasters>::lock();
-    auto& baseMap = StaticObject<PolymorphicCasters>::getInstance().map;
-
-    {
-      auto& derivedMap =
-          baseMap.insert({baseKey, PolymorphicCasters::DerivedCasterMap{}})
-              .first->second;
-      auto& derivedVec = derivedMap.insert({derivedKey, {}}).first->second;
-      derivedVec.push_back(this);
-    }
-
-    // Insert reverse relation Derived->Base
-    auto& reverseMap =
-        StaticObject<PolymorphicCasters>::getInstance().reverseMap;
-    CEREAL_EMPLACE_MAP(reverseMap, derivedKey, baseKey);
-
-    // Find all chainable unregistered relations
-    /* The strategy here is to process only the nodes in the class hierarchy
-       graph that have been affected by the new insertion. The aglorithm
-       iteratively processes a node an ensures that it is updated with all new
-       shortest length paths. It then rocesses the parents of the active node,
-       with the knowledge that all children have already been processed.
-
-       Note that for the following, we'll use the nomenclature of parent and
-       child to not confuse with the inserted base derived relationship */
-    {
-      // Checks whether there is a path from parent->child and returns a <dist,
-      // path> pair dist is set to MAX if the path does not exist
-      auto checkRelation = [](std::type_index const& parentInfo,
-                              std::type_index const& childInfo)
-          -> std::pair<size_t, std::vector<PolymorphicCaster const*> const&> {
-        auto result =
-            PolymorphicCasters::lookup_if_exists(parentInfo, childInfo);
-        if (result.first) {
-          auto const& path = result.second;
-          return {path.size(), path};
-        } else
-          return {(std::numeric_limits<size_t>::max)(), {}};
-      };
-
-      std::stack<std::type_index>
-          parentStack; // Holds the parent nodes to be processed
-      std::vector<std::type_index>
-          dirtySet; // Marks child nodes that have been changed
-      std::unordered_set<std::type_index>
-          processedParents; // Marks parent nodes that have been processed
-
-      // Checks if a child has been marked dirty
-      auto isDirty = [&](std::type_index const& c) {
-        auto const dirtySetSize = dirtySet.size();
-        for (size_t i = 0; i < dirtySetSize; ++i)
-          if (dirtySet[i] == c)
-            return true;
-
-        return false;
-      };
-
-      // Begin processing the base key and mark derived as dirty
-      parentStack.push(baseKey);
-      dirtySet.emplace_back(derivedKey);
-
-      while (!parentStack.empty()) {
-        using Relations = std::unordered_multimap<
-            std::type_index,
-            std::pair<std::type_index, std::vector<PolymorphicCaster const*>>>;
-        Relations
-            unregisteredRelations; // Defer insertions until after main loop to
-                                   // prevent iterator invalidation
-
-        const auto parent = parentStack.top();
-        parentStack.pop();
-
-        // Update paths to all children marked dirty
-        for (auto const& childPair : baseMap[parent]) {
-          const auto child = childPair.first;
-          if (isDirty(child) && baseMap.count(child)) {
-            auto parentChildPath = checkRelation(parent, child);
-
-            // Search all paths from the child to its own children (finalChild),
-            // looking for a shorter parth from parent to finalChild
-            for (auto const& finalChildPair : baseMap[child]) {
-              const auto finalChild = finalChildPair.first;
-
-              auto parentFinalChildPath = checkRelation(parent, finalChild);
-              auto childFinalChildPath = checkRelation(child, finalChild);
-
-              const size_t newLength = 1u + parentChildPath.first;
-
-              if (newLength < parentFinalChildPath.first) {
-                std::vector<PolymorphicCaster const*> path =
-                    parentChildPath.second;
-                path.insert(path.end(), childFinalChildPath.second.begin(),
-                            childFinalChildPath.second.end());
-
-                // Check to see if we have a previous uncommitted path in
-                // unregisteredRelations that is shorter. If so, ignore this
-                // path
-                auto hintRange = unregisteredRelations.equal_range(parent);
-                auto hint = hintRange.first;
-                for (; hint != hintRange.second; ++hint)
-                  if (hint->second.first == finalChild)
-                    break;
-
-                const bool uncommittedExists =
-                    hint != unregisteredRelations.end();
-                if (uncommittedExists &&
-                    (hint->second.second.size() <= newLength))
-                  continue;
-
-                auto newPath = std::pair<std::type_index,
-                                         std::vector<PolymorphicCaster const*>>{
-                    finalChild, std::move(path)};
-
-                // Insert the new path if it doesn't exist, otherwise this will
-                // just lookup where to do the replacement
-                auto old =
-                    unregisteredRelations.emplace_hint(hint, parent, newPath);
-
-                // If there was an uncommitted path, we need to perform a
-                // replacement
-                if (uncommittedExists)
-                  old->second = newPath;
-              }
-            } // end loop over child's children
-          }   // end if dirty and child has children
-        }     // end loop over children
-
-        // Insert chained relations
-        for (auto const& it : unregisteredRelations) {
-          auto& derivedMap = baseMap.find(it.first)->second;
-          derivedMap[it.second.first] = it.second.second;
-          CEREAL_EMPLACE_MAP(reverseMap, it.second.first, it.first);
-        }
-
-        // Mark current parent as modified
-        dirtySet.emplace_back(parent);
-
-        // Insert all parents of the current parent node that haven't yet been
-        // processed
-        auto parentRange = reverseMap.equal_range(parent);
-        for (auto pIter = parentRange.first; pIter != parentRange.second;
-             ++pIter) {
-          const auto pParent = pIter->second;
-          if (!processedParents.count(pParent)) {
-            parentStack.push(pParent);
-            processedParents.insert(pParent);
-          }
-        }
-      } // end loop over parent stack
-    }   // end chainable relations
-  }     // end PolymorphicVirtualCaster()
-
-#undef CEREAL_EMPLACE_MAP
+    register_virtual_caster(baseKey, derivedKey, this);
+  }
 
   //! Performs the proper downcast with the templated types
   void const* downcast(void const* const ptr) const override {
@@ -441,8 +261,8 @@ struct PolymorphicVirtualCaster : PolymorphicCaster {
     given runtime type information and void pointers.
 
     Registration happens automatically via cereal::base_class and
-   cereal::virtual_base_class instantiations. For cases where neither is called,
-   see the CEREAL_REGISTER_POLYMORPHIC_RELATION macro */
+    cereal::virtual_base_class instantiations. For cases where neither is
+   called, see the CEREAL_REGISTER_POLYMORPHIC_RELATION macro */
 template <class Base, class Derived> struct RegisterPolymorphicCaster {
   //! Performs registration (binding) between Base and Derived
   /*! If the type is not polymorphic, nothing will happen */
@@ -603,17 +423,17 @@ template <class Archive, class T> struct OutputBindingCreator {
     /*! Wrap a raw polymorphic pointer in a shared_ptr to its true type
 
         The wrapped pointer will not be responsible for ownership of the held
-       pointer so it will not attempt to destroy it; instead the refcount of the
-       wrapped pointer will be tied to a fake 'ownership pointer' that will do
-       nothing when it ultimately goes out of scope.
+        pointer so it will not attempt to destroy it; instead the refcount of
+        the wrapped pointer will be tied to a fake 'ownership pointer' that will
+        do nothing when it ultimately goes out of scope.
 
         The main reason for doing this, other than not to destroy the true
-       object with our wrapper pointer, is to avoid meddling with the internal
-       reference count in a polymorphic type that inherits from
-       std::enable_shared_from_this.
+        object with our wrapper pointer, is to avoid meddling with the internal
+        reference count in a polymorphic type that inherits from
+        std::enable_shared_from_this.
 
         @param dptr A void pointer to the contents of the shared_ptr to
-       serialize */
+                    serialize */
     PolymorphicSharedPointerWrapper(T const* dptr)
         : refCount(), wrappedPtr(refCount, dptr) {}
 
@@ -629,10 +449,10 @@ template <class Archive, class T> struct OutputBindingCreator {
 
   //! Does the actual work of saving a polymorphic shared_ptr
   /*! This function will properly create a shared_ptr from the void * that is
-     passed in before passing it to the archive for serialization.
+      passed in before passing it to the archive for serialization.
 
       In addition, this will also preserve the state of any internal
-     enable_shared_from_this mechanisms
+      enable_shared_from_this mechanisms
 
       @param ar The archive to serialize to
       @param dptr Pointer to the actual data held by the shared_ptr */
@@ -647,10 +467,10 @@ template <class Archive, class T> struct OutputBindingCreator {
 
   //! Does the actual work of saving a polymorphic shared_ptr
   /*! This function will properly create a shared_ptr from the void * that is
-     passed in before passing it to the archive for serialization.
+      passed in before passing it to the archive for serialization.
 
       This version is for types that do not inherit from
-     std::enable_shared_from_this.
+      std::enable_shared_from_this.
 
       @param ar The archive to serialize to
       @param dptr Pointer to the actual data held by the shared_ptr */
@@ -728,7 +548,7 @@ template <void (*)()> struct instantiate_function {};
     for specific Archive types.  When the compiler looks for overloads of
     instantiate_polymorphic_binding, it will be forced to instantiate this
     struct during overload resolution, even though it will not be part of a
-   valid overload */
+    valid overload */
 template <class Archive, class T> struct polymorphic_serialization_support {
 #if defined(_MSC_VER) && !defined(__INTEL_COMPILER)
   //! Creates the appropriate bindings depending on whether the archive supports

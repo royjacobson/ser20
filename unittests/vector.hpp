@@ -36,7 +36,7 @@ void test_vector()
 
   for(int ii=0; ii<100; ++ii)
   {
-    std::vector<int> o_podvector(100);
+    std::vector<int> o_podvector(10000);
     for(auto & elem : o_podvector)
       elem = random_value<int>(gen);
 

@@ -1,35 +1,11 @@
 file(GLOB TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
 
 # A semi-colon separated list of test sources that should not be automatically built with doctest
-set(SPECIAL_TESTS "portability_test.cpp")
+set(SPECIAL_TESTS)
 
 if(CMAKE_VERSION VERSION_LESS 2.8)
   # Portability test uses the `TARGET_FILE_DIR` generator expression which is available from CMake 2.8.
   set(SKIP_PORTABILITY_TEST ON)
-endif()
-
-if(NOT SKIP_PORTABILITY_TEST)
-  # Build the portability test only if we are on a 64-bit machine (void* is 8 bytes)
-  if((${CMAKE_SIZEOF_VOID_P} EQUAL 8))
-    if(NOT MSVC)
-      add_executable(portability_test32 portability_test.cpp)
-      target_link_libraries(portability_test32 ${CEREAL_THREAD_LIBS})
-      set_target_properties(portability_test32 PROPERTIES COMPILE_FLAGS "-m32")
-      set_target_properties(portability_test32 PROPERTIES LINK_FLAGS "-m32")
-    endif()
-
-    add_executable(portability_test64 portability_test.cpp)
-    target_link_libraries(portability_test64 ${CEREAL_THREAD_LIBS})
-
-    add_test(NAME portability_test
-            COMMAND ${CMAKE_COMMAND}
-              -DPORTABILITY_TEST_DIR=$<TARGET_FILE_DIR:portability_test64>
-            -P "${CMAKE_CURRENT_SOURCE_DIR}/run_portability_test.cmake")
-
-  elseif(MSVC)
-    add_executable(portability_test32 portability_test.cpp)
-    target_link_libraries(portability_test32 cereal::cereal)
-  endif()
 endif()
 
 # Build all of the non-special tests
@@ -46,15 +22,6 @@ foreach(TEST_SOURCE ${TESTS})
     add_executable(${TEST_TARGET} ${TEST_SOURCE})
     target_link_libraries(${TEST_TARGET} ${CEREAL_THREAD_LIBS})
     add_test(NAME "${TEST_TARGET}" COMMAND "${TEST_TARGET}")
-
-    # If we are on a 64-bit machine, create an extra 32-bit version of the test if portability testing is enabled
-    if((NOT MSVC) AND (${CMAKE_SIZEOF_VOID_P} EQUAL 8) AND (NOT SKIP_PORTABILITY_TEST))
-      add_executable(${TEST_TARGET}_32 ${TEST_SOURCE})
-      set_target_properties(${TEST_TARGET}_32 PROPERTIES
-        COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
-      target_link_libraries(${TEST_TARGET}_32 ${CEREAL_THREAD_LIBS})
-      add_test(NAME "${TEST_TARGET}_32" COMMAND "${TEST_TARGET}_32")
-    endif()
 
   endif()
 
@@ -89,10 +56,6 @@ if(NOT MSVC)
       target_link_libraries(${COVERAGE_TARGET} ${CEREAL_THREAD_LIBS})
     endif()
   endforeach()
-endif()
-
-if(CMAKE_CXX_STANDARD GREATER 14)
-  add_subdirectory(cpp17)
 endif()
 
 if(Boost_FOUND)
