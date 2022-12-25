@@ -51,7 +51,7 @@ namespace ser20 {
     @ingroup Utility */
 template <class T>
 SER20_HIDE_FUNCTION inline NameValuePair<T> make_nvp(std::string const& name,
-                                                      T&& value) {
+                                                     T&& value) {
   return {name.c_str(), std::forward<T>(value)};
 }
 
@@ -60,7 +60,7 @@ SER20_HIDE_FUNCTION inline NameValuePair<T> make_nvp(std::string const& name,
     @ingroup Utility */
 template <class T>
 SER20_HIDE_FUNCTION inline NameValuePair<T> make_nvp(const char* name,
-                                                      T&& value) {
+                                                     T&& value) {
   return {name, std::forward<T>(value)};
 }
 
@@ -91,8 +91,7 @@ SER20_HIDE_FUNCTION inline BinaryData<T> binary_data(T&& data, size_t size) {
 
     @relates SizeTag
     @ingroup Utility */
-template <class T>
-SER20_HIDE_FUNCTION inline SizeTag<T> make_size_tag(T&& sz) {
+template <class T> SER20_HIDE_FUNCTION inline SizeTag<T> make_size_tag(T&& sz) {
   return {std::forward<T>(sz)};
 }
 
@@ -136,8 +135,7 @@ SER20_HIDE_FUNCTION inline SizeTag<T> make_size_tag(T&& sz) {
 
     @relates DeferredData
     @ingroup Utility */
-template <class T>
-SER20_HIDE_FUNCTION inline DeferredData<T> defer(T&& value) {
+template <class T> SER20_HIDE_FUNCTION inline DeferredData<T> defer(T&& value) {
   return {std::forward<T>(value)};
 }
 
@@ -150,14 +148,14 @@ SER20_HIDE_FUNCTION inline DeferredData<T> defer(T&& value) {
     @ingroup Internal */
 template <class Archive, class T>
 SER20_HIDE_FUNCTION inline void prologue(Archive& /* archive */,
-                                          T const& /* data */) {}
+                                         T const& /* data */) {}
 
 //! Called after a type is serialized to tear down any special archive state
 //! for processing some type
 /*! @ingroup Internal */
 template <class Archive, class T>
 SER20_HIDE_FUNCTION inline void epilogue(Archive& /* archive */,
-                                          T const& /* data */) {}
+                                         T const& /* data */) {}
 
 // ######################################################################
 //! Special flags for archives
@@ -182,8 +180,8 @@ enum Flags { AllowEmptyClassElision = 1 };
     support pointers to polymorphic data types.  All archives that
     come with ser20 are already registered.
     @ingroup Internal */
-#define SER20_REGISTER_ARCHIVE(Archive)                                       \
-  namespace ser20 {                                                           \
+#define SER20_REGISTER_ARCHIVE(Archive)                                        \
+  namespace ser20 {                                                            \
   namespace detail {                                                           \
   template <class T>                                                           \
   typename polymorphic_serialization_support<Archive, T>::type                 \
@@ -196,7 +194,7 @@ enum Flags { AllowEmptyClassElision = 1 };
 // GCC / clang don't want the function
 #define SER20_UNUSED_FUNCTION
 #else
-#define SER20_UNUSED_FUNCTION                                                 \
+#define SER20_UNUSED_FUNCTION                                                  \
   static void unused() { (void)version; }
 #endif
 
@@ -308,17 +306,17 @@ private:
     macro should be placed at global scope.
     @ingroup Utility */
 
-#define SER20_CLASS_VERSION(TYPE, VERSION_NUMBER)                             \
-  namespace ser20 {                                                           \
+#define SER20_CLASS_VERSION(TYPE, VERSION_NUMBER)                              \
+  namespace ser20 {                                                            \
   namespace detail {                                                           \
   template <> struct Version<TYPE> {                                           \
     static std::uint32_t registerVersion() {                                   \
-      ::ser20::detail::StaticObject<Versions>::getInstance().mapping.emplace( \
+      ::ser20::detail::StaticObject<Versions>::getInstance().mapping.emplace(  \
           std::type_index(typeid(TYPE)).hash_code(), VERSION_NUMBER);          \
       return VERSION_NUMBER;                                                   \
     }                                                                          \
     static inline const std::uint32_t version = registerVersion();             \
-    SER20_UNUSED_FUNCTION                                                     \
+    SER20_UNUSED_FUNCTION                                                      \
   }; /* end Version */                                                         \
   }                                                                            \
   } // end namespaces
@@ -346,7 +344,7 @@ public:
   //! Construct the output archive
   /*! @param derived A pointer to the derived ArchiveType (pass this from the
                      derived archive) */
-  OutputArchive(ArchiveType* const derived)
+  OutputArchive(ArchiveType* const)
       : itsSharedPointerStorage(), itsCurrentPolymorphicTypeId(1) {}
 
   OutputArchive& operator=(OutputArchive const&) = delete;
@@ -437,7 +435,6 @@ public:
       return id->second;
   }
 
-private:
   //! Serializes data after calling prologue, then calls epilogue
   template <class T> SER20_HIDE_FUNCTION inline void process(T&& head) {
     prologue(*SELF, head);
@@ -445,6 +442,7 @@ private:
     epilogue(*SELF, head);
   }
 
+private:
   //! Unwinds to process all data
   template <class... Args>
   SER20_HIDE_FUNCTION inline void process(Args&&... args) {
@@ -629,7 +627,7 @@ private:
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
       PROCESS_IF(non_member_versioned_serialize) {
     SER20_SERIALIZE_FUNCTION_NAME(*SELF, const_cast<T&>(t),
-                                   registerClassVersion<T>());
+                                  registerClassVersion<T>());
     return *SELF;
   }
 
@@ -715,7 +713,7 @@ public:
   //! Construct the output archive
   /*! @param derived A pointer to the derived ArchiveType (pass this from the
                      derived archive) */
-  InputArchive(ArchiveType* const derived)
+  InputArchive(ArchiveType* const)
       : itsBaseClassSet(), itsSharedPointerStorage(), itsPolymorphicTypeMap(),
         itsVersionedTypes() {}
 
@@ -725,7 +723,7 @@ public:
   /*! This is the primary interface for serializing data with an archive */
   template <class... Types>
   SER20_HIDE_FUNCTION inline ArchiveType& operator()(Types&&... args) {
-    process(std::forward<Types>(args)...);
+    SELF->process(std::forward<Types>(args)...);
     return *SELF;
   }
 
@@ -834,7 +832,7 @@ private:
   //! Unwinds to process all data
   template <class... Args>
   SER20_HIDE_FUNCTION inline void process(Args&&... args) {
-    (this->process(std::forward<Args>(args)), ...);
+    (SELF->process(std::forward<Args>(args)), ...);
   }
 
   //! Serialization of a virtual_base_class wrapper
@@ -1003,7 +1001,7 @@ private:
     {
       std::uint32_t version;
 
-      process(make_nvp<ArchiveType>("ser20_class_version", version));
+      SELF->process(make_nvp<ArchiveType>("ser20_class_version", version));
       itsVersionedTypes.emplace_hint(lookupResult, hash, version);
 
       return version;

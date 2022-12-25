@@ -56,12 +56,10 @@ public:
   //! Construct, outputting to the provided stream
   /*! @param stream The stream to output to.  Can be a stringstream, a file
                     stream, or even cout!
-      @param bufferSize Size of the inner buffer of the archive.
       */
-  BinaryOutputArchive(std::ostream& stream, size_t bufferSize = 0x1000)
+  BinaryOutputArchive(std::ostream& stream)
       : OutputArchive<BinaryOutputArchive, AllowEmptyClassElision>(this),
-        itsStream(stream), bufferSize(bufferSize), bufferEnd(0),
-        itsBuffer(bufferSize) {}
+        itsStream(stream), bufferEnd(0), itsBuffer(bufferSize) {}
 
   ~BinaryOutputArchive() {
     if (bufferEnd) {
@@ -84,6 +82,24 @@ public:
     }
   }
 
+  template <class... Args> SER20_HIDE_FUNCTION void process(Args&&... args) {
+    (this->process(std::forward<Args>(args)), ...);
+  }
+
+  template <class T> SER20_HIDE_FUNCTION void process(T&& arg) {
+    bool wasProcessing = isProcessing;
+    if (!isProcessing) {
+      isProcessing = true;
+    }
+
+    static_cast<OutputArchive*>(this)->process(std::forward<T>(arg));
+
+    if (!wasProcessing) {
+      flush();
+      isProcessing = false;
+    }
+  }
+
 private:
   void flush() {
     write(itsBuffer.data(), bufferEnd);
@@ -98,9 +114,10 @@ private:
                       std::to_string(writtenSize));
   }
 
+  bool isProcessing = false;
   std::ostream& itsStream;
 
-  size_t bufferSize;
+  static constexpr std::streamsize bufferSize = 0x1000;
   size_t bufferEnd;
   std::vector<char> itsBuffer;
 };
@@ -122,12 +139,11 @@ public:
   //! Construct, loading from the provided stream
   /*! @param stream The stream to output to.  Can be a stringstream, a file
              stream, or even cout!
-    @param bufferSize Size of the inner buffer of the archive.
     */
-  BinaryInputArchive(std::istream& stream, size_t bufferSize = 0x1000)
+  BinaryInputArchive(std::istream& stream)
       : InputArchive<BinaryInputArchive, AllowEmptyClassElision>(this),
-        itsStream(stream), bufferSize(bufferSize), bufferStart(0), bufferEnd(0),
-        itsBuffer(bufferSize) {}
+        itsStream(stream), bufferStart(0), bufferEnd(0), itsBuffer(bufferSize) {
+  }
 
   ~BinaryInputArchive() noexcept = default;
 
@@ -162,6 +178,7 @@ private:
       bufferStart = 0;
       bufferEnd = load(itsBuffer.data(), bufferSize, size);
       auto bytesRead = flush(data, size);
+      (void)bytesRead;
       assert(bytesRead == size);
     }
   }
@@ -176,10 +193,9 @@ private:
                       std::to_string(readSize));
     return readSize;
   }
-
   std::istream& itsStream;
 
-  size_t bufferSize;
+  static constexpr std::streamsize bufferSize = 0x1000;
   size_t bufferStart;
   size_t bufferEnd;
   std::vector<char> itsBuffer;
@@ -199,8 +215,8 @@ SER20_SAVE_FUNCTION_NAME(BinaryOutputArchive& ar, T const& t)
 
 //! Loading for POD types from binary
 template <class T>
-SER20_HIDE_FUNCTION inline void
-SER20_LOAD_FUNCTION_NAME(BinaryInputArchive& ar, T& t)
+SER20_HIDE_FUNCTION inline void SER20_LOAD_FUNCTION_NAME(BinaryInputArchive& ar,
+                                                         T& t)
   requires(std::is_arithmetic_v<T>)
 {
   ar.loadBinary(std::addressof(t), sizeof(t));
@@ -217,7 +233,7 @@ SER20_SERIALIZE_FUNCTION_NAME(Archive& ar, NameValuePair<T>& t)
 //! Serializing SizeTags to binary
 template <class Archive, class T>
 SER20_HIDE_FUNCTION inline void SER20_SERIALIZE_FUNCTION_NAME(Archive& ar,
-                                                                SizeTag<T>& t)
+                                                              SizeTag<T>& t)
     SER20_ARCHIVE_RESTRICT(BinaryInputArchive, BinaryOutputArchive) {
   ar(t.size);
 }
@@ -231,8 +247,8 @@ SER20_SAVE_FUNCTION_NAME(BinaryOutputArchive& ar, BinaryData<T> const& bd) {
 
 //! Loading binary data
 template <class T>
-SER20_HIDE_FUNCTION inline void
-SER20_LOAD_FUNCTION_NAME(BinaryInputArchive& ar, BinaryData<T>& bd) {
+SER20_HIDE_FUNCTION inline void SER20_LOAD_FUNCTION_NAME(BinaryInputArchive& ar,
+                                                         BinaryData<T>& bd) {
   ar.loadBinary(bd.data, static_cast<std::streamsize>(bd.size));
 }
 } // namespace ser20
@@ -243,6 +259,6 @@ SER20_REGISTER_ARCHIVE(ser20::BinaryInputArchive)
 
 // tie input and output archives together
 SER20_SETUP_ARCHIVE_TRAITS(ser20::BinaryInputArchive,
-                            ser20::BinaryOutputArchive)
+                           ser20::BinaryOutputArchive)
 
 #endif // SER20_ARCHIVES_BINARY_HPP_

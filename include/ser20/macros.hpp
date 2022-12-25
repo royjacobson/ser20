@@ -45,6 +45,16 @@
 #ifndef SER20_MACROS_HPP_
 #define SER20_MACROS_HPP_
 
+#ifdef _MSVC_LANG
+#if _MSVC_LANG < 202002L
+#error "Ser20 requires at least C++20!"
+#endif
+#else
+#if __cplusplus < 202002L
+#error "Ser20 requires at least C++20!"
+#endif
+#endif
+
 #ifndef SER20_THREAD_SAFE
 //! Whether ser20 should be compiled for a threaded environment
 /*! This macro causes ser20 to use mutexes to control access to
