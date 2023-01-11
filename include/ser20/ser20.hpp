@@ -252,7 +252,7 @@ private:
 };
 
 //! Helper macro for CRTP.
-#define SELF static_cast<ArchiveType*>(this)
+#define SER20_SELF static_cast<ArchiveType*>(this)
 
 // ######################################################################
 //! Defines a class version for some type
@@ -353,8 +353,8 @@ public:
   /*! This is the primary interface for serializing data with an archive */
   template <class... Types>
   SER20_HIDE_FUNCTION inline ArchiveType& operator()(Types&&... args) {
-    SELF->process(std::forward<Types>(args)...);
-    return *SELF;
+    SER20_SELF->process(std::forward<Types>(args)...);
+    return *SER20_SELF;
   }
 
   //! Serializes any data marked for deferment using defer
@@ -364,7 +364,7 @@ public:
     // Don't use for each loop in case there is a recursive deferring
     // and the vector is reallocated.
     for (size_t i = 0; i < itsDeferments.size(); i++) {
-      itsDeferments[i](*SELF);
+      itsDeferments[i](*SER20_SELF);
     }
   }
 
@@ -396,8 +396,8 @@ public:
       transition to the operator() overload */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& operator&(T&& arg) {
-    SELF->process(std::forward<T>(arg));
-    return *SELF;
+    SER20_SELF->process(std::forward<T>(arg));
+    return *SER20_SELF;
   }
 
   //! Serializes passed in data
@@ -406,8 +406,8 @@ public:
       transition to the operator() overload */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& operator<<(T&& arg) {
-    SELF->process(std::forward<T>(arg));
-    return *SELF;
+    SER20_SELF->process(std::forward<T>(arg));
+    return *SER20_SELF;
   }
 
   //! @}
@@ -437,16 +437,16 @@ public:
 
   //! Serializes data after calling prologue, then calls epilogue
   template <class T> SER20_HIDE_FUNCTION inline void process(T&& head) {
-    prologue(*SELF, head);
-    SELF->processImpl(head);
-    epilogue(*SELF, head);
+    prologue(*SER20_SELF, head);
+    SER20_SELF->processImpl(head);
+    epilogue(*SER20_SELF, head);
   }
 
 private:
   //! Unwinds to process all data
   template <class... Args>
   SER20_HIDE_FUNCTION inline void process(Args&&... args) {
-    (SELF->process(std::forward<Args>(args)), ...);
+    (SER20_SELF->process(std::forward<Args>(args)), ...);
   }
 
   //! Serialization of a virtual_base_class wrapper
@@ -456,16 +456,16 @@ private:
     traits::detail::base_class_id id(b.base_ptr);
     if (!itsBaseClassSet.contains(id)) {
       itsBaseClassSet.insert(id);
-      SELF->processImpl(*b.base_ptr);
+      SER20_SELF->processImpl(*b.base_ptr);
     }
-    return *SELF;
+    return *SER20_SELF;
   }
 
   //! Serialization of a base_class wrapper
   /*! \sa base_class */
   template <class T> inline ArchiveType& processImpl(base_class<T> const& b) {
-    SELF->processImpl(*b.base_ptr);
-    return *SELF;
+    SER20_SELF->processImpl(*b.base_ptr);
+    return *SER20_SELF;
   }
 
   std::vector<std::function<void(ArchiveType&)>> itsDeferments;
@@ -475,7 +475,7 @@ private:
         [d](ArchiveType& ar) { ar.process(d.value); });
     itsDeferments.emplace_back(std::move(deferment));
 
-    return *SELF;
+    return *SER20_SELF;
   }
 
 //! Helper macro that expands the requirements for activating an overload
@@ -485,7 +485,7 @@ private:
       Is output serializable AND
         is specialized for this type of function OR
         has no specialization at all */
-#define PROCESS_IF(name)                                                       \
+#define SER20_PROCESS_IF(name)                                                       \
   requires(traits::has_##name##_v<T, ArchiveType> &&                           \
            !traits::has_invalid_output_versioning_v<T, ArchiveType> &&         \
            (traits::is_output_serializable_v<T, ArchiveType> &&                \
@@ -495,49 +495,49 @@ private:
   //! Member serialization
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(member_serialize) {
-    access::member_serialize(*SELF, const_cast<T&>(t));
-    return *SELF;
+      SER20_PROCESS_IF(member_serialize) {
+    access::member_serialize(*SER20_SELF, const_cast<T&>(t));
+    return *SER20_SELF;
   }
 
   //! Non member serialization
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(non_member_serialize) {
-    SER20_SERIALIZE_FUNCTION_NAME(*SELF, const_cast<T&>(t));
-    return *SELF;
+      SER20_PROCESS_IF(non_member_serialize) {
+    SER20_SERIALIZE_FUNCTION_NAME(*SER20_SELF, const_cast<T&>(t));
+    return *SER20_SELF;
   }
 
   //! Member split (save)
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(member_save) {
-    access::member_save(*SELF, t);
-    return *SELF;
+      SER20_PROCESS_IF(member_save) {
+    access::member_save(*SER20_SELF, t);
+    return *SER20_SELF;
   }
 
   //! Non member split (save)
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(non_member_save) {
-    SER20_SAVE_FUNCTION_NAME(*SELF, t);
-    return *SELF;
+      SER20_PROCESS_IF(non_member_save) {
+    SER20_SAVE_FUNCTION_NAME(*SER20_SELF, t);
+    return *SER20_SELF;
   }
 
   //! Member split (save_minimal)
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(member_save_minimal) {
-    SELF->process(access::member_save_minimal(*SELF, t));
-    return *SELF;
+      SER20_PROCESS_IF(member_save_minimal) {
+    SER20_SELF->process(access::member_save_minimal(*SER20_SELF, t));
+    return *SER20_SELF;
   }
 
   //! Non member split (save_minimal)
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(non_member_save_minimal) {
-    SELF->process(SER20_SAVE_MINIMAL_FUNCTION_NAME(*SELF, t));
-    return *SELF;
+      SER20_PROCESS_IF(non_member_save_minimal) {
+    SER20_SELF->process(SER20_SAVE_MINIMAL_FUNCTION_NAME(*SER20_SELF, t));
+    return *SER20_SELF;
   }
 
   //! Empty class specialization
@@ -547,7 +547,7 @@ private:
              !traits::is_output_serializable_v<T, ArchiveType> &&
              std::is_empty_v<T>)
   {
-    return *SELF;
+    return *SER20_SELF;
   }
 
   //! No matching serialization
@@ -588,7 +588,7 @@ private:
         "In addition, you may not mix versioned with non-versioned "
         "serialization functions. \n\n ");
 
-    return *SELF;
+    return *SER20_SELF;
   }
 
   //! Registers a class version with the archive and serializes it if necessary
@@ -615,61 +615,61 @@ private:
   /*! Versioning implementation */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(member_versioned_serialize) {
-    access::member_serialize(*SELF, const_cast<T&>(t),
+      SER20_PROCESS_IF(member_versioned_serialize) {
+    access::member_serialize(*SER20_SELF, const_cast<T&>(t),
                              registerClassVersion<T>());
-    return *SELF;
+    return *SER20_SELF;
   }
 
   //! Non member serialization
   /*! Versioning implementation */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(non_member_versioned_serialize) {
-    SER20_SERIALIZE_FUNCTION_NAME(*SELF, const_cast<T&>(t),
+      SER20_PROCESS_IF(non_member_versioned_serialize) {
+    SER20_SERIALIZE_FUNCTION_NAME(*SER20_SELF, const_cast<T&>(t),
                                   registerClassVersion<T>());
-    return *SELF;
+    return *SER20_SELF;
   }
 
   //! Member split (save)
   /*! Versioning implementation */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(member_versioned_save) {
-    access::member_save(*SELF, t, registerClassVersion<T>());
-    return *SELF;
+      SER20_PROCESS_IF(member_versioned_save) {
+    access::member_save(*SER20_SELF, t, registerClassVersion<T>());
+    return *SER20_SELF;
   }
 
   //! Non member split (save)
   /*! Versioning implementation */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(non_member_versioned_save) {
-    SER20_SAVE_FUNCTION_NAME(*SELF, t, registerClassVersion<T>());
-    return *SELF;
+      SER20_PROCESS_IF(non_member_versioned_save) {
+    SER20_SAVE_FUNCTION_NAME(*SER20_SELF, t, registerClassVersion<T>());
+    return *SER20_SELF;
   }
 
   //! Member split (save_minimal)
   /*! Versioning implementation */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(member_versioned_save_minimal) {
-    SELF->process(
-        access::member_save_minimal(*SELF, t, registerClassVersion<T>()));
-    return *SELF;
+      SER20_PROCESS_IF(member_versioned_save_minimal) {
+    SER20_SELF->process(
+        access::member_save_minimal(*SER20_SELF, t, registerClassVersion<T>()));
+    return *SER20_SELF;
   }
 
   //! Non member split (save_minimal)
   /*! Versioning implementation */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const& t)
-      PROCESS_IF(non_member_versioned_save_minimal) {
-    SELF->process(
-        SER20_SAVE_MINIMAL_FUNCTION_NAME(*SELF, t, registerClassVersion<T>()));
-    return *SELF;
+      SER20_PROCESS_IF(non_member_versioned_save_minimal) {
+    SER20_SELF->process(
+        SER20_SAVE_MINIMAL_FUNCTION_NAME(*SER20_SELF, t, registerClassVersion<T>()));
+    return *SER20_SELF;
   }
 
-#undef PROCESS_IF
+#undef SER20_PROCESS_IF
 
 private:
   //! A set of all base classes that have been serialized
@@ -723,8 +723,8 @@ public:
   /*! This is the primary interface for serializing data with an archive */
   template <class... Types>
   SER20_HIDE_FUNCTION inline ArchiveType& operator()(Types&&... args) {
-    SELF->process(std::forward<Types>(args)...);
-    return *SELF;
+    SER20_SELF->process(std::forward<Types>(args)...);
+    return *SER20_SELF;
   }
 
   //! Serializes any data marked for deferment using defer
@@ -734,7 +734,7 @@ public:
     // Don't use for each loop in case there is a recursive deferring
     // and the vector is reallocated.
     for (size_t i = 0; i < itsDeferments.size(); i++) {
-      itsDeferments[i](*SELF);
+      itsDeferments[i](*SER20_SELF);
     }
   }
 
@@ -766,8 +766,8 @@ public:
       transition to the operator() overload */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& operator&(T&& arg) {
-    SELF->process(std::forward<T>(arg));
-    return *SELF;
+    SER20_SELF->process(std::forward<T>(arg));
+    return *SER20_SELF;
   }
 
   //! Serializes passed in data
@@ -776,8 +776,8 @@ public:
       transition to the operator() overload */
   template <class T>
   SER20_HIDE_FUNCTION inline ArchiveType& operator>>(T&& arg) {
-    SELF->process(std::forward<T>(arg));
-    return *SELF;
+    SER20_SELF->process(std::forward<T>(arg));
+    return *SER20_SELF;
   }
 
   //! @}
@@ -824,15 +824,15 @@ public:
 private:
   //! Serializes data after calling prologue, then calls epilogue
   template <class T> SER20_HIDE_FUNCTION inline void process(T&& head) {
-    prologue(*SELF, head);
-    SELF->processImpl(head);
-    epilogue(*SELF, head);
+    prologue(*SER20_SELF, head);
+    SER20_SELF->processImpl(head);
+    epilogue(*SER20_SELF, head);
   }
 
   //! Unwinds to process all data
   template <class... Args>
   SER20_HIDE_FUNCTION inline void process(Args&&... args) {
-    (SELF->process(std::forward<Args>(args)), ...);
+    (SER20_SELF->process(std::forward<Args>(args)), ...);
   }
 
   //! Serialization of a virtual_base_class wrapper
@@ -841,16 +841,16 @@ private:
     traits::detail::base_class_id id(b.base_ptr);
     if (!itsBaseClassSet.contains(id)) {
       itsBaseClassSet.insert(id);
-      SELF->processImpl(*b.base_ptr);
+      SER20_SELF->processImpl(*b.base_ptr);
     }
-    return *SELF;
+    return *SER20_SELF;
   }
 
   //! Serialization of a base_class wrapper
   /*! \sa base_class */
   template <class T> inline ArchiveType& processImpl(base_class<T>& b) {
-    SELF->processImpl(*b.base_ptr);
-    return *SELF;
+    SER20_SELF->processImpl(*b.base_ptr);
+    return *SER20_SELF;
   }
 
   std::vector<std::function<void(ArchiveType&)>> itsDeferments;
@@ -860,7 +860,7 @@ private:
         [d](ArchiveType& ar) { ar.process(d.value); });
     itsDeferments.emplace_back(std::move(deferment));
 
-    return *SELF;
+    return *SER20_SELF;
   }
 
 //! Helper macro that expands the requirements for activating an overload
@@ -870,7 +870,7 @@ private:
       Is input serializable AND
         is specialized for this type of function OR
         has no specialization at all */
-#define PROCESS_IF(name)                                                       \
+#define SER20_PROCESS_IF(name)                                                       \
   requires(traits::has_##name##_v<T, ArchiveType> &&                           \
            !traits::has_invalid_input_versioning_v<T, ArchiveType> &&          \
            traits::is_input_serializable_v<T, ArchiveType> &&                  \
@@ -880,55 +880,55 @@ private:
   //! Member serialization
   template <class T>
   inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
-      PROCESS_IF(member_serialize) {
-    access::member_serialize(*SELF, t);
-    return *SELF;
+      SER20_PROCESS_IF(member_serialize) {
+    access::member_serialize(*SER20_SELF, t);
+    return *SER20_SELF;
   }
 
   //! Non member serialization
   template <class T>
   inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
-      PROCESS_IF(non_member_serialize) {
-    SER20_SERIALIZE_FUNCTION_NAME(*SELF, t);
-    return *SELF;
+      SER20_PROCESS_IF(non_member_serialize) {
+    SER20_SERIALIZE_FUNCTION_NAME(*SER20_SELF, t);
+    return *SER20_SELF;
   }
 
   //! Member split (load)
   template <class T>
   inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
-      PROCESS_IF(member_load) {
-    access::member_load(*SELF, t);
-    return *SELF;
+      SER20_PROCESS_IF(member_load) {
+    access::member_load(*SER20_SELF, t);
+    return *SER20_SELF;
   }
 
   //! Non member split (load)
   template <class T>
   inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
-      PROCESS_IF(non_member_load) {
-    SER20_LOAD_FUNCTION_NAME(*SELF, t);
-    return *SELF;
+      SER20_PROCESS_IF(non_member_load) {
+    SER20_LOAD_FUNCTION_NAME(*SER20_SELF, t);
+    return *SER20_SELF;
   }
 
   //! Member split (load_minimal)
   template <class T>
-  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_load_minimal) {
+  inline ArchiveType& processImpl(T& t) SER20_PROCESS_IF(member_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     traits::get_member_save_minimal_t<T, OutArchiveType> value;
-    SELF->process(value);
-    access::member_load_minimal(*SELF, t, value);
-    return *SELF;
+    SER20_SELF->process(value);
+    access::member_load_minimal(*SER20_SELF, t, value);
+    return *SER20_SELF;
   }
 
   //! Non member split (load_minimal)
   template <class T>
-  inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_load_minimal) {
+  inline ArchiveType& processImpl(T& t) SER20_PROCESS_IF(non_member_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     traits::get_non_member_save_minimal_t<T, OutArchiveType> value;
-    SELF->process(value);
-    SER20_LOAD_MINIMAL_FUNCTION_NAME(*SELF, t, value);
-    return *SELF;
+    SER20_SELF->process(value);
+    SER20_LOAD_MINIMAL_FUNCTION_NAME(*SER20_SELF, t, value);
+    return *SER20_SELF;
   }
 
   //! Empty class specialization
@@ -938,7 +938,7 @@ private:
              !traits::is_input_serializable_v<T, ArchiveType> &&
              std::is_empty_v<T>)
   {
-    return *SELF;
+    return *SER20_SELF;
   }
 
   //! No matching serialization
@@ -979,7 +979,7 @@ private:
         "In addition, you may not mix versioned with non-versioned "
         "serialization functions. \n\n ");
 
-    return *SELF;
+    return *SER20_SELF;
   }
 
   //! Befriend for versioning in load_and_construct
@@ -1001,7 +1001,7 @@ private:
     {
       std::uint32_t version;
 
-      SELF->process(make_nvp<ArchiveType>("ser20_class_version", version));
+      SER20_SELF->process(make_nvp<ArchiveType>("ser20_class_version", version));
       itsVersionedTypes.emplace_hint(lookupResult, hash, version);
 
       return version;
@@ -1012,69 +1012,70 @@ private:
   /*! Versioning implementation */
   template <class T>
   inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
-      PROCESS_IF(member_versioned_serialize) {
+      SER20_PROCESS_IF(member_versioned_serialize) {
     const auto version = loadClassVersion<T>();
-    access::member_serialize(*SELF, t, version);
-    return *SELF;
+    access::member_serialize(*SER20_SELF, t, version);
+    return *SER20_SELF;
   }
 
   //! Non member serialization
   /*! Versioning implementation */
   template <class T>
   inline ArchiveType& processImpl(T& t)
-      PROCESS_IF(non_member_versioned_serialize) {
+      SER20_PROCESS_IF(non_member_versioned_serialize) {
     const auto version = loadClassVersion<T>();
-    SER20_SERIALIZE_FUNCTION_NAME(*SELF, t, version);
-    return *SELF;
+    SER20_SERIALIZE_FUNCTION_NAME(*SER20_SELF, t, version);
+    return *SER20_SELF;
   }
 
   //! Member split (load)
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& processImpl(T& t) PROCESS_IF(member_versioned_load) {
+  inline ArchiveType& processImpl(T& t) SER20_PROCESS_IF(member_versioned_load) {
     const auto version = loadClassVersion<T>();
-    access::member_load(*SELF, t, version);
-    return *SELF;
+    access::member_load(*SER20_SELF, t, version);
+    return *SER20_SELF;
   }
 
   //! Non member split (load)
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& processImpl(T& t) PROCESS_IF(non_member_versioned_load) {
+  inline ArchiveType& processImpl(T& t) SER20_PROCESS_IF(non_member_versioned_load) {
     const auto version = loadClassVersion<T>();
-    SER20_LOAD_FUNCTION_NAME(*SELF, t, version);
-    return *SELF;
+    SER20_LOAD_FUNCTION_NAME(*SER20_SELF, t, version);
+    return *SER20_SELF;
   }
 
   //! Member split (load_minimal)
   /*! Versioning implementation */
   template <class T>
   inline ArchiveType& processImpl(T& t)
-      PROCESS_IF(member_versioned_load_minimal) {
+      SER20_PROCESS_IF(member_versioned_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     const auto version = loadClassVersion<T>();
     traits::get_member_versioned_save_minimal_t<T, OutArchiveType> value;
-    SELF->process(value);
-    access::member_load_minimal(*SELF, t, value, version);
-    return *SELF;
+    SER20_SELF->process(value);
+    access::member_load_minimal(*SER20_SELF, t, value, version);
+    return *SER20_SELF;
   }
 
   //! Non member split (load_minimal)
   /*! Versioning implementation */
   template <class T>
   inline ArchiveType& processImpl(T& t)
-      PROCESS_IF(non_member_versioned_load_minimal) {
+      SER20_PROCESS_IF(non_member_versioned_load_minimal) {
     using OutArchiveType =
         typename traits::detail::get_output_from_input<ArchiveType>::type;
     const auto version = loadClassVersion<T>();
     traits::get_non_member_versioned_save_minimal_t<T, OutArchiveType> value;
-    SELF->process(value);
-    SER20_LOAD_MINIMAL_FUNCTION_NAME(*SELF, t, value, version);
-    return *SELF;
+    SER20_SELF->process(value);
+    SER20_LOAD_MINIMAL_FUNCTION_NAME(*SER20_SELF, t, value, version);
+    return *SER20_SELF;
   }
 
-#undef PROCESS_IF
+#undef SER20_SELF
+#undef SER20_PROCESS_IF
 
 private:
   //! A set of all base classes that have been serialized

@@ -59,10 +59,11 @@ inline void SER20_LOAD_FUNCTION_NAME(Archive& ar, Map<Args...>& map) {
 
   map.clear();
 
-  auto hint = map.begin();
   if constexpr (HasReserve<Map<Args...>>) {
     map.reserve(size);
   }
+
+  auto hint = map.begin();
   for (size_t i = 0; i < size; ++i) {
     typename Map<Args...>::key_type key;
     typename Map<Args...>::mapped_type value;
