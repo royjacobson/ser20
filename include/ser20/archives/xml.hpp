@@ -289,12 +289,12 @@ public:
   }
 
   //! Overload for uint8_t prevents them from being serialized as characters
-  SER20_HIDE_FUNCTION void saveValue(uint8_t const& value) {
+  SER20_HIDE_FUNCTION inline void saveValue(uint8_t const& value) {
     saveValue(static_cast<uint32_t>(value));
   }
 
   //! Overload for int8_t prevents them from being serialized as characters
-  SER20_HIDE_FUNCTION void saveValue(int8_t const& value) {
+  SER20_HIDE_FUNCTION inline void saveValue(int8_t const& value) {
     saveValue(static_cast<int32_t>(value));
   }
 

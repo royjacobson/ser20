@@ -82,11 +82,11 @@ public:
     }
   }
 
-  template <class... Args> SER20_HIDE_FUNCTION void process(Args&&... args) {
+  template <class... Args> SER20_HIDE_FUNCTION inline void process(Args&&... args) {
     (this->process(std::forward<Args>(args)), ...);
   }
 
-  template <class T> SER20_HIDE_FUNCTION void process(T&& arg) {
+  template <class T> SER20_HIDE_FUNCTION inline void process(T&& arg) {
     bool wasProcessing = isProcessing;
     if (!isProcessing) {
       isProcessing = true;
