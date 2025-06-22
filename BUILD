@@ -2,11 +2,13 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 
 cc_library(
     name = "ser20",
-    srcs = glob([
+    srcs = [
         "src/ser20.cpp",
         "src/polymorphic_impl.cpp",
-    ]),
-    hdrs = glob([
+    ],
+    hdrs = [
+        "include/ser20/types/concepts/pair_associative_container.hpp",
+    ] + glob([
         "include/ser20/*.hpp",
         "include/ser20/external/*.hpp",
         "include/ser20/external/rapidjson/*.h",
@@ -17,7 +19,6 @@ cc_library(
         "include/ser20/archives/*.hpp",
         "include/ser20/details/*.hpp",
         "include/ser20/types/*.hpp",
-        "include/ser20/types/concepts/pair_associative_container.hpp",
     ]),
     strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
