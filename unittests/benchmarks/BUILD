@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary")
 
 cc_binary(
     name = "benchmark",
@@ -7,6 +7,6 @@ cc_binary(
     ],
     deps = [
         "//:ser20",
-        "@com_google_benchmark//:benchmark",
+        "@google_benchmark//:benchmark",
     ],
 )
