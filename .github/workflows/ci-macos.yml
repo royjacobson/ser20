@@ -10,8 +10,32 @@ jobs:
         include:
           - CMAKE_OPTIONS: '-DWITH_WERROR=ON'
             COMPILER: 'clang++'
-            XCODE_VERSION: 14
-            NAME: macos-latest-clang-xcode14
+            XCODE_VERSION: 16.2.0
+            NAME: macos-latest-clang-xcode16.2
+          - CMAKE_OPTIONS: '-DWITH_WERROR=ON'
+            COMPILER: 'clang++'
+            XCODE_VERSION: 16.1.0
+            NAME: macos-latest-clang-xcode16.1
+          - CMAKE_OPTIONS: '-DWITH_WERROR=ON'
+            COMPILER: 'clang++'
+            XCODE_VERSION: 15.4.0
+            NAME: macos-latest-clang-xcode15.4
+          - CMAKE_OPTIONS: '-DWITH_WERROR=ON'
+            COMPILER: 'clang++'
+            XCODE_VERSION: 15.3.0
+            NAME: macos-latest-clang-xcode15.3
+          - CMAKE_OPTIONS: '-DWITH_WERROR=ON'
+            COMPILER: 'clang++'
+            XCODE_VERSION: 15.2.0
+            NAME: macos-latest-clang-xcode15.2
+          - CMAKE_OPTIONS: '-DWITH_WERROR=ON'
+            COMPILER: 'clang++'
+            XCODE_VERSION: 15.1.0
+            NAME: macos-latest-clang-xcode15.1
+          - CMAKE_OPTIONS: '-DWITH_WERROR=ON'
+            COMPILER: 'clang++'
+            XCODE_VERSION: 15.0.1
+            NAME: macos-latest-clang-xcode15.0.1
     name: ${{ matrix.name }}
 
     steps:
@@ -35,6 +59,6 @@ jobs:
 
         # Build ser20 and test
         cmake --version
-        mkdir build && cd build
+        rm -rf build && mkdir build && cd build
         cmake ${CMAKE_OPTIONS} .. && make -j4 VERBOSE=1
         ctest . --output-on-failure
