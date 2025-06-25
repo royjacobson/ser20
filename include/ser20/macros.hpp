@@ -126,21 +126,21 @@
 #endif // end MSVC check
 
 #if !defined(SER20_NODEBUG) && defined(__has_attribute)
-#  if __has_attribute(__nodebug__)
-#    define SER20_NODEBUG __attribute__((__nodebug__))
-#  endif
+#if __has_attribute(__nodebug__)
+#define SER20_NODEBUG __attribute__((__nodebug__))
+#endif
 #endif
 #ifndef SER20_NODEBUG
 #define SER20_NODEBUG
 #endif
 
 #if defined(__has_attribute)
-#  if __has_attribute(__always_inline__)
-#    define SER20_FORCE_INLINE __attribute__((__always_inline__))
-#  endif
+#if __has_attribute(__always_inline__)
+#define SER20_FORCE_INLINE __attribute__((__always_inline__))
+#endif
 #endif
 #if defined(_MSC_VER) && !defined(SER20_FORCE_INLINE)
-#  define SER20_FORCE_INLINE [[msvc::forceinline]]
+#define SER20_FORCE_INLINE [[msvc::forceinline]]
 #endif
 #ifndef SER20_FORCE_INLINE
 #define SER20_FORCE_INLINE
