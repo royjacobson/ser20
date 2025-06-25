@@ -9,46 +9,45 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { UBUNTU_VER: '22.04', COMPILER: 'gcc',   COMPILER_VER: '10' }
-          - { UBUNTU_VER: '22.04', COMPILER: 'gcc',   COMPILER_VER: '12' }
-          - { UBUNTU_VER: '24.04', COMPILER: 'gcc',   COMPILER_VER: '14' }
-          - { UBUNTU_VER: '25.04', COMPILER: 'gcc',   COMPILER_VER: '15' }
-          - { UBUNTU_VER: '22.04', COMPILER: 'clang', COMPILER_VER: '13' }
-          - { UBUNTU_VER: '22.04', COMPILER: 'clang', COMPILER_VER: '15' }
-          - { UBUNTU_VER: '24.04', COMPILER: 'clang', COMPILER_VER: '16' }
-          - { UBUNTU_VER: '24.04', COMPILER: 'clang', COMPILER_VER: '18' }
+          - { UBUNTU_VER: "22.04", COMPILER: "gcc", COMPILER_VER: "10" }
+          - { UBUNTU_VER: "22.04", COMPILER: "gcc", COMPILER_VER: "12" }
+          - { UBUNTU_VER: "24.04", COMPILER: "gcc", COMPILER_VER: "14" }
+          - { UBUNTU_VER: "22.04", COMPILER: "clang", COMPILER_VER: "13" }
+          - { UBUNTU_VER: "22.04", COMPILER: "clang", COMPILER_VER: "15" }
+          - { UBUNTU_VER: "24.04", COMPILER: "clang", COMPILER_VER: "16" }
+          - { UBUNTU_VER: "24.04", COMPILER: "clang", COMPILER_VER: "18" }
+
     name: ubuntu-${{ matrix.UBUNTU_VER }}-${{ matrix.COMPILER }}${{ matrix.COMPILER_VER }}
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: install deps and test
-      shell: bash
-      env:
-        CMAKE_OPTIONS: ${{ matrix.CMAKE_OPTIONS }}
-        CC_COMPILER: ${{ matrix.COMPILER }}-${{ matrix.COMPILER_VER }}
-        CXX_COMPILER: ${{ matrix.COMPILER == 'gcc' && 'g++' || 'clang++' }}-${{ matrix.COMPILER_VER }}
-        EXTRA_APT_PACKAGES: ${{ matrix.COMPILER == 'gcc' && 'g++' || 'clang-' }}-${{ matrix.COMPILER_VER }}
-      run: |
-        set -ex
-        apt-get update -y
-        DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles apt-get install -y software-properties-common wget pipx make apt-transport-https
+      - name: install deps and test
+        shell: bash
+        env:
+          CMAKE_OPTIONS: ${{ matrix.CMAKE_OPTIONS }}
+          CC_COMPILER: ${{ matrix.COMPILER }}-${{ matrix.COMPILER_VER }}
+          CXX_COMPILER: ${{ matrix.COMPILER == 'gcc' && 'g++' || 'clang++' }}-${{ matrix.COMPILER_VER }}
+          EXTRA_APT_PACKAGES: ${{ matrix.COMPILER == 'gcc' && 'g++' || 'clang' }}-${{ matrix.COMPILER_VER }}
+        run: |
+          set -ex
+          apt-get update -y
+          DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles apt-get install -y software-properties-common wget pipx make apt-transport-https
 
-        # Install apt packages
-        apt-get install libboost-serialization-dev libboost-dev ${EXTRA_APT_PACKAGES} -y
-        
-        # Install CMake
-        export PATH=${PATH}:$HOME/.local/bin
-        pipx install cmake
+          # Install apt packages
+          apt-get install libboost-serialization-dev libboost-dev ${EXTRA_APT_PACKAGES} -y
 
-        # Set compiler and env variables
-        export CC=${CC_COMPILER}
-        export CXX=${CXX_COMPILER}
-        ${CXX} --version
+          # Install CMake
+          export PATH=${PATH}:$HOME/.local/bin
+          pipx install cmake
 
-        # Build ser20 and test
-        cmake --version
-        mkdir build && cd build
-        cmake ${CMAKE_OPTIONS} .. && make -j4 VERBOSE=1
-        ctest . --output-on-failure
+          # Set compiler and env variables
+          export CC=${CC_COMPILER}
+          export CXX=${CXX_COMPILER}
+          ${CXX} --version
+
+          # Build ser20 and test
+          cmake --version
+          mkdir build && cd build
+          cmake -DWITH_WERROR=ON ${CMAKE_OPTIONS} .. && make -j4 VERBOSE=1
+          ctest . --output-on-failure

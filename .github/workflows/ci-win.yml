@@ -8,7 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - COMPILER: 'cl'
+          - COMPILER: "cl"
             NAME: windows-msvc-latest
     name: ${{ matrix.NAME }}
     steps:
