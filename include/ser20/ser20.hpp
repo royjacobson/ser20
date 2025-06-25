@@ -879,7 +879,7 @@ private:
 
   //! Member serialization
   template <class T>
-  inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
+  SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T& t)
       SER20_PROCESS_IF(member_serialize) {
     access::member_serialize(*SER20_SELF, t);
     return *SER20_SELF;
@@ -887,7 +887,7 @@ private:
 
   //! Non member serialization
   template <class T>
-  inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
+  SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T& t)
       SER20_PROCESS_IF(non_member_serialize) {
     SER20_SERIALIZE_FUNCTION_NAME(*SER20_SELF, t);
     return *SER20_SELF;
@@ -895,7 +895,7 @@ private:
 
   //! Member split (load)
   template <class T>
-  inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
+  SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T& t)
       SER20_PROCESS_IF(member_load) {
     access::member_load(*SER20_SELF, t);
     return *SER20_SELF;
@@ -903,7 +903,7 @@ private:
 
   //! Non member split (load)
   template <class T>
-  inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
+  SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T& t)
       SER20_PROCESS_IF(non_member_load) {
     SER20_LOAD_FUNCTION_NAME(*SER20_SELF, t);
     return *SER20_SELF;
@@ -933,7 +933,7 @@ private:
 
   //! Empty class specialization
   template <class T>
-  inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T const&)
+  SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T const&)
     requires(bool(Flags& AllowEmptyClassElision) &&
              !traits::is_input_serializable_v<T, ArchiveType> &&
              std::is_empty_v<T>)
@@ -1011,7 +1011,7 @@ private:
   //! Member serialization
   /*! Versioning implementation */
   template <class T>
-  inline ArchiveType& SER20_HIDE_FUNCTION processImpl(T& t)
+  SER20_HIDE_FUNCTION inline ArchiveType& processImpl(T& t)
       SER20_PROCESS_IF(member_versioned_serialize) {
     const auto version = loadClassVersion<T>();
     access::member_serialize(*SER20_SELF, t, version);
