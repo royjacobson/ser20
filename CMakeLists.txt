@@ -11,9 +11,9 @@ option(BUILD_SANDBOX "Build sandbox examples" ${SER20_MASTER_PROJECT})
 option(BUILD_TESTS "Build tests" ${SER20_MASTER_PROJECT})
 option(SKIP_PERFORMANCE_COMPARISON "Skip building performance sandbox comparison (requires boost)" ON)
 
-if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD STREQUAL "98")
-    set(CMAKE_CXX_STANDARD 20)
-endif()
+# if(NOT DEFINED CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD STREQUAL "98")
+#     set(CMAKE_CXX_STANDARD 20)
+# endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -25,6 +25,8 @@ target_include_directories(ser20 SYSTEM PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
+
+target_compile_features(ser20 PUBLIC cxx_std_20)
 
 if(MSVC)
     target_compile_options(ser20 PRIVATE /bigobj /W3 /WX)

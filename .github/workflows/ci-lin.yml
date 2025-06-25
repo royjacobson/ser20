@@ -3,61 +3,21 @@ on: [push, pull_request]
 
 jobs:
   test_ser20_linux:
-    runs-on: ubuntu-22.04
-    container: ${{ matrix.CONTAINER }}
+    runs-on: ubuntu-${{ matrix.UBUNTU_VER }}
+    container: ubuntu:${{ matrix.UBUNTU_VER }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - CMAKE_OPTIONS: '-DCMAKE_CXX_STANDARD=20'
-            COMPILER: 'g++-10'
-            EXTRA_APT_PACKAGES: 'g++-10'
-            CONTAINER: ubuntu:22.04
-            NAME: ubuntu-22.04-g++10
-
-          - CMAKE_OPTIONS: ''
-            COMPILER: 'g++-12'
-            EXTRA_APT_PACKAGES: 'g++-12'
-            CONTAINER: ubuntu:22.04
-            NAME: ubuntu-22.04-g++12
-
-          - CMAKE_OPTIONS: ''
-            COMPILER: 'g++-14'
-            EXTRA_APT_PACKAGES: 'g++-14'
-            CONTAINER: ubuntu:24.04
-            NAME: ubuntu-24.04-g++14
-
-          - CMAKE_OPTIONS: ''
-            COMPILER: 'g++-15'
-            EXTRA_APT_PACKAGES: 'g++-15'
-            CONTAINER: ubuntu:25.04
-            NAME: ubuntu-25.04-g++15
-
-          - CMAKE_OPTIONS: ''
-            COMPILER: 'clang++-13'
-            EXTRA_APT_PACKAGES: 'clang-13'
-            CONTAINER: ubuntu:22.04
-            NAME: ubuntu-22.04-clang-13
-
-          - CMAKE_OPTIONS: ''
-            COMPILER: 'clang++-15'
-            EXTRA_APT_PACKAGES: 'clang-15'
-            CONTAINER: ubuntu:22.04
-            NAME: ubuntu-22.04-clang-15
-
-          - CMAKE_OPTIONS: ''
-            COMPILER: 'clang++-16'
-            EXTRA_APT_PACKAGES: 'clang-16'
-            CONTAINER: ubuntu:24.04
-            NAME: ubuntu-24.04-clang-16
-
-          - CMAKE_OPTIONS: ''
-            COMPILER: 'clang++-18'
-            EXTRA_APT_PACKAGES: 'clang-18'
-            CONTAINER: ubuntu:24.04
-            NAME: ubuntu-24.04-clang-18
-
-    name: ${{ matrix.NAME }}
+          - { UBUNTU_VER: '22.04', COMPILER: 'gcc',   COMPILER_VER: '10' }
+          - { UBUNTU_VER: '22.04', COMPILER: 'gcc',   COMPILER_VER: '12' }
+          - { UBUNTU_VER: '24.04', COMPILER: 'gcc',   COMPILER_VER: '14' }
+          - { UBUNTU_VER: '25.04', COMPILER: 'gcc',   COMPILER_VER: '15' }
+          - { UBUNTU_VER: '22.04', COMPILER: 'clang', COMPILER_VER: '13' }
+          - { UBUNTU_VER: '22.04', COMPILER: 'clang', COMPILER_VER: '15' }
+          - { UBUNTU_VER: '24.04', COMPILER: 'clang', COMPILER_VER: '16' }
+          - { UBUNTU_VER: '24.04', COMPILER: 'clang', COMPILER_VER: '18' }
+    name: ubuntu-${{ matrix.UBUNTU_VER }}-${{ matrix.COMPILER }}${{ matrix.COMPILER_VER }}
 
     steps:
     - name: Checkout code
@@ -67,8 +27,9 @@ jobs:
       shell: bash
       env:
         CMAKE_OPTIONS: ${{ matrix.CMAKE_OPTIONS }}
-        COMPILER: ${{ matrix.COMPILER }}
-        EXTRA_APT_PACKAGES: ${{ matrix.EXTRA_APT_PACKAGES }}
+        CC_COMPILER: ${{ matrix.COMPILER }}-${{ matrix.COMPILER_VER }}
+        CXX_COMPILER: ${{ matrix.COMPILER == 'gcc' && 'g++' || 'clang++' }}-${{ matrix.COMPILER_VER }}
+        EXTRA_APT_PACKAGES: ${{ matrix.COMPILER == 'gcc' && 'g++' || 'clang-' }}-${{ matrix.COMPILER_VER }}
       run: |
         set -ex
         apt-get update -y
@@ -78,12 +39,12 @@ jobs:
         apt-get install libboost-serialization-dev libboost-dev ${EXTRA_APT_PACKAGES} -y
         
         # Install CMake
+        export PATH=${PATH}:$HOME/.local/bin
         pipx install cmake
-        pipx ensurepath
-        source ~/.bashrc
 
         # Set compiler and env variables
-        export CXX=${COMPILER}
+        export CC=${CC_COMPILER}
+        export CXX=${CXX_COMPILER}
         ${CXX} --version
 
         # Build ser20 and test

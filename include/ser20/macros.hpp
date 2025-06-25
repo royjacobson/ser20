@@ -46,11 +46,11 @@
 #define SER20_MACROS_HPP_
 
 #ifdef _MSVC_LANG
-#if _MSVC_LANG < 202002L
+#if _MSVC_LANG <= 201703L
 #error "Ser20 requires at least C++20!"
 #endif
 #else
-#if __cplusplus < 202002L
+#if __cplusplus <= 201703L
 #error "Ser20 requires at least C++20!"
 #endif
 #endif
