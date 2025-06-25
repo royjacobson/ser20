@@ -41,7 +41,7 @@
 //! The minor version
 #define SER20_VERSION_MINOR 9
 //! The patch version
-#define SER20_VERSION_PATCH 0
+#define SER20_VERSION_PATCH 1
 
 //! The full version as a single number
 #define SER20_VERSION                                                          \
