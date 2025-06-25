@@ -125,20 +125,25 @@
 #define SER20_ALIGNOF alignof
 #endif // end MSVC check
 
-#if __has_attribute(__nodebug__)
-#define SER20_NODEBUG __attribute__((__nodebug__))
-#else
+#if !defined(SER20_NODEBUG) && defined(__has_attribute)
+#  if __has_attribute(__nodebug__)
+#    define SER20_NODEBUG __attribute__((__nodebug__))
+#  endif
+#endif
+#ifndef SER20_NODEBUG
 #define SER20_NODEBUG
 #endif
 
-#if __has_attribute(__always_inline__)
-#define SER20_FORCE_INLINE __attribute__((__always_inline__))
-#else
-#ifdef _MSC_VER
-#define SER20_FORCE_INLINE __forceinline
-#else 
-#define SER20_FORCE_INLINE
+#if defined(__has_attribute)
+#  if __has_attribute(__always_inline__)
+#    define SER20_FORCE_INLINE __attribute__((__always_inline__))
+#  endif
 #endif
+#if defined(_MSC_VER) && !defined(SER20_FORCE_INLINE)
+#  define SER20_FORCE_INLINE [[msvc::forceinline]]
+#endif
+#ifndef SER20_FORCE_INLINE
+#define SER20_FORCE_INLINE
 #endif
 
 #ifndef SER20_HIDE_FUNCTION

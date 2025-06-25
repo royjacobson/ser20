@@ -3,13 +3,13 @@ on: [push, pull_request]
 
 jobs:
   test_ser20_windows:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.HOST_VERSION }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - COMPILER: "cl"
-            NAME: windows-msvc-latest
+          - {HOST_VERSION: "windows-2019", NAME: "WIN 2019"}
+          - {HOST_VERSION: "windows-2025", NAME: "WIN 2025"}
     name: ${{ matrix.NAME }}
     steps:
       - name: Checkout code
@@ -28,7 +28,8 @@ jobs:
           del build
           mkdir build
           cd build
-          cmake -G "Ninja" -DCMAKE_CXX_COMPILER=${{ matrix.COMPILER }} ..
+
+          cmake -G "Ninja" -DCMAKE_CXX_COMPILER=cl ..
           cmake --build . --config Release
 
       - name: Run tests
