@@ -46,11 +46,11 @@
 #define SER20_MACROS_HPP_
 
 #ifdef _MSVC_LANG
-#if _MSVC_LANG < 202002L
+#if _MSVC_LANG <= 201703L
 #error "Ser20 requires at least C++20!"
 #endif
 #else
-#if __cplusplus < 202002L
+#if __cplusplus <= 201703L
 #error "Ser20 requires at least C++20!"
 #endif
 #endif
@@ -125,20 +125,25 @@
 #define SER20_ALIGNOF alignof
 #endif // end MSVC check
 
+#if !defined(SER20_NODEBUG) && defined(__has_attribute)
 #if __has_attribute(__nodebug__)
 #define SER20_NODEBUG __attribute__((__nodebug__))
-#else
+#endif
+#endif
+#ifndef SER20_NODEBUG
 #define SER20_NODEBUG
 #endif
 
+#if defined(__has_attribute)
 #if __has_attribute(__always_inline__)
 #define SER20_FORCE_INLINE __attribute__((__always_inline__))
-#else
-#ifdef _MSC_VER
-#define SER20_FORCE_INLINE __forceinline
-#else 
-#define SER20_FORCE_INLINE
 #endif
+#endif
+#if defined(_MSC_VER) && !defined(SER20_FORCE_INLINE)
+#define SER20_FORCE_INLINE [[msvc::forceinline]]
+#endif
+#ifndef SER20_FORCE_INLINE
+#define SER20_FORCE_INLINE
 #endif
 
 #ifndef SER20_HIDE_FUNCTION

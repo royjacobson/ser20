@@ -5,8 +5,14 @@ Ser20 is a C++20 fork of cereal, a C++11 serialization library. It is completely
 except for a namespace change. Thanks to modern meta-programming, Ser20 is 15% smaller and 
 can compile up to 25% faster. Ser20 also has some other runtime optimizations, and is optimized for debug experience and debug symbols size.
 
-Ser20 requires compiler support for C++20 concepts. Clang 13 and GCC10 should be modern enough,
-but CI testing is not set up very hermetically yet.
+Ser20 requires compiler support for C++20 concepts. It is tested on the following compilers (but ):
+
+| Compiler | Version | Platform |
+|----------|---------|-----------|
+| GCC | 10-14 | Ubuntu |
+| Clang | 13-18 | Ubuntu |
+| MSVC | VS 16, VS 17 | Windows |
+| AppleClang | 15, 16 | macOS |
 
 ### Using Ser20
 
