@@ -1,0 +1,38 @@
+name: ser20 windows ci
+on: [push, pull_request]
+
+jobs:
+  test_ser20_windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - COMPILER: 'cl'
+            NAME: windows-msvc-latest
+    name: ${{ matrix.NAME }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Configure and build
+        shell: pwsh
+        run: |
+          cmake --version
+          del build
+          mkdir build
+          cd build
+          cmake -G "Ninja" -DCMAKE_CXX_COMPILER=${{ matrix.COMPILER }} ..
+          cmake --build . --config Release
+
+      - name: Run tests
+        shell: pwsh
+        run: |
+          cd build
+          ctest -C Release --output-on-failure

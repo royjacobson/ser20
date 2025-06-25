@@ -20,7 +20,19 @@ jobs:
             EXTRA_APT_PACKAGES: 'clang-14'
             CONTAINER: ubuntu:22.04
             NAME: ubuntu-22.04-clang-14
-    name: ${{ matrix.name }}
+
+          - CMAKE_OPTIONS: ''
+            COMPILER: 'g++-14'
+            EXTRA_APT_PACKAGES: 'g++-14'
+            CONTAINER: ubuntu:22.04
+            NAME: ubuntu-22.04-g++14
+
+          - CMAKE_OPTIONS: ''
+            COMPILER: 'clang++-18'
+            EXTRA_APT_PACKAGES: 'clang-18'
+            CONTAINER: ubuntu:22.04
+            NAME: ubuntu-22.04-clang-18
+    name: ${{ matrix.NAME }}
 
     steps:
     - name: Checkout code
