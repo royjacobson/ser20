@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - CMAKE_OPTIONS: ''
+          - CMAKE_OPTIONS: '-DCMAKE_CXX_STANDARD=20'
             COMPILER: 'g++-10'
             EXTRA_APT_PACKAGES: 'g++-10'
             CONTAINER: ubuntu:22.04
@@ -69,22 +69,18 @@ jobs:
         CMAKE_OPTIONS: ${{ matrix.CMAKE_OPTIONS }}
         COMPILER: ${{ matrix.COMPILER }}
         EXTRA_APT_PACKAGES: ${{ matrix.EXTRA_APT_PACKAGES }}
-        LLVM_APT_SOURCE: ${{ matrix.LLVM_APT_SOURCE }}
       run: |
         set -ex
         apt-get update -y
-        DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles apt-get install -y software-properties-common wget python3-pip make apt-transport-https
-
-        if [[ "${LLVM_APT_SOURCE}" != "" ]]; then
-          wget -qO - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
-          add-apt-repository "${LLVM_APT_SOURCE}"
-        fi
-
-        apt-get update -y
+        DEBIAN_FRONTEND=noninteractive TZ=America/Los_Angeles apt-get install -y software-properties-common wget pipx make apt-transport-https
 
         # Install apt packages
         apt-get install libboost-serialization-dev libboost-dev ${EXTRA_APT_PACKAGES} -y
-        pip3 install cmake
+        
+        # Install CMake
+        pipx install cmake
+        pipx ensurepath
+        source ~/.bashrc
 
         # Set compiler and env variables
         export CXX=${COMPILER}
