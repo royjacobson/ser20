@@ -10,28 +10,53 @@ jobs:
       matrix:
         include:
           - CMAKE_OPTIONS: ''
+            COMPILER: 'g++-10'
+            EXTRA_APT_PACKAGES: 'g++-10'
+            CONTAINER: ubuntu:22.04
+            NAME: ubuntu-22.04-g++10
+
+          - CMAKE_OPTIONS: ''
             COMPILER: 'g++-12'
             EXTRA_APT_PACKAGES: 'g++-12'
             CONTAINER: ubuntu:22.04
             NAME: ubuntu-22.04-g++12
 
           - CMAKE_OPTIONS: ''
-            COMPILER: 'clang++-14'
-            EXTRA_APT_PACKAGES: 'clang-14'
-            CONTAINER: ubuntu:22.04
-            NAME: ubuntu-22.04-clang-14
-
-          - CMAKE_OPTIONS: ''
             COMPILER: 'g++-14'
             EXTRA_APT_PACKAGES: 'g++-14'
+            CONTAINER: ubuntu:24.04
+            NAME: ubuntu-24.04-g++14
+
+          - CMAKE_OPTIONS: ''
+            COMPILER: 'g++-15'
+            EXTRA_APT_PACKAGES: 'g++-15'
+            CONTAINER: ubuntu:25.04
+            NAME: ubuntu-25.04-g++15
+
+          - CMAKE_OPTIONS: ''
+            COMPILER: 'clang++-13'
+            EXTRA_APT_PACKAGES: 'clang-13'
             CONTAINER: ubuntu:22.04
-            NAME: ubuntu-22.04-g++14
+            NAME: ubuntu-22.04-clang-13
+
+          - CMAKE_OPTIONS: ''
+            COMPILER: 'clang++-15'
+            EXTRA_APT_PACKAGES: 'clang-15'
+            CONTAINER: ubuntu:22.04
+            NAME: ubuntu-22.04-clang-15
+
+          - CMAKE_OPTIONS: ''
+            COMPILER: 'clang++-16'
+            EXTRA_APT_PACKAGES: 'clang-16'
+            CONTAINER: ubuntu:24.04
+            NAME: ubuntu-24.04-clang-16
 
           - CMAKE_OPTIONS: ''
             COMPILER: 'clang++-18'
             EXTRA_APT_PACKAGES: 'clang-18'
-            CONTAINER: ubuntu:22.04
-            NAME: ubuntu-22.04-clang-18
+            CONTAINER: ubuntu:24.04
+            NAME: ubuntu-24.04-clang-18
+
     name: ${{ matrix.NAME }}
 
     steps:
