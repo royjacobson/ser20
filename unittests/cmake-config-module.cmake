@@ -118,7 +118,7 @@ if(result)
 endif()
 
 execute_process(
-  COMMAND ${CMAKE_CTEST_COMMAND}
+  COMMAND ${CMAKE_CTEST_COMMAND} -C Debug
   WORKING_DIRECTORY ${BINARY_DIR}/test
   RESULT_VARIABLE result
 )
